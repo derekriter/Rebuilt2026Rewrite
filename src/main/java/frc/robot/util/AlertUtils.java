@@ -29,10 +29,10 @@ public class AlertUtils {
     }
 
     public static Alert makeSystemDisabledAlert(String systemName) {
-        return new Alert(String.format("%s disabled by override"), AlertType.kInfo);
+        return new Alert(String.format("%s disabled by override", systemName), AlertType.kInfo);
     }
 
     public static Alert makeSafetyDisabledAlert(String systemName) {
-        return new Alert(String.format("%s safety disabled by override"), AlertType.kInfo);
+        return new Alert(String.format("%s safety disabled by override", systemName), AlertType.kInfo);
     }
 }

@@ -157,7 +157,7 @@ public final class Launcher extends SubsystemBase {
             if (!(realTurretState instanceof LockedTurretState)) realTurretState = new LockedTurretState();
             return;
         } else if (Overrides.disableShooterSafety) {
-            realShooterState = reqShooterState;
+            realTurretState = reqTurretState;
             return;
         }
 
