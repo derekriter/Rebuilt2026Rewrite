@@ -77,11 +77,6 @@ wpi.java.debugJni = false
 // Set this to true to enable desktop support.
 def includeDesktopSupport = true
 
-task(replayWatch, type: JavaExec) {
-    mainClass = "org.littletonrobotics.junuction.ReplayWatch"
-    classpath = sourceSets.main.runtimeClasspath
-}
-
 // Defining my dependencies. In this case, WPILib (+ friends), and vendor libraries.
 // Also defines JUnit 5.
 dependencies {
@@ -105,9 +100,6 @@ dependencies {
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.1'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-
-    def akitJson = new groovy.json.JsonSlurper().parseText(new File(projectDir.getAbsolutePath() + "/vendordeps/AdvantageKit.json").text)
-    annotationProcessor "org.littletonrobotics.akit:akit-autolog:$akitJson.version"
 }
 
 test {
@@ -147,7 +139,7 @@ def dateTimeFormat = "yyyy-MM-dd HH:mm:ss"; //this format is ideal for sorting
 project.compileJava.dependsOn(createVersionFile)
 gversion {
     srcDir = "src/main/java"
-    classPackage = "frc.robot.config"
+    classPackage = "frc.robot.constants"
     className = "BuildConstants"
     dateFormat = dateTimeFormat
     timeZone = "America/Detroit"

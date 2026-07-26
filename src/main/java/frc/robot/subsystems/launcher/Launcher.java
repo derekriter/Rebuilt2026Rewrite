@@ -1,377 +1,255 @@
 package frc.robot.subsystems.launcher;
 
-import static edu.wpi.first.units.Units.Celsius;
-import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.RPM;
 
-import edu.wpi.first.math.Pair;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.Distance;
-import edu.wpi.first.units.measure.LinearVelocity;
+import com.revrobotics.PersistMode;
+import com.revrobotics.ResetMode;
+import com.revrobotics.spark.SparkBase.ControlType;
+import com.revrobotics.spark.SparkFlex;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkMax;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.RobotContainer;
-import frc.robot.config.LauncherConstants;
-import frc.robot.config.LauncherConstants.ShooterConstants;
-import frc.robot.config.LauncherConstants.TurretConstants;
+import frc.robot.config.LauncherConfig.ShooterConfig;
+import frc.robot.config.LauncherConfig.TurretConfig;
 import frc.robot.config.Overrides;
-import frc.robot.subsystems.launcher.shooter.IShooterIO;
-import frc.robot.subsystems.launcher.shooter.IShooterIO.ShooterIOInputs;
-import frc.robot.subsystems.launcher.shooter.ShooterFlags;
-import frc.robot.subsystems.launcher.shooter.ShooterIOInputsAutoLogged;
-import frc.robot.subsystems.launcher.shooter.ShooterTarget;
-import frc.robot.subsystems.launcher.shooter.states.FixedTargetShooterState;
-import frc.robot.subsystems.launcher.shooter.states.IShooterState;
-import frc.robot.subsystems.launcher.shooter.states.InactiveShooterState;
-import frc.robot.subsystems.launcher.shooter.states.TargetingPointShooterState;
-import frc.robot.subsystems.launcher.turret.ITurretIO;
-import frc.robot.subsystems.launcher.turret.ITurretIO.TurretIOInputs;
-import frc.robot.subsystems.launcher.turret.TurretAngle;
-import frc.robot.subsystems.launcher.turret.TurretFlags;
-import frc.robot.subsystems.launcher.turret.TurretIOInputsAutoLogged;
-import frc.robot.subsystems.launcher.turret.states.FixedAngleTurretState;
-import frc.robot.subsystems.launcher.turret.states.ITurretState;
-import frc.robot.subsystems.launcher.turret.states.InactiveTurretState;
-import frc.robot.subsystems.launcher.turret.states.LockedTurretState;
-import frc.robot.subsystems.launcher.turret.states.ManualControlTurretState;
-import frc.robot.subsystems.launcher.turret.states.TargetPointTurretState;
 import frc.robot.util.AlertUtils;
+import frc.robot.util.MotorUtils;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 public final class Launcher extends SubsystemBase {
 
     // ===Turret===
-    private final ITurretIO turretIO;
-    private TurretIOInputs turretInputs = new TurretIOInputsAutoLogged();
+    private Optional<SparkMax> turret;
 
-    private final Alert turretDisabled = AlertUtils.makeSystemDisabledAlert(TurretConstants.systemName),
-            turretSafetyOff = AlertUtils.makeSafetyDisabledAlert(TurretConstants.systemName);
     private final Alert
-            turretDisconnected = AlertUtils.makeDisconnectAlert(TurretConstants.motorName, TurretConstants.canID),
-            turretOverheating = AlertUtils.makeDisconnectAlert(TurretConstants.motorName, TurretConstants.canID),
-            turretCriticalOverheating =
-                    AlertUtils.makeDisconnectAlert(TurretConstants.motorName, TurretConstants.canID),
-            turretConfigFail = AlertUtils.makeConfigFailAlert(TurretConstants.motorName, TurretConstants.canID),
-            turretHardwareFault = AlertUtils.makeHardwareFaultAlert(TurretConstants.motorName, TurretConstants.canID);
+            turretDisconnectedAlert = AlertUtils.makeDisconnectAlert(TurretConfig.motorName, TurretConfig.canID),
+            turretTempWarnAlert = AlertUtils.makeTempWarnAlert(TurretConfig.motorName, TurretConfig.canID),
+            turretThermalShutdownAlert =
+                    AlertUtils.makeThermalShutdownAlert(TurretConfig.motorName, TurretConfig.canID);
 
-    private ITurretState reqTurretState = new InactiveTurretState();
-    private ITurretState realTurretState = new InactiveTurretState();
-    private Optional<ITurretState> lastRealTurretState = Optional.empty();
-
-    private Optional<TurretFlags> turretFlags = Optional.empty();
-    private boolean isTurretCalibrated = false;
+    private boolean turretConnectedLast = false;
+    private boolean turretThermalShutdown = false;
+    private boolean turretThermalShutdownLast = false;
 
     // ===Shooter===
-    private final IShooterIO shooterIO;
-    private ShooterIOInputs shooterInputs = new ShooterIOInputsAutoLogged();
+    private Optional<SparkFlex> shooter;
 
-    private final Alert shooterDisabled = AlertUtils.makeSystemDisabledAlert(ShooterConstants.systemName),
-            shooterSafetyOff = AlertUtils.makeSafetyDisabledAlert(ShooterConstants.systemName);
     private final Alert
-            shooterDisconnected = AlertUtils.makeDisconnectAlert(ShooterConstants.motorName, ShooterConstants.canID),
-            shooterOverheating = AlertUtils.makeOverheatingAlert(ShooterConstants.motorName, ShooterConstants.canID),
-            shooterCriticalOverheating =
-                    AlertUtils.makeCriticalOverheatingAlert(ShooterConstants.motorName, ShooterConstants.canID),
-            shooterConfigFail = AlertUtils.makeConfigFailAlert(ShooterConstants.motorName, ShooterConstants.canID),
-            shooterHardwareFault =
-                    AlertUtils.makeHardwareFaultAlert(ShooterConstants.motorName, ShooterConstants.canID);
+            shooterDisconnectedAlert = AlertUtils.makeDisconnectAlert(ShooterConfig.motorName, ShooterConfig.canID),
+            shooterTempWarnAlert = AlertUtils.makeTempWarnAlert(ShooterConfig.motorName, ShooterConfig.canID),
+            shooterThermalShutdownAlert =
+                    AlertUtils.makeThermalShutdownAlert(ShooterConfig.motorName, ShooterConfig.canID);
 
-    private IShooterState reqShooterState = new InactiveShooterState();
-    private IShooterState realShooterState = new InactiveShooterState();
-    private Optional<IShooterState> lastRealShooterState = Optional.empty();
+    private boolean shooterConnectedLast = false;
+    private boolean shooterThermalShutdown = false;
+    private boolean shooterThermalShutdownLast = false;
+    private double lastShooterTarget = Double.NaN;
 
-    private Optional<ShooterFlags> shooterFlags = Optional.empty();
-
-    public Launcher(ITurretIO _turretIO, IShooterIO _shooterIO) {
+    public Launcher() {
         // ===Turret===
-        turretIO = _turretIO;
+        if (Overrides.disableTurret) {
+            turret = Optional.empty();
 
-        turretDisabled.set(Overrides.disableTurret);
-        turretSafetyOff.set(Overrides.disableTurretSafety);
+            AlertUtils.makeSystemDisabledAlert(TurretConfig.systemName).set(true);
+        } else {
+            if (Overrides.disableTurretSafety) {
+                AlertUtils.makeSafetyDisabledAlert(TurretConfig.systemName).set(true);
+            }
+
+            turret = Optional.of(new SparkMax(TurretConfig.canID, MotorType.kBrushless));
+            MotorUtils.safeApplyConfig(
+                    turret.get(),
+                    TurretConfig.motorName,
+                    TurretConfig.motorConfig,
+                    ResetMode.kResetSafeParameters,
+                    PersistMode.kPersistParameters);
+        }
 
         // ===Shooter===
-        shooterIO = _shooterIO;
+        if (Overrides.disableShooter) {
+            shooter = Optional.empty();
 
-        shooterDisabled.set(Overrides.disableShooter);
-        shooterSafetyOff.set(Overrides.disableShooterSafety);
+            AlertUtils.makeSystemDisabledAlert(ShooterConfig.systemName).set(true);
+        } else {
+            if (Overrides.disableShooterSafety) {
+                AlertUtils.makeSafetyDisabledAlert(ShooterConfig.systemName).set(true);
+            }
+
+            shooter = Optional.of(new SparkFlex(ShooterConfig.canID, MotorType.kBrushless));
+            MotorUtils.safeApplyConfig(
+                    shooter.get(),
+                    ShooterConfig.motorName,
+                    ShooterConfig.motorConfig,
+                    ResetMode.kResetSafeParameters,
+                    PersistMode.kPersistParameters);
+        }
     }
 
     @Override
-    public void periodic() {
-        turretIO.updateInputs(turretInputs);
-        updateTurretFlags();
-        shooterIO.updateInputs(shooterInputs);
-        updateShooterFlags();
+    public void periodic() {}
 
-        determineRealTurretState();
-        controlTurret();
-
-        determineRealShooterState();
-        controlShooter();
-    }
-
-    private void updateTurretFlags() {
-        boolean connected = turretInputs.connected;
-        boolean overheating = turretInputs.temp.gte(Celsius.of(75));
-        boolean critOverheating = turretInputs.temp.gte(Celsius.of(80));
-        boolean configSuccess = turretInputs.motorConfigSuccessfull;
-        boolean hardwareFaults = turretInputs.faultEscEEPROM
-                || turretInputs.faultFirmware
-                || turretInputs.faultGateDriver
-                || turretInputs.faultSensor
-                || turretInputs.faultMotorType;
-        boolean overheatShutdown = (critOverheating
-                        || turretFlags.map(flags -> flags.overheatShutdown()).orElse(false))
-                && overheating;
-
-        if (turretFlags.map(flags -> flags.motorConnected()).orElse(false) != connected) {
-            if (connected) {
-                System.out.printf("Connected to %s (CAN %d)\n", TurretConstants.motorName, TurretConstants.canID);
-            } else {
-                DriverStation.reportError(
-                        String.format(
-                                "Lost connection to %s (CAN %d)", TurretConstants.motorName, TurretConstants.canID),
-                        false);
-            }
-        }
-        if (turretFlags.isEmpty() && !configSuccess) {
-            DriverStation.reportError(String.format("Failed to configure %s", TurretConstants.motorName), false);
-            turretConfigFail.set(true);
-        }
-
-        turretFlags = Optional.of(new TurretFlags(
-                connected, overheating, critOverheating, configSuccess, hardwareFaults, overheatShutdown));
-
-        turretDisconnected.set(!connected);
-        turretOverheating.set(overheating);
-        turretCriticalOverheating.set(critOverheating);
-        turretHardwareFault.set(hardwareFaults);
-    }
-
-    private void determineRealTurretState() {
-        if (Overrides.disableTurret) {
-            if (!(realTurretState instanceof LockedTurretState)) realTurretState = new LockedTurretState();
-            return;
-        } else if (Overrides.disableShooterSafety) {
-            realTurretState = reqTurretState;
-            return;
-        }
-
-        if (turretFlags.isEmpty()) {
-            if (!(realTurretState instanceof InactiveTurretState)) realTurretState = new InactiveTurretState();
-            return;
-        }
-
-        TurretFlags flags = turretFlags.get();
-        if (!flags.motorConnected() || flags.overheatShutdown()) {
-            if (!(realTurretState instanceof InactiveTurretState)) realTurretState = new InactiveTurretState();
+    public void pollFlags(LauncherFlags flags) {
+        if (turret.isEmpty()) {
+            flags.turretOperational = false;
         } else {
-            realTurretState = reqTurretState;
+            SparkMax t = turret.get();
+            boolean connected = !t.getFaults().can;
+            double temp = t.getMotorTemperature();
+
+            boolean gettingToasty = temp >= 75;
+            boolean overheating = temp >= 80;
+            turretThermalShutdown = (overheating || turretThermalShutdown) && gettingToasty;
+
+            flags.turretOperational = connected && !turretThermalShutdown;
+
+            turretDisconnectedAlert.set(!connected);
+            turretTempWarnAlert.set(gettingToasty && !turretThermalShutdown);
+            turretThermalShutdownAlert.set(turretThermalShutdown);
+
+            if (connected != turretConnectedLast) {
+                if (connected) {
+                    System.out.printf("Connected to %s (CAN %d)\n", TurretConfig.motorName, TurretConfig.canID);
+                } else {
+                    DriverStation.reportError(
+                            String.format("Lost connection to %s (CAN %d)", TurretConfig.motorName, TurretConfig.canID),
+                            false);
+                }
+            }
+            if (turretThermalShutdown != turretThermalShutdownLast) {
+                if (turretThermalShutdown) {
+                    DriverStation.reportError(
+                            String.format(
+                                    "Thermal shutdown triggered on %s (CAN %d)",
+                                    TurretConfig.motorName, TurretConfig.canID),
+                            false);
+
+                    stopTurret();
+                } else {
+                    System.out.printf(
+                            "Thermal shutdown released on %s (CAN %d)", TurretConfig.motorName, TurretConfig.canID);
+                }
+            }
+
+            turretConnectedLast = connected;
+            turretThermalShutdownLast = turretThermalShutdown;
         }
-    }
 
-    private void controlTurret() {
-        boolean stateChanged =
-                lastRealTurretState.isEmpty() || !lastRealTurretState.get().equals(realTurretState);
-
-        if (stateChanged) {
-            if (realTurretState instanceof LockedTurretState) {
-                turretIO.setBrake(true);
-            } else {
-                turretIO.setBrake(!TurretConstants.coast);
-            }
-        }
-
-        if (realTurretState instanceof LockedTurretState) {
-            if (stateChanged) {
-                turretIO.stop();
-            }
-        } else if (realTurretState instanceof FixedAngleTurretState) {
-            if (stateChanged) {
-                turretIO.runToPosition(((FixedAngleTurretState) realTurretState)
-                        .angle()
-                        .clampToLegalRange()
-                        .asMotorAngle());
-            }
-        } else if (realTurretState instanceof ManualControlTurretState) {
-            if (stateChanged) {
-                turretIO.dutyCycle(((ManualControlTurretState) realTurretState).duty());
-            }
-        } else if (realTurretState instanceof TargetPointTurretState) {
-            Pose2d robotPose = RobotContainer.instance().swerve.getPose();
-            Translation2d launcherLoc = getLauncherLocOnField();
-            Translation2d targetLoc =
-                    ((TargetPointTurretState) realTurretState).point().get();
-            Translation2d compTargetLoc = targetLoc.plus(calcPointCompensation());
-
-            Translation2d vecToTarget = compTargetLoc.minus(launcherLoc);
-            Angle fieldCentricAngle = Radians.of(Math.atan2(vecToTarget.getY(), vecToTarget.getX()));
-            Angle robotCentricAngle =
-                    fieldCentricAngle.minus(robotPose.getRotation().getMeasure());
-            TurretAngle tAngle =
-                    TurretAngle.fromMechanismAngle(robotCentricAngle).clampToLegalRange();
-
-            turretIO.runToPosition(tAngle.asMotorAngle());
+        if (shooter.isEmpty()) {
+            flags.shooterOperational = false;
         } else {
-            // turret is in inactive or invalid state
+            SparkFlex s = shooter.get();
+            boolean connected = !s.getFaults().can;
+            double temp = s.getMotorTemperature();
 
-            if (stateChanged) {
-                turretIO.stop();
+            boolean gettingToasty = temp >= 70;
+            boolean overheating = temp >= 80;
+            shooterThermalShutdown = (overheating || shooterThermalShutdown) && gettingToasty;
+
+            flags.shooterOperational = connected && !shooterThermalShutdown;
+            flags.shooterIsAtTarget = isShooterAtTarget();
+
+            shooterDisconnectedAlert.set(!connected);
+            shooterTempWarnAlert.set(gettingToasty && !shooterThermalShutdown);
+            shooterThermalShutdownAlert.set(shooterThermalShutdown);
+
+            if (connected != shooterConnectedLast) {
+                if (connected) {
+                    System.out.printf("Connected to %s (CAN %d)\n", ShooterConfig.motorName, ShooterConfig.canID);
+                } else {
+                    DriverStation.reportError(
+                            String.format(
+                                    "Lost connection to %s (CAN %d)", ShooterConfig.motorName, ShooterConfig.canID),
+                            false);
+                }
             }
-        }
-    }
+            if (shooterThermalShutdown != shooterThermalShutdownLast) {
+                if (shooterThermalShutdown) {
+                    DriverStation.reportError(
+                            String.format(
+                                    "Thermal shutdown triggered on %s (CAN %d)",
+                                    ShooterConfig.motorName, ShooterConfig.canID),
+                            false);
 
-    private void updateShooterFlags() {
-        boolean connected = shooterInputs.connected;
-        boolean overheating = shooterInputs.temp.gte(Celsius.of(75));
-        boolean critOverheating = shooterInputs.temp.gte(Celsius.of(80));
-        boolean configSuccess = shooterInputs.motorConfigSuccessfull;
-        boolean hardwareFaults = shooterInputs.faultEscEEPROM
-                || shooterInputs.faultFirmware
-                || shooterInputs.faultGateDriver
-                || shooterInputs.faultSensor
-                || shooterInputs.faultMotorType;
-        boolean overheatShutdown = (critOverheating
-                        || shooterFlags.map(flags -> flags.overheatShutdown()).orElse(false))
-                && overheating;
-
-        if (shooterFlags.map(flags -> flags.motorConnected()).orElse(false) != connected) {
-            if (connected) {
-                System.out.printf("Connected to %s (CAN %d)\n", ShooterConstants.motorName, ShooterConstants.canID);
-            } else {
-                DriverStation.reportError(
-                        String.format(
-                                "Lost connection to %s (CAN %d)", ShooterConstants.motorName, ShooterConstants.canID),
-                        false);
+                    stopShooter();
+                } else {
+                    System.out.printf(
+                            "Thermal shutdown released on %s (CAN %d)", ShooterConfig.motorName, ShooterConfig.canID);
+                }
             }
-        }
-        if (shooterFlags.isEmpty() && !configSuccess) {
-            DriverStation.reportError(String.format("Failed to configure %s", ShooterConstants.motorName), false);
-            shooterConfigFail.set(true);
-        }
 
-        shooterFlags = Optional.of(new ShooterFlags(
-                connected, overheating, critOverheating, configSuccess, hardwareFaults, overheatShutdown));
-
-        shooterDisconnected.set(!connected);
-        shooterOverheating.set(overheating);
-        shooterCriticalOverheating.set(critOverheating);
-        shooterHardwareFault.set(hardwareFaults);
-    }
-
-    private void determineRealShooterState() {
-        if (Overrides.disableShooter) {
-            if (!(realShooterState instanceof InactiveShooterState)) realShooterState = new InactiveShooterState();
-            return;
-        } else if (Overrides.disableShooterSafety) {
-            realShooterState = reqShooterState;
-            return;
-        }
-
-        if (shooterFlags.isEmpty()) {
-            if (!(realShooterState instanceof InactiveShooterState)) realShooterState = new InactiveShooterState();
-            return;
-        }
-
-        ShooterFlags flags = shooterFlags.get();
-        if (!flags.motorConnected() || flags.overheatShutdown()) {
-            if (!(realShooterState instanceof InactiveShooterState)) realShooterState = new InactiveShooterState();
-        } else {
-            realShooterState = reqShooterState;
+            shooterConnectedLast = connected;
+            shooterThermalShutdownLast = shooterThermalShutdown;
         }
     }
 
-    private void controlShooter() {
-        boolean stateChanged =
-                lastRealShooterState.isEmpty() || !lastRealShooterState.get().equals(realShooterState);
+    public void setTurretAngle(TurretAngle ang) {
+        if (turret.isEmpty() || turretThermalShutdown) return;
 
-        if (realShooterState instanceof FixedTargetShooterState) {
-            if (stateChanged) {
-                shooterIO.runToVelocity(((FixedTargetShooterState) realShooterState)
-                        .target()
-                        .clampToLegalRange()
-                        .asShooterVelocity());
-            }
-        } else if (realShooterState instanceof TargetingPointShooterState) {
-            Translation2d launcherLoc = getLauncherLocOnField();
-            Translation2d targetLoc =
-                    ((TargetingPointShooterState) realShooterState).point().get();
-            Translation2d compTargetLoc = targetLoc.plus(calcPointCompensation());
+        ang.wrap();
+        if (!ang.isLegal()) return;
 
-            Distance dist = Meters.of(launcherLoc.getDistance(compTargetLoc));
-            ShooterTarget sTarget = ShooterTarget.fromDistanceToTarget(dist).clampToLegalRange();
-
-            shooterIO.runToVelocity(sTarget.asShooterVelocity());
-        } else {
-            // shooter is in inactive or invalid state
-
-            if (stateChanged) {
-                shooterIO.stop();
-            }
-        }
+        turret.get().getClosedLoopController().setSetpoint(ang.asMotorRotations(), ControlType.kPosition);
     }
 
-    private Translation2d getLauncherLocOnField() {
-        Pose2d robot = RobotContainer.instance().swerve.getPose();
-        return robot.getTranslation().plus(LauncherConstants.launcherOffset.rotateBy(robot.getRotation()));
-    }
+    public void setTurretDuty(double duty) {
+        if (turret.isEmpty() || (turretThermalShutdown && duty != 0)) return;
 
-    private Translation2d calcPointCompensation() {
-        Pose2d robotPose = RobotContainer.instance().swerve.getPose();
-        Pair<LinearVelocity, LinearVelocity> robotVel =
-                RobotContainer.instance().swerve.getRealFieldRelativeVelocity();
-        Translation2d velCompensation = new Translation2d(
-                        robotVel.getFirst().times(LauncherConstants.ballAirTime),
-                        robotVel.getSecond().times(LauncherConstants.ballAirTime))
-                .rotateBy(robotPose.getRotation())
-                .unaryMinus();
-
-        return velCompensation;
-    }
-
-    public void targetPoint(Supplier<Translation2d> point) {
-        reqShooterState = new TargetingPointShooterState(point);
-        reqTurretState = new TargetPointTurretState(point);
-    }
-
-    public void fixedTargetShooter(ShooterTarget target) {
-        if (!target.isLegal()) {
-            DriverStation.reportWarning("Illegal shooter target will be clamped", true);
-        }
-
-        reqShooterState = new FixedTargetShooterState(target.clampToLegalRange());
-    }
-
-    public void fixedAngleTurret(TurretAngle angle) {
-        if (!angle.isLegal()) {
-            DriverStation.reportWarning("Illegal turret target will be clamped", true);
-        }
-
-        reqTurretState = new FixedAngleTurretState(angle.clampToLegalRange());
-    }
-
-    public void stop() {
-        reqShooterState = new InactiveShooterState();
-        reqTurretState = new InactiveTurretState();
+        turret.get().set(duty);
     }
 
     public void stopTurret() {
-        reqTurretState = new InactiveTurretState();
+        if (turret.isEmpty()) return;
+
+        turret.get().stopMotor();
+    }
+
+    public boolean isTurretAtHomingLimit() {
+        if (turret.isEmpty()) return false;
+
+        SparkMax t = turret.get();
+        return t.getOutputCurrent() > TurretConfig.calibrationThresholdCurrent.in(Amps)
+                || Math.abs(t.getEncoder().getVelocity()) < TurretConfig.calibrationThresholdVel.in(RPM);
+    }
+
+    public void setAsTurretHomingPosition() {
+        if (turret.isEmpty()) return;
+
+        turret.get().getEncoder().setPosition(TurretConfig.calibrationEndPos.asMotorRotations());
+    }
+
+    public void setShooterVoltage(double volts) {
+        if (shooter.isEmpty() || (shooterThermalShutdown && volts != 0)) return;
+
+        shooter.get().setVoltage(volts);
+        lastShooterTarget = Double.NaN;
+    }
+
+    public void setShooterTarget(ShooterTarget trg) {
+        if (shooter.isEmpty() || shooterThermalShutdown) return;
+
+        if (!trg.isLegal()) trg.clampToLegalRange();
+
+        lastShooterTarget = trg.asShooterRPM();
+        shooter.get().getClosedLoopController().setSetpoint(lastShooterTarget, ControlType.kVelocity);
     }
 
     public void stopShooter() {
-        reqShooterState = new InactiveShooterState();
+        if (shooter.isEmpty()) return;
+
+        shooter.get().stopMotor();
     }
 
-    public void manualTurret(double duty) {
-        reqTurretState = new ManualControlTurretState(duty);
-    }
+    public boolean isShooterAtTarget() {
+        if (shooter.isEmpty()) return false;
+        if (Double.isNaN(lastShooterTarget)) return false;
 
-    public boolean getIsTurretCalibrated() {
-        return isTurretCalibrated;
+        double vel = shooter.get().getEncoder().getVelocity();
+        double upwardTol = ShooterConfig.upwardTolerance.asShooterRPM();
+        double downwardTol = ShooterConfig.downwardTolerance.asShooterRPM();
+
+        return vel <= lastShooterTarget + upwardTol && vel >= lastShooterTarget - downwardTol;
     }
 }

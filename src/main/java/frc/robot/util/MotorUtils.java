@@ -68,7 +68,9 @@ public class MotorUtils {
             }
         }
 
-        DriverStation.reportError(String.format("Failed to configure %s", motorName), false);
+        DriverStation.reportError(
+                String.format("Failed to configure %s (CAN %d)", motorName, motor.getDeviceId()), false);
+        AlertUtils.makeConfigFailAlert(motorName, motor.getDeviceId()).set(true);
         return false;
     }
 }

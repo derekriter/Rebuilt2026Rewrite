@@ -1,9 +1,9 @@
-package frc.robot.state;
+package frc.robot.brain;
 
 public enum TargetingMode {
     TARGETING_HUB,
     TARGETING_FZONE,
-    TARGETING_ARBITRARY_POINT,
-    IDLE,
+    FIXED_TARGET,
+    HOMING,
     DISABLED
 }

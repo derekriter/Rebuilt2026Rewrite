@@ -4,27 +4,16 @@
 
 package frc.robot;
 
+import frc.robot.commands.HomeLauncher;
+import frc.robot.subsystems.launcher.Launcher;
 import frc.robot.subsystems.swerve.Swerve;
 
 public final class RobotContainer {
 
-    private static boolean _hasCreatedInstance = false;
-    private static RobotContainer _inst = null;
+    public final Swerve swerve = new Swerve();
+    public final Launcher launcher = new Launcher();
 
-    public static RobotContainer instance() {
-        if (!_hasCreatedInstance) {
-            _hasCreatedInstance = true;
-            _inst = new RobotContainer();
-        } else if (_inst == null) {
-            throw new Error("Cannot access RobotContainer instance within its own constructor!");
-        }
+    public final HomeLauncher homeLauncherCmd = new HomeLauncher(launcher);
 
-        return _inst;
-    }
-
-    public final Swerve swerve;
-
-    private RobotContainer() {
-        swerve = new Swerve();
-    }
+    public RobotContainer() {}
 }

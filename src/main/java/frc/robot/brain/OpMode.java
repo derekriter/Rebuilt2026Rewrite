@@ -1,6 +1,6 @@
-package frc.robot.state;
+package frc.robot.brain;
 
-public enum RobotMode {
+public enum OpMode {
     DISABLED(false, false),
     TELEOP(true, true),
     AUTON(true, false),
@@ -9,7 +9,7 @@ public enum RobotMode {
     public final boolean enabled;
     public final boolean driverControlled;
 
-    private RobotMode(boolean _enabled, boolean _driverControlled) {
+    private OpMode(boolean _enabled, boolean _driverControlled) {
         this.enabled = _enabled;
         this.driverControlled = _driverControlled;
     }
