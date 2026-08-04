@@ -22,6 +22,7 @@ public class RobotState {
     public boolean isTurretHomed = false;
 
     public TargetingMode targetingMode = TargetingMode.DISABLED;
+    public boolean overrideTurret = false;
 
     public void copyFrom(RobotState ref) {
         opMode = ref.opMode;
@@ -40,5 +41,6 @@ public class RobotState {
         isTurretHomed = ref.isTurretHomed;
 
         targetingMode = ref.targetingMode;
+        overrideTurret = ref.overrideTurret;
     }
 }

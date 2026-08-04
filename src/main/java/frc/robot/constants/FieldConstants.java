@@ -5,7 +5,7 @@ import static edu.wpi.first.units.Units.Inches;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.measure.Distance;
 
-public class FieldConstants {
+public final class FieldConstants {
     // https://firstfrc.blob.core.windows.net/frc2026/FieldAssets/2026-field-dimension-dwgs.pdf
     public static final Translation2d redHubLoc = new Translation2d(Inches.of(651.22 - 182.11), Inches.of(158.84));
     public static final Translation2d blueHubLoc = new Translation2d(Inches.of(182.11), Inches.of(158.84));

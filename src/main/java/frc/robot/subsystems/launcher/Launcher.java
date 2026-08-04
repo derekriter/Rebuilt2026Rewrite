@@ -1,6 +1,7 @@
 package frc.robot.subsystems.launcher;
 
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.RPM;
 
 import com.revrobotics.PersistMode;
@@ -97,17 +98,40 @@ public final class Launcher extends SubsystemBase {
         } else {
             SparkMax t = turret.get();
             boolean connected = !t.getFaults().can;
-            double temp = t.getMotorTemperature();
 
-            boolean gettingToasty = temp >= 75;
-            boolean overheating = temp >= 80;
-            turretThermalShutdown = (overheating || turretThermalShutdown) && gettingToasty;
+            if (Overrides.disableTurretSafety) {
+                flags.turretOperational = true;
+            } else {
+                double temp = t.getMotorTemperature();
 
-            flags.turretOperational = connected && !turretThermalShutdown;
+                boolean gettingToasty = temp >= TurretConfig.tempWarnThreshold.in(Celsius);
+                boolean overheating = temp >= TurretConfig.thermalShutdownThreshold.in(Celsius);
+                turretThermalShutdown = (overheating || turretThermalShutdown) && gettingToasty;
+
+                flags.turretOperational = connected && !turretThermalShutdown;
+
+                turretTempWarnAlert.set(gettingToasty && !turretThermalShutdown);
+                turretThermalShutdownAlert.set(turretThermalShutdown);
+
+                if (turretThermalShutdown != turretThermalShutdownLast) {
+                    if (turretThermalShutdown) {
+                        DriverStation.reportError(
+                                String.format(
+                                        "Thermal shutdown triggered on %s (CAN %d)",
+                                        TurretConfig.motorName, TurretConfig.canID),
+                                false);
+
+                        stopTurret();
+                    } else {
+                        System.out.printf(
+                                "Thermal shutdown released on %s (CAN %d)", TurretConfig.motorName, TurretConfig.canID);
+                    }
+                }
+
+                turretThermalShutdownLast = turretThermalShutdown;
+            }
 
             turretDisconnectedAlert.set(!connected);
-            turretTempWarnAlert.set(gettingToasty && !turretThermalShutdown);
-            turretThermalShutdownAlert.set(turretThermalShutdown);
 
             if (connected != turretConnectedLast) {
                 if (connected) {
@@ -118,23 +142,8 @@ public final class Launcher extends SubsystemBase {
                             false);
                 }
             }
-            if (turretThermalShutdown != turretThermalShutdownLast) {
-                if (turretThermalShutdown) {
-                    DriverStation.reportError(
-                            String.format(
-                                    "Thermal shutdown triggered on %s (CAN %d)",
-                                    TurretConfig.motorName, TurretConfig.canID),
-                            false);
-
-                    stopTurret();
-                } else {
-                    System.out.printf(
-                            "Thermal shutdown released on %s (CAN %d)", TurretConfig.motorName, TurretConfig.canID);
-                }
-            }
 
             turretConnectedLast = connected;
-            turretThermalShutdownLast = turretThermalShutdown;
         }
 
         if (shooter.isEmpty()) {
@@ -142,18 +151,42 @@ public final class Launcher extends SubsystemBase {
         } else {
             SparkFlex s = shooter.get();
             boolean connected = !s.getFaults().can;
-            double temp = s.getMotorTemperature();
 
-            boolean gettingToasty = temp >= 70;
-            boolean overheating = temp >= 80;
-            shooterThermalShutdown = (overheating || shooterThermalShutdown) && gettingToasty;
+            if (Overrides.disableShooterSafety) {
+                flags.shooterOperational = true;
+            } else {
+                double temp = s.getMotorTemperature();
 
-            flags.shooterOperational = connected && !shooterThermalShutdown;
+                boolean gettingToasty = temp >= ShooterConfig.tempWarnThreshold.in(Celsius);
+                boolean overheating = temp >= ShooterConfig.thermalShutdownThreshold.in(Celsius);
+                shooterThermalShutdown = (overheating || shooterThermalShutdown) && gettingToasty;
+
+                flags.shooterOperational = connected && !shooterThermalShutdown;
+
+                shooterTempWarnAlert.set(gettingToasty && !shooterThermalShutdown);
+                shooterThermalShutdownAlert.set(shooterThermalShutdown);
+
+                if (shooterThermalShutdown != shooterThermalShutdownLast) {
+                    if (shooterThermalShutdown) {
+                        DriverStation.reportError(
+                                String.format(
+                                        "Thermal shutdown triggered on %s (CAN %d)",
+                                        ShooterConfig.motorName, ShooterConfig.canID),
+                                false);
+
+                        stopShooter();
+                    } else {
+                        System.out.printf(
+                                "Thermal shutdown released on %s (CAN %d)",
+                                ShooterConfig.motorName, ShooterConfig.canID);
+                    }
+                }
+
+                shooterThermalShutdownLast = shooterThermalShutdown;
+            }
             flags.shooterIsAtTarget = isShooterAtTarget();
 
             shooterDisconnectedAlert.set(!connected);
-            shooterTempWarnAlert.set(gettingToasty && !shooterThermalShutdown);
-            shooterThermalShutdownAlert.set(shooterThermalShutdown);
 
             if (connected != shooterConnectedLast) {
                 if (connected) {
@@ -165,23 +198,8 @@ public final class Launcher extends SubsystemBase {
                             false);
                 }
             }
-            if (shooterThermalShutdown != shooterThermalShutdownLast) {
-                if (shooterThermalShutdown) {
-                    DriverStation.reportError(
-                            String.format(
-                                    "Thermal shutdown triggered on %s (CAN %d)",
-                                    ShooterConfig.motorName, ShooterConfig.canID),
-                            false);
-
-                    stopShooter();
-                } else {
-                    System.out.printf(
-                            "Thermal shutdown released on %s (CAN %d)", ShooterConfig.motorName, ShooterConfig.canID);
-                }
-            }
 
             shooterConnectedLast = connected;
-            shooterThermalShutdownLast = shooterThermalShutdown;
         }
     }
 
@@ -210,14 +228,14 @@ public final class Launcher extends SubsystemBase {
         if (turret.isEmpty()) return false;
 
         SparkMax t = turret.get();
-        return t.getOutputCurrent() > TurretConfig.calibrationThresholdCurrent.in(Amps)
-                || Math.abs(t.getEncoder().getVelocity()) < TurretConfig.calibrationThresholdVel.in(RPM);
+        return t.getOutputCurrent() > TurretConfig.homingThresholdCurrent.in(Amps)
+                || Math.abs(t.getEncoder().getVelocity()) < TurretConfig.homingThresholdVel.in(RPM);
     }
 
     public void setAsTurretHomingPosition() {
         if (turret.isEmpty()) return;
 
-        turret.get().getEncoder().setPosition(TurretConfig.calibrationEndPos.asMotorRotations());
+        turret.get().getEncoder().setPosition(TurretConfig.homingEndPos.asMotorRotations());
     }
 
     public void setShooterVoltage(double volts) {

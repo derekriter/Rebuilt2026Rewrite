@@ -1,6 +1,7 @@
 package frc.robot.config;
 
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
@@ -13,6 +14,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
+import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Time;
 import frc.robot.subsystems.launcher.ShooterTarget;
 import frc.robot.subsystems.launcher.TurretAngle;
@@ -25,6 +27,8 @@ public final class LauncherConfig {
         public static final String motorName = "turretMotor";
 
         public static final SparkMaxConfig motorConfig;
+        public static final Temperature tempWarnThreshold = Celsius.of(75);
+        public static final Temperature thermalShutdownThreshold = Celsius.of(80);
 
         public static final double motorRotsPerMechRots = (46.713913 - -19.690401) / 0.5;
 
@@ -33,12 +37,12 @@ public final class LauncherConfig {
         public static final TurretAngle minLegal = TurretAngle.fromMechanismAngle(Degrees.of(-90));
         public static final TurretAngle breakAngle = TurretAngle.fromMechanismAngle(Degrees.of(225));
 
-        public static final double calibrationSpeed = -0.2;
-        public static final TurretAngle calibrationEndPos = TurretAngle.fromMotorRotations(-39.094849);
-        public static final Time calibrationEndDelay = Seconds.of(0.2);
-        public static final Current calibrationThresholdCurrent = Amps.of(20);
-        public static final AngularVelocity calibrationThresholdVel = RPM.of(1);
-        public static final Time calibrationTimeout = Seconds.of(5);
+        public static final double homingSpeed = -0.2;
+        public static final TurretAngle homingEndPos = TurretAngle.fromMotorRotations(-39.094849);
+        public static final Time homingMinRunTime = Seconds.of(0.2);
+        public static final Current homingThresholdCurrent = Amps.of(20);
+        public static final AngularVelocity homingThresholdVel = RPM.of(1);
+        public static final Time homingTimeout = Seconds.of(5);
 
         static {
             motorConfig = new SparkMaxConfig();
@@ -61,6 +65,8 @@ public final class LauncherConfig {
         public static final String motorName = "shooterMotor";
 
         public static final SparkFlexConfig motorConfig;
+        public static final Temperature tempWarnThreshold = Celsius.of(70);
+        public static final Temperature thermalShutdownThreshold = Celsius.of(80);
 
         public static final ShooterTarget upwardTolerance = ShooterTarget.fromShooterVelocity(RPM.of(100));
         public static final ShooterTarget downwardTolerance = ShooterTarget.fromShooterVelocity(RPM.of(100));

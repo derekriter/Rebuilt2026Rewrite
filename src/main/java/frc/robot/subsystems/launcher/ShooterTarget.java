@@ -21,8 +21,16 @@ public final class ShooterTarget {
         return new ShooterTarget(vel.mutableCopy());
     }
 
+    public static ShooterTarget fromShooterRPM(double rpm) {
+        return new ShooterTarget(RPM.mutable(rpm));
+    }
+
     public static ShooterTarget fromDistanceToTarget(Distance dist) {
         return new ShooterTarget(RPM.mutable(381 * dist.in(Meters) + 1614 + ShooterConfig.targetOffset.asShooterRPM()));
+    }
+
+    public static ShooterTarget fromMetersToTarget(double meters) {
+        return new ShooterTarget(RPM.mutable(381 * meters + 1614 + ShooterConfig.targetOffset.asShooterRPM()));
     }
 
     public AngularVelocity asShooterVelocity() {
@@ -52,5 +60,9 @@ public final class ShooterTarget {
                 MathUtil.clamp(
                         vel.in(RPM), ShooterConfig.minRealTarget.vel.in(RPM), ShooterConfig.maxRealTarget.vel.in(RPM)),
                 RPM);
+    }
+
+    public void add(ShooterTarget b) {
+        vel.mut_plus(b.vel);
     }
 }

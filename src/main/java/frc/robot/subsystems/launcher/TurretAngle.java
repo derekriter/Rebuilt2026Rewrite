@@ -20,6 +20,10 @@ public final class TurretAngle {
         return new TurretAngle(mechAngle.mutableCopy());
     }
 
+    public static TurretAngle fromMechanismDeg(double mechDeg) {
+        return new TurretAngle(Degrees.mutable(mechDeg));
+    }
+
     public static TurretAngle fromMotorAngle(Angle motorAngle) {
         return new TurretAngle(motorAngle.mutableCopy().mut_divide(TurretConfig.motorRotsPerMechRots));
     }

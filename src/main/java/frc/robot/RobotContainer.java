@@ -4,16 +4,52 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.XboxController;
+import frc.robot.commands.AimAtTarget;
 import frc.robot.commands.HomeLauncher;
+import frc.robot.config.ControllerConfig;
 import frc.robot.subsystems.launcher.Launcher;
 import frc.robot.subsystems.swerve.Swerve;
 
 public final class RobotContainer {
 
+    private static boolean _hasCreatedInstance = false;
+    private static RobotContainer _inst = null;
+
+    public static RobotContainer instance() {
+        if (!_hasCreatedInstance) {
+            _hasCreatedInstance = true;
+            _inst = new RobotContainer();
+        } else if (_inst == null) {
+            throw new Error("Cannot access RobotContainer instance within its own constructor!");
+        }
+
+        return _inst;
+    }
+
     public final Swerve swerve = new Swerve();
     public final Launcher launcher = new Launcher();
 
-    public final HomeLauncher homeLauncherCmd = new HomeLauncher(launcher);
+    public final XboxController driver1 = new XboxController(ControllerConfig.driver1Port);
+    public final XboxController driver2 = new XboxController(ControllerConfig.driver2Port);
 
-    public RobotContainer() {}
+    private RobotContainer() {}
+
+    public HomeLauncher homeLauncherCmd() {
+        return new HomeLauncher(launcher);
+    }
+
+    public AimAtTarget aimAtHubCmd() {
+        return AimAtTarget.atHub(launcher, swerve, Robot.instance().brain.state.isRed, () -> Robot.instance()
+                .brain
+                .state
+                .overrideTurret);
+    }
+
+    public AimAtTarget aimAtFZoneCmd() {
+        return AimAtTarget.atFZone(launcher, swerve, Robot.instance().brain.state.isRed, () -> Robot.instance()
+                .brain
+                .state
+                .overrideTurret);
+    }
 }

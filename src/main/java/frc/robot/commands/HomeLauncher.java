@@ -16,7 +16,7 @@ public class HomeLauncher extends Command {
 
     @Override
     public void initialize() {
-        launcher.setTurretDuty(TurretConfig.calibrationSpeed);
+        launcher.setTurretDuty(TurretConfig.homingSpeed);
         startTimer.restart();
     }
 
@@ -31,8 +31,8 @@ public class HomeLauncher extends Command {
 
     @Override
     public boolean isFinished() {
-        return startTimer.hasElapsed(TurretConfig.calibrationEndDelay) && launcher.isTurretAtHomingLimit()
-                || startTimer.hasElapsed(TurretConfig.calibrationTimeout);
+        return startTimer.hasElapsed(TurretConfig.homingMinRunTime) && launcher.isTurretAtHomingLimit()
+                || startTimer.hasElapsed(TurretConfig.homingTimeout);
     }
 
     @Override
