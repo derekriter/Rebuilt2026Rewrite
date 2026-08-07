@@ -4,61 +4,66 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import frc.robot.config.BuildConstants;
-import frc.robot.config.RobotMode;
-import org.littletonrobotics.junction.LogFileUtil;
-import org.littletonrobotics.junction.LoggedRobot;
-import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.networktables.NT4Publisher;
-import org.littletonrobotics.junction.wpilog.WPILOGReader;
-import org.littletonrobotics.junction.wpilog.WPILOGWriter;
+import frc.robot.brain.RobotBrain;
+import frc.robot.brain.RobotState;
+import frc.robot.util.ControllerUtil;
+import java.util.Optional;
 
-public final class Robot extends LoggedRobot {
+public final class Robot extends TimedRobot {
 
-    public Robot() {
-        initLogging();
-        RobotContainer.instance();
-    }
+    private static boolean _hasCreatedInstance = false;
+    private static Robot _inst = null;
 
-    private void initLogging() {
-        Logger.recordMetadata("ProjectName", BuildConstants.MAVEN_NAME);
-        Logger.recordMetadata("BuildData", BuildConstants.BUILD_DATE);
-        Logger.recordMetadata("GitSHA", BuildConstants.GIT_SHA);
-        Logger.recordMetadata("GitDate", BuildConstants.GIT_DATE);
-        Logger.recordMetadata("GitBranch", BuildConstants.GIT_BRANCH);
-        Logger.recordMetadata(
-                "GitDirty",
-                switch (BuildConstants.DIRTY) {
-                    case 0 -> "All changes commited";
-                    case 1 -> "Uncommited changes";
-                    default -> "UNKNOWN";
-                });
-
-        switch (RobotMode.currentMode) {
-            case REAL:
-                Logger.addDataReceiver(new WPILOGWriter());
-                Logger.addDataReceiver(new NT4Publisher());
-                break;
-            case SIM:
-                Logger.addDataReceiver(new NT4Publisher());
-                break;
-            case REPLAY:
-                setUseTiming(false); // run at max speed, no 50 Hz limit
-
-                String logPath = LogFileUtil.findReplayLog();
-                Logger.setReplaySource(new WPILOGReader(logPath));
-                Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")));
-                break;
+    public static Robot instance() {
+        if (!_hasCreatedInstance) {
+            _hasCreatedInstance = true;
+            _inst = new Robot();
+        } else if (_inst == null) {
+            throw new Error("Cannot access Robot instance within its own constructor!");
         }
 
-        Logger.start();
+        return _inst;
     }
+
+    public final RobotBrain brain;
+
+    private Robot() {
+        initLogging();
+
+        RobotContainer.instance();
+
+        brain = new RobotBrain();
+    }
+
+    private void initLogging() {}
 
     @Override
     public void robotPeriodic() {
+        brain.pollState();
+        brain.determineModes();
+        brain.runCommands();
+
+        /*
+         * Run command scheduler
+         * First runs subsystem periodics, then scheduled commands
+         */
         CommandScheduler.getInstance().run();
+        ControllerUtil.periodic(RobotContainer.instance().driver1, RobotContainer.instance().driver2);
+
+        // update lastState in brain
+        if (brain.lastState.isEmpty()) {
+            brain.lastState = Optional.of(new RobotState());
+        }
+        brain.lastState.get().copyFrom(brain.state);
     }
+
+    @Override
+    public void simulationInit() {}
+
+    @Override
+    public void simulationPeriodic() {}
 
     @Override
     public void disabledInit() {}
@@ -88,9 +93,7 @@ public final class Robot extends LoggedRobot {
     public void teleopExit() {}
 
     @Override
-    public void testInit() {
-        CommandScheduler.getInstance().cancelAll();
-    }
+    public void testInit() {}
 
     @Override
     public void testPeriodic() {}

@@ -4,45 +4,52 @@
 
 package frc.robot;
 
-import frc.robot.config.RobotMode;
+import edu.wpi.first.wpilibj.XboxController;
+import frc.robot.commands.AimAtTarget;
+import frc.robot.commands.HomeLauncher;
+import frc.robot.config.ControllerConfig;
 import frc.robot.subsystems.launcher.Launcher;
-import frc.robot.subsystems.launcher.shooter.IShooterIO;
-import frc.robot.subsystems.launcher.shooter.SimShooterIO;
-import frc.robot.subsystems.launcher.shooter.SparkFlexShooterIO;
-import frc.robot.subsystems.launcher.turret.ITurretIO;
-import frc.robot.subsystems.launcher.turret.SimTurretIO;
-import frc.robot.subsystems.launcher.turret.SparkMAXTurretIO;
 import frc.robot.subsystems.swerve.Swerve;
 
 public final class RobotContainer {
 
-    private static RobotContainer inst = null;
+    private static boolean _hasCreatedInstance = false;
+    private static RobotContainer _inst = null;
 
     public static RobotContainer instance() {
-        if (inst == null) {
-            inst = new RobotContainer();
+        if (!_hasCreatedInstance) {
+            _hasCreatedInstance = true;
+            _inst = new RobotContainer();
+        } else if (_inst == null) {
+            throw new Error("Cannot access RobotContainer instance within its own constructor!");
         }
-        return inst;
+
+        return _inst;
     }
 
-    public final Launcher launcher;
-    public final Swerve swerve;
+    public final Swerve swerve = new Swerve();
+    public final Launcher launcher = new Launcher();
 
-    private RobotContainer() {
-        switch (RobotMode.currentMode) {
-            case REAL:
-            default:
-                launcher = new Launcher(new SparkMAXTurretIO(), new SparkFlexShooterIO());
-                swerve = new Swerve();
-                break;
-            case SIM:
-                launcher = new Launcher(new SimTurretIO(), new SimShooterIO());
-                swerve = new Swerve();
-                break;
-            case REPLAY:
-                launcher = new Launcher(ITurretIO.blank, IShooterIO.blank);
-                swerve = new Swerve();
-                break;
-        }
+    public final XboxController driver1 = new XboxController(ControllerConfig.driver1Port);
+    public final XboxController driver2 = new XboxController(ControllerConfig.driver2Port);
+
+    private RobotContainer() {}
+
+    public HomeLauncher homeLauncherCmd() {
+        return new HomeLauncher(launcher);
+    }
+
+    public AimAtTarget aimAtHubCmd() {
+        return AimAtTarget.atHub(launcher, swerve, Robot.instance().brain.state.isRed, () -> Robot.instance()
+                .brain
+                .state
+                .overrideTurret);
+    }
+
+    public AimAtTarget aimAtFZoneCmd() {
+        return AimAtTarget.atFZone(launcher, swerve, Robot.instance().brain.state.isRed, () -> Robot.instance()
+                .brain
+                .state
+                .overrideTurret);
     }
 }
