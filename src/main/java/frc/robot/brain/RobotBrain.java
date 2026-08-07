@@ -84,6 +84,7 @@ public class RobotBrain {
         }
     }
 
+    @SuppressWarnings("unused")
     public void determineModes() {
         boolean shooterCanRun = !Overrides.disableShooter && state.launcherFlags.shooterOperational;
         boolean turretCanRun = !Overrides.disableTurret && state.launcherFlags.turretOperational;

@@ -11,11 +11,11 @@ import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import edu.wpi.first.wpilibj.Alert;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.config.LauncherConfig.ShooterConfig;
 import frc.robot.config.LauncherConfig.TurretConfig;
 import frc.robot.config.Overrides;
+import frc.robot.telemetry.Telemetry;
 import frc.robot.util.AlertUtils;
 import frc.robot.util.MotorUtils;
 import java.util.Optional;
@@ -115,7 +115,7 @@ public final class Launcher extends SubsystemBase {
 
                 if (turretThermalShutdown != turretThermalShutdownLast) {
                     if (turretThermalShutdown) {
-                        DriverStation.reportError(
+                        Telemetry.reportWarning(
                                 String.format(
                                         "Thermal shutdown triggered on %s (CAN %d)",
                                         TurretConfig.motorName, TurretConfig.canID),
@@ -123,8 +123,9 @@ public final class Launcher extends SubsystemBase {
 
                         stopTurret();
                     } else {
-                        System.out.printf(
-                                "Thermal shutdown released on %s (CAN %d)", TurretConfig.motorName, TurretConfig.canID);
+                        Telemetry.println(String.format(
+                                "Thermal shutdown released on %s (CAN %d)",
+                                TurretConfig.motorName, TurretConfig.canID));
                     }
                 }
 
@@ -135,9 +136,10 @@ public final class Launcher extends SubsystemBase {
 
             if (connected != turretConnectedLast) {
                 if (connected) {
-                    System.out.printf("Connected to %s (CAN %d)\n", TurretConfig.motorName, TurretConfig.canID);
+                    Telemetry.println(
+                            String.format("Connected to %s (CAN %d)\n", TurretConfig.motorName, TurretConfig.canID));
                 } else {
-                    DriverStation.reportError(
+                    Telemetry.reportWarning(
                             String.format("Lost connection to %s (CAN %d)", TurretConfig.motorName, TurretConfig.canID),
                             false);
                 }
@@ -168,7 +170,7 @@ public final class Launcher extends SubsystemBase {
 
                 if (shooterThermalShutdown != shooterThermalShutdownLast) {
                     if (shooterThermalShutdown) {
-                        DriverStation.reportError(
+                        Telemetry.reportWarning(
                                 String.format(
                                         "Thermal shutdown triggered on %s (CAN %d)",
                                         ShooterConfig.motorName, ShooterConfig.canID),
@@ -176,9 +178,9 @@ public final class Launcher extends SubsystemBase {
 
                         stopShooter();
                     } else {
-                        System.out.printf(
+                        Telemetry.println(String.format(
                                 "Thermal shutdown released on %s (CAN %d)",
-                                ShooterConfig.motorName, ShooterConfig.canID);
+                                ShooterConfig.motorName, ShooterConfig.canID));
                     }
                 }
 
@@ -190,9 +192,10 @@ public final class Launcher extends SubsystemBase {
 
             if (connected != shooterConnectedLast) {
                 if (connected) {
-                    System.out.printf("Connected to %s (CAN %d)\n", ShooterConfig.motorName, ShooterConfig.canID);
+                    Telemetry.println(
+                            String.format("Connected to %s (CAN %d)\n", ShooterConfig.motorName, ShooterConfig.canID));
                 } else {
-                    DriverStation.reportError(
+                    Telemetry.reportWarning(
                             String.format(
                                     "Lost connection to %s (CAN %d)", ShooterConfig.motorName, ShooterConfig.canID),
                             false);
