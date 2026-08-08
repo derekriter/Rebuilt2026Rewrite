@@ -9,8 +9,8 @@ import frc.robot.config.TelemetryConfig;
 import java.util.Arrays;
 
 public class RawWriter implements AutoCloseable {
-    private final RawPublisher ntPublisher;
-    private final RawLogEntry logEntry;
+    private RawPublisher ntPublisher;
+    private RawLogEntry logEntry;
     private final boolean includeNTInChecks;
     private final boolean disableChecks;
 
@@ -41,6 +41,8 @@ public class RawWriter implements AutoCloseable {
     }
 
     public void set(byte[] val) {
+        if (ntPublisher == null && logEntry == null) return;
+
         if (val == null) val = new byte[] {};
 
         if (!includeNTInChecks && ntPublisher != null) {
@@ -64,8 +66,16 @@ public class RawWriter implements AutoCloseable {
 
     @Override
     public void close() {
-        if (ntPublisher != null) {
-            ntPublisher.close();
-        }
+        // if (ntPublisher != null) {
+        //     // NetworkTableInstance.getDefault().flushLocal(); // ensure values are published before closing
+        // publisher
+        //     ntPublisher.close();
+        //     ntPublisher = null;
+        // }
+        // if(logEntry != null) {
+        //     logEntry.finish();
+        //     logEntry = null;
+        // }
+        logEntry = null;
     }
 }

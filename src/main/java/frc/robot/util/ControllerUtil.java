@@ -99,7 +99,7 @@ public class ControllerUtil {
 
     public static boolean scheduleControllerRumble(int id, double lStrength, double rStrength, double seconds) {
         if (id < 0 || id > 5) {
-            Telemetry.reportError("Invalid controller id");
+            Telemetry.reportError("Invalid controller id", true);
             return false;
         }
         if (seconds <= 0) {
@@ -123,7 +123,7 @@ public class ControllerUtil {
 
     public static void cancelControllerRumbles(int id) {
         if (id < 0 || id > 5) {
-            Telemetry.reportError("Invalid controller id");
+            Telemetry.reportError("Invalid controller id", true);
             return;
         }
 
@@ -132,7 +132,7 @@ public class ControllerUtil {
 
     public static int getActiveRumbleCount(int id) {
         if (id < 0 || id > 5) {
-            Telemetry.reportError("Invalid controller id");
+            Telemetry.reportError("Invalid controller id", true);
             return 0;
         }
 

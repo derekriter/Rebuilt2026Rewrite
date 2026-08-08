@@ -9,8 +9,8 @@ import frc.robot.config.TelemetryConfig;
 import java.util.Arrays;
 
 public class BoolArrayWriter implements AutoCloseable {
-    private final BooleanArrayPublisher ntPublisher;
-    private final BooleanArrayLogEntry logEntry;
+    private BooleanArrayPublisher ntPublisher;
+    private BooleanArrayLogEntry logEntry;
     private final boolean includeNTInChecks;
     private final boolean disableChecks;
 
@@ -41,6 +41,8 @@ public class BoolArrayWriter implements AutoCloseable {
     }
 
     public void set(boolean[] val) {
+        if (ntPublisher == null && logEntry == null) return;
+
         if (val == null) val = new boolean[] {};
 
         if (!includeNTInChecks && ntPublisher != null) {
@@ -64,8 +66,16 @@ public class BoolArrayWriter implements AutoCloseable {
 
     @Override
     public void close() {
-        if (ntPublisher != null) {
-            ntPublisher.close();
-        }
+        // if (ntPublisher != null) {
+        //     // NetworkTableInstance.getDefault().flushLocal(); // ensure values are published before closing
+        // publisher
+        //     ntPublisher.close();
+        //     ntPublisher = null;
+        // }
+        // if(logEntry != null) {
+        //     logEntry.finish();
+        //     logEntry = null;
+        // }
+        logEntry = null;
     }
 }

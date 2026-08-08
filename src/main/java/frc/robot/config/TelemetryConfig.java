@@ -7,7 +7,7 @@ import frc.robot.telemetry.TelemetryLevel;
 import java.util.Optional;
 
 public final class TelemetryConfig {
-    public static final String PREFIX = "[Telem] ";
+    public static final String PREFIX = "[telem] ";
     public static final TelemetryLevel telemetryLevel = TelemetryLevel.ENABLED;
     public static final boolean defaultIncludeNTInChecks = true;
     public static final boolean defaultDisableChecks = false;

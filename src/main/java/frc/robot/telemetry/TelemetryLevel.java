@@ -2,9 +2,9 @@ package frc.robot.telemetry;
 
 public enum TelemetryLevel {
     ENABLED(true, true),
-    NT_ONLY(true, false),
-    FILE_ONLY(false, true),
-    DISABLED(false, false);
+    NT_AND_CONSOLE(true, false),
+    FILE_AND_CONSOLE(false, true),
+    CONSOLE_ONLY(false, false);
 
     public final boolean logToNT;
     public final boolean logToFile;

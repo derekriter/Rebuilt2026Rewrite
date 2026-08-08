@@ -8,8 +8,8 @@ import edu.wpi.first.wpilibj.DataLogManager;
 import frc.robot.config.TelemetryConfig;
 
 public class StringWriter implements AutoCloseable {
-    private final StringPublisher ntPublisher;
-    private final StringLogEntry logEntry;
+    private StringPublisher ntPublisher;
+    private StringLogEntry logEntry;
     private final boolean includeNTInChecks;
     private final boolean disableChecks;
 
@@ -40,6 +40,8 @@ public class StringWriter implements AutoCloseable {
     }
 
     public void set(String val) {
+        if (ntPublisher == null && logEntry == null) return;
+
         if (val == null) val = "null";
 
         if (!includeNTInChecks && ntPublisher != null) {
@@ -63,8 +65,16 @@ public class StringWriter implements AutoCloseable {
 
     @Override
     public void close() {
-        if (ntPublisher != null) {
-            ntPublisher.close();
-        }
+        // if (ntPublisher != null) {
+        //     // NetworkTableInstance.getDefault().flushLocal(); // ensure values are published before closing
+        // publisher
+        //     ntPublisher.close();
+        //     ntPublisher = null;
+        // }
+        // if(logEntry != null) {
+        //     logEntry.finish();
+        //     logEntry = null;
+        // }
+        logEntry = null;
     }
 }

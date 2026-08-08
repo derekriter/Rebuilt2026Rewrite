@@ -32,10 +32,10 @@ public final class LauncherConfig {
 
         public static final double motorRotsPerMechRots = (46.713913 - -19.690401) / 0.5;
 
-        public static final TurretAngle forward = TurretAngle.fromMechanismAngle(Degrees.of(0));
+        public static final TurretAngle breakAngle = TurretAngle.fromMechanismAngle(Degrees.of(225));
         public static final TurretAngle maxLegal = TurretAngle.fromMechanismAngle(Degrees.of(180));
         public static final TurretAngle minLegal = TurretAngle.fromMechanismAngle(Degrees.of(-90));
-        public static final TurretAngle breakAngle = TurretAngle.fromMechanismAngle(Degrees.of(225));
+        public static final TurretAngle forward = TurretAngle.fromMechanismAngle(Degrees.of(0));
 
         public static final double homingSpeed = -0.2;
         public static final TurretAngle homingEndPos = TurretAngle.fromMotorRotations(-39.094849);
@@ -68,11 +68,11 @@ public final class LauncherConfig {
         public static final Temperature tempWarnThreshold = Celsius.of(70);
         public static final Temperature thermalShutdownThreshold = Celsius.of(80);
 
-        public static final ShooterTarget upwardTolerance = ShooterTarget.fromShooterVelocity(RPM.of(100));
-        public static final ShooterTarget downwardTolerance = ShooterTarget.fromShooterVelocity(RPM.of(100));
+        public static final ShooterTarget targetOffset = ShooterTarget.fromShooterVelocity(RPM.of(100));
         public static final ShooterTarget maxRealTarget = ShooterTarget.fromShooterVelocity(RPM.of(5300));
         public static final ShooterTarget minRealTarget = ShooterTarget.fromDistanceToTarget(Meters.of(1.96));
-        public static final ShooterTarget targetOffset = ShooterTarget.fromShooterVelocity(RPM.of(100));
+        public static final ShooterTarget upwardTolerance = ShooterTarget.fromShooterVelocity(RPM.of(100));
+        public static final ShooterTarget downwardTolerance = ShooterTarget.fromShooterVelocity(RPM.of(100));
 
         static {
             motorConfig = new SparkFlexConfig();

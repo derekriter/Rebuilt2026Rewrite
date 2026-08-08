@@ -40,7 +40,7 @@ public class MotorUtils {
             PersistMode persistMode,
             int maxTries) {
         if (motor == null) {
-            Telemetry.reportError("Cannot configure a null SparkBase");
+            Telemetry.reportError("Cannot configure a null SparkBase", true);
             return false;
         }
         if (motorName == null || motorName.isEmpty()) {
@@ -48,7 +48,7 @@ public class MotorUtils {
             motorName = "UNNAMED SparkMotor";
         }
         if (config == null) {
-            Telemetry.reportError("Cannot apply a null SparkBaseConfig");
+            Telemetry.reportError("Cannot apply a null SparkBaseConfig", true);
             return false;
         }
 
@@ -68,7 +68,7 @@ public class MotorUtils {
             }
         }
 
-        Telemetry.reportError(String.format("Failed to configure %s (CAN %d)", motorName, motor.getDeviceId()));
+        Telemetry.reportError(String.format("Failed to configure %s (CAN %d)", motorName, motor.getDeviceId()), true);
         AlertUtils.makeConfigFailAlert(motorName, motor.getDeviceId()).set(true);
         return false;
     }

@@ -4,12 +4,25 @@ import static edu.wpi.first.units.Units.Seconds;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.revrobotics.util.StatusLogger;
+import edu.wpi.first.hal.DriverStationJNI;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.networktables.BooleanArraySubscriber;
+import edu.wpi.first.networktables.BooleanSubscriber;
+import edu.wpi.first.networktables.DoubleArraySubscriber;
+import edu.wpi.first.networktables.DoubleSubscriber;
+import edu.wpi.first.networktables.FloatArraySubscriber;
+import edu.wpi.first.networktables.FloatSubscriber;
+import edu.wpi.first.networktables.IntegerArraySubscriber;
+import edu.wpi.first.networktables.IntegerSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.RawSubscriber;
+import edu.wpi.first.networktables.StringArraySubscriber;
+import edu.wpi.first.networktables.StringSubscriber;
 import edu.wpi.first.util.struct.Struct;
 import edu.wpi.first.util.struct.StructSerializable;
 import edu.wpi.first.wpilibj.Alert;
@@ -37,11 +50,10 @@ import frc.robot.telemetry.writer.StructWriter;
 import frc.robot.util.CloneOperation;
 import frc.robot.util.EqualityTest;
 import java.lang.reflect.Field;
+import java.util.Arrays;
 
 public class Telemetry {
 
-    // TODO: reader classes
-    // TODO: review messaging
     // TODO: add log metadata
 
     private static final Alert flashdriveNotRecognizedAlert =
@@ -86,10 +98,11 @@ public class Telemetry {
             DataLogManager.logNetworkTables(true);
             DriverStation.startDataLog(DataLogManager.getLog(), true);
 
-            try (StringWriter directoryWriter = makeStringWriter("Telem", "logDirectory");
+            try (StringWriter logDirectoryWriter = makeStringWriter("Telem", "logDirectory");
                     BoolWriter recognizedWriter = makeBoolWriter("Telem", "flashdriveRecognized")) {
                 String logDir = DataLogManager.getLogDir();
-                directoryWriter.set(logDir);
+
+                logDirectoryWriter.set(logDir);
 
                 boolean loggingToFlash =
                         logDir == null ? false : logDir.toLowerCase().startsWith("/u");
@@ -98,10 +111,16 @@ public class Telemetry {
             }
         }
 
-        if (TelemetryConfig.telemetryLevel.logToNT || TelemetryConfig.telemetryLevel.logToFile) {
-            println(TelemetryConfig.PREFIX + "Logging started");
-        } else {
-            println(TelemetryConfig.PREFIX + "Logging initialization done, logging is disabled");
+        try (StringWriter levelWriter = makeStringWriter("Telem", "telemetryLevel")) {
+            levelWriter.set(TelemetryConfig.telemetryLevel.name());
+        }
+
+        println(TelemetryConfig.PREFIX + "Telemetry initialization complete");
+        if (!TelemetryConfig.telemetryLevel.logToNT) {
+            reportWarning(TelemetryConfig.PREFIX + "NT telemetry is disabled!", false);
+        }
+        if (!TelemetryConfig.telemetryLevel.logToFile) {
+            reportWarning(TelemetryConfig.PREFIX + "Log telemetry is disabled!", false);
         }
         hasInited = true;
     }
@@ -125,124 +144,91 @@ public class Telemetry {
     /**
      * Report a warning and log it to the console
      */
-    public static void reportWarning(String msg, boolean printFullTrace) {
-        reportWarning(msg, generateStackTrace(Thread.currentThread().getStackTrace(), 2), printFullTrace);
+    public static void reportWarning(String msg, boolean printTrace) {
+        if (msg == null) msg = "null";
+
+        StackTraceElement[] trace = Thread.currentThread().getStackTrace();
+        if (printTrace) {
+            try {
+                trace = Arrays.copyOfRange(trace, 2, trace.length); // cut off the first two elements
+
+                DriverStation.reportWarning(msg, trace);
+            } catch (Exception e) {
+                println("Exception occurred while reporting warning with message: " + msg);
+                e.printStackTrace();
+            }
+        } else {
+            String locString;
+            try {
+                locString = trace[2].toString();
+
+                DriverStationJNI.sendError(false, 1, false, msg, locString, "", true);
+            } catch (Exception e) {
+                println("Exception occurred while reporting warning with message: " + msg);
+                e.printStackTrace();
+            }
+        }
     }
 
     /**
      * Report a warning and log it to the console
      */
-    public static void reportWarning(Throwable e, boolean printFullTrace) {
+    public static void reportWarning(Throwable e, boolean printTrace) {
         if (e == null) {
-            reportWarning("Unknown warning exception, attempted to log null Throwable", true);
+            reportError("Attempted to report a null Throwable as a warning", true);
         } else {
-            reportWarning(e.getMessage(), generateStackTrace(e.getStackTrace(), 0), printFullTrace);
-        }
-    }
-
-    private static void reportWarning(String msg, StackTrace trace, boolean printFullTrace) {
-        // safe because of short circuit logic evalutation
-        if (msg == null || msg.isEmpty()) msg = "No message provided";
-        if (trace == null) {
-            trace = new StackTrace();
-            trace.location = "Invalid StackTrace";
-            trace.trace = "Invalid StackTrace";
-        }
-        if (trace.location == null) {
-            trace.location = "Invalid StackTrace.location";
-        }
-        if (trace.trace == null) {
-            trace.trace = "Invalid StackTrace.trace";
-        }
-
-        StringBuilder builder = new StringBuilder();
-        builder.append("Warning at ");
-        builder.append(trace.location);
-        builder.append(": ");
-        builder.append(msg);
-
-        if (printFullTrace) {
-            builder.append('\n');
-            builder.append(trace.trace);
-        }
-
-        println(builder.toString());
-    }
-
-    /**
-     * Report an error and log it to the console
-     */
-    public static void reportError(String msg) {
-        reportError(msg, generateStackTrace(Thread.currentThread().getStackTrace(), 2));
-    }
-
-    /**
-     * Report an error and log it to the console
-     */
-    public static void reportError(Throwable e) {
-        if (e == null) {
-            reportError("Unknown error exception, attempted to log null Throwable");
-        } else {
-            reportError(e.getMessage(), generateStackTrace(e.getStackTrace(), 0));
-        }
-    }
-
-    private static void reportError(String msg, StackTrace trace) {
-        if (msg == null || msg.isEmpty()) msg = "No message provided";
-        if (trace == null) {
-            trace = new StackTrace();
-            trace.location = "Invalid StackTrace";
-            trace.trace = "Invalid StackTrace";
-        }
-        if (trace.location == null) {
-            trace.location = "Invalid StackTrace.location";
-        }
-        if (trace.trace == null) {
-            trace.trace = "Invalid StackTrace.trace";
-        }
-
-        StringBuilder builder = new StringBuilder();
-        builder.append("ERROR at ");
-        builder.append(trace.location);
-        builder.append(": ");
-        builder.append(msg);
-        builder.append('\n');
-        builder.append(trace.trace);
-
-        println(builder.toString());
-    }
-
-    private static class StackTrace {
-        public String location;
-        public String trace;
-    }
-
-    private static StackTrace generateStackTrace(StackTraceElement[] trace, int offset) {
-        // stole this code from DriverStation.class:494
-        String locString;
-        if (trace.length >= offset + 1) {
-            locString = trace[offset].toString();
-        } else {
-            locString = "";
-        }
-
-        StringBuilder traceString = new StringBuilder();
-        boolean haveLoc = false;
-        for (int i = offset; i < trace.length; i++) {
-            String loc = trace[i].toString();
-            traceString.append("\tat ").append(loc).append('\n');
-
-            // get first user function
-            if (!haveLoc && !loc.startsWith("edu.wpi.first")) {
-                locString = loc;
-                haveLoc = true;
+            String msg = "(" + e.getClass().getTypeName() + ") " + e.getMessage();
+            if (printTrace) {
+                DriverStation.reportWarning(msg, e.getStackTrace());
+            } else {
+                DriverStationJNI.sendError(false, 1, false, msg, e.getStackTrace()[0].toString(), "", true);
             }
         }
+    }
 
-        StackTrace result = new StackTrace();
-        result.location = locString;
-        result.trace = traceString.toString();
-        return result;
+    /**
+     * Report an error and log it to the console
+     */
+    public static void reportError(String msg, boolean printTrace) {
+        if (msg == null) msg = "null";
+
+        StackTraceElement[] trace = Thread.currentThread().getStackTrace();
+        if (printTrace) {
+            try {
+                trace = Arrays.copyOfRange(trace, 2, trace.length); // cut off the first two elements
+
+                DriverStation.reportError(msg, trace);
+            } catch (Exception e) {
+                println("Exception occurred while reporting warning with message: " + msg);
+                e.printStackTrace();
+            }
+        } else {
+            String locString;
+            try {
+                locString = trace[2].toString();
+
+                DriverStationJNI.sendError(true, 1, false, msg, locString, "", true);
+            } catch (Exception e) {
+                println("Exception occurred while reporting warning with message: " + msg);
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Report an error and log it to the console
+     */
+    public static void reportError(Throwable e, boolean printTrace) {
+        if (e == null) {
+            reportError("Attempted to report a null Throwable as an error", true);
+        } else {
+            String msg = "(" + e.getClass().getTypeName() + ") " + e.getMessage();
+            if (printTrace) {
+                DriverStation.reportError(msg, e.getStackTrace());
+            } else {
+                DriverStationJNI.sendError(true, 1, false, msg, e.getStackTrace()[0].toString(), "", true);
+            }
+        }
     }
 
     /*
@@ -279,6 +265,12 @@ public class Telemetry {
         return entry;
     }
 
+    public static BooleanArraySubscriber makeBoolArrayReader(String table, String name, boolean[] defaultValue) {
+        return NetworkTableInstance.getDefault()
+                .getBooleanArrayTopic(NetworkTable.normalizeKey(table + "/" + name))
+                .subscribe(defaultValue);
+    }
+
     /*
     boolean
     */
@@ -306,6 +298,12 @@ public class Telemetry {
         var entry = new BoolWriter(NetworkTable.normalizeKey(table + "/" + name), includeNTInChecks, disableChecks);
         entry.set(initialValue);
         return entry;
+    }
+
+    public static BooleanSubscriber makeBoolReader(String table, String name, boolean defaultValue) {
+        return NetworkTableInstance.getDefault()
+                .getBooleanTopic(NetworkTable.normalizeKey(table + "/" + name))
+                .subscribe(defaultValue);
     }
 
     /*
@@ -338,6 +336,12 @@ public class Telemetry {
         return entry;
     }
 
+    public static DoubleArraySubscriber makeDoubleArrayReader(String table, String name, double[] defaultValue) {
+        return NetworkTableInstance.getDefault()
+                .getDoubleArrayTopic(NetworkTable.normalizeKey(table + "/" + name))
+                .subscribe(defaultValue);
+    }
+
     /*
     double
     */
@@ -365,6 +369,12 @@ public class Telemetry {
         var entry = new DoubleWriter(NetworkTable.normalizeKey(table + "/" + name), includeNTInChecks, disableChecks);
         entry.set(initialValue);
         return entry;
+    }
+
+    public static DoubleSubscriber makeDoubleReader(String table, String name, double defaultValue) {
+        return NetworkTableInstance.getDefault()
+                .getDoubleTopic(NetworkTable.normalizeKey(table + "/" + name))
+                .subscribe(defaultValue);
     }
 
     /*
@@ -397,6 +407,12 @@ public class Telemetry {
         return entry;
     }
 
+    public static FloatArraySubscriber makeFloatArrayReader(String table, String name, float[] defaultValue) {
+        return NetworkTableInstance.getDefault()
+                .getFloatArrayTopic(NetworkTable.normalizeKey(table + "/" + name))
+                .subscribe(defaultValue);
+    }
+
     /*
     float
     */
@@ -424,6 +440,12 @@ public class Telemetry {
         var entry = new FloatWriter(NetworkTable.normalizeKey(table + "/" + name), includeNTInChecks, disableChecks);
         entry.set(initialValue);
         return entry;
+    }
+
+    public static FloatSubscriber makeFloatReader(String table, String name, float defaultValue) {
+        return NetworkTableInstance.getDefault()
+                .getFloatTopic(NetworkTable.normalizeKey(table + "/" + name))
+                .subscribe(defaultValue);
     }
 
     /*
@@ -456,6 +478,12 @@ public class Telemetry {
         return entry;
     }
 
+    public static IntegerArraySubscriber makeLongArrayReader(String table, String name, long[] defaultValue) {
+        return NetworkTableInstance.getDefault()
+                .getIntegerArrayTopic(NetworkTable.normalizeKey(table + "/" + name))
+                .subscribe(defaultValue);
+    }
+
     /*
     long
     */
@@ -483,6 +511,12 @@ public class Telemetry {
         var entry = new LongWriter(NetworkTable.normalizeKey(table + "/" + name), includeNTInChecks, disableChecks);
         entry.set(initialValue);
         return entry;
+    }
+
+    public static IntegerSubscriber makeLongReader(String table, String name, long defaultValue) {
+        return NetworkTableInstance.getDefault()
+                .getIntegerTopic(NetworkTable.normalizeKey(table + "/" + name))
+                .subscribe(defaultValue);
     }
 
     /*
@@ -526,6 +560,12 @@ public class Telemetry {
         return entry;
     }
 
+    public static RawSubscriber makeRawReader(String typeString, String table, String name, byte[] defaultValue) {
+        return NetworkTableInstance.getDefault()
+                .getRawTopic(NetworkTable.normalizeKey(table + "/" + name))
+                .subscribe(typeString, defaultValue);
+    }
+
     /*
     String[]
     */
@@ -556,6 +596,12 @@ public class Telemetry {
         return entry;
     }
 
+    public static StringArraySubscriber makeStringArrayReader(String table, String name, String[] defaultValue) {
+        return NetworkTableInstance.getDefault()
+                .getStringArrayTopic(NetworkTable.normalizeKey(table + "/" + name))
+                .subscribe(defaultValue);
+    }
+
     /*
     String
     */
@@ -583,6 +629,12 @@ public class Telemetry {
         var entry = new StringWriter(NetworkTable.normalizeKey(table + "/" + name), includeNTInChecks, disableChecks);
         entry.set(initialValue);
         return entry;
+    }
+
+    public static StringSubscriber makeStringReader(String table, String name, String defaultValue) {
+        return NetworkTableInstance.getDefault()
+                .getStringTopic(NetworkTable.normalizeKey(table + "/" + name))
+                .subscribe(defaultValue);
     }
 
     /*

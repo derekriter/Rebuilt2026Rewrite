@@ -12,8 +12,8 @@ import frc.robot.util.CloneOperation;
 import frc.robot.util.EqualityTest;
 
 public class StructWriter<T extends StructSerializable> implements AutoCloseable {
-    private final StructPublisher<T> ntPublisher;
-    private final StructLogEntry<T> logEntry;
+    private StructPublisher<T> ntPublisher;
+    private StructLogEntry<T> logEntry;
     private final EqualityTest<T> isEqual;
     private final CloneOperation<T> clone;
     private final boolean includeNTInChecks;
@@ -66,6 +66,8 @@ public class StructWriter<T extends StructSerializable> implements AutoCloseable
     }
 
     public void set(T val) {
+        if (ntPublisher == null && logEntry == null) return;
+
         if (val == null) val = nullFallback;
 
         if (!includeNTInChecks && ntPublisher != null) {
@@ -89,8 +91,16 @@ public class StructWriter<T extends StructSerializable> implements AutoCloseable
 
     @Override
     public void close() {
-        if (ntPublisher != null) {
-            ntPublisher.close();
-        }
+        // if (ntPublisher != null) {
+        //     // NetworkTableInstance.getDefault().flushLocal(); // ensure values are published before closing
+        // publisher
+        //     ntPublisher.close();
+        //     ntPublisher = null;
+        // }
+        // if(logEntry != null) {
+        //     logEntry.finish();
+        //     logEntry = null;
+        // }
+        logEntry = null;
     }
 }

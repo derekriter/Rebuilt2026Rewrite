@@ -137,7 +137,7 @@ public final class Launcher extends SubsystemBase {
             if (connected != turretConnectedLast) {
                 if (connected) {
                     Telemetry.println(
-                            String.format("Connected to %s (CAN %d)\n", TurretConfig.motorName, TurretConfig.canID));
+                            String.format("Connected to %s (CAN %d)", TurretConfig.motorName, TurretConfig.canID));
                 } else {
                     Telemetry.reportWarning(
                             String.format("Lost connection to %s (CAN %d)", TurretConfig.motorName, TurretConfig.canID),
@@ -193,7 +193,7 @@ public final class Launcher extends SubsystemBase {
             if (connected != shooterConnectedLast) {
                 if (connected) {
                     Telemetry.println(
-                            String.format("Connected to %s (CAN %d)\n", ShooterConfig.motorName, ShooterConfig.canID));
+                            String.format("Connected to %s (CAN %d)", ShooterConfig.motorName, ShooterConfig.canID));
                 } else {
                     Telemetry.reportWarning(
                             String.format(
