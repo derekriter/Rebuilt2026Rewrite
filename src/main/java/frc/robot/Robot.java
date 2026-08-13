@@ -41,6 +41,7 @@ public final class Robot extends TimedRobot {
     public void robotPeriodic() {
         brain.pollState();
         brain.determineModes();
+        RobotBrain.robotStateWriter.update(brain.state);
         brain.runCommands();
 
         /*

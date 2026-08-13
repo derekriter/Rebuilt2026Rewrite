@@ -12,9 +12,13 @@ import frc.robot.Robot;
 import frc.robot.RobotContainer;
 import frc.robot.config.ControllerConfig;
 import frc.robot.config.Overrides;
+import frc.robot.telemetry.Telemetry;
+import frc.robot.telemetry.writer.compound.RobotStateWriter;
 import java.util.Optional;
 
 public class RobotBrain {
+
+    public static final RobotStateWriter robotStateWriter = Telemetry.makeRobotStateWriter("RobotBrain", "robotState");
 
     public RobotState state;
     public Optional<RobotState> lastState;

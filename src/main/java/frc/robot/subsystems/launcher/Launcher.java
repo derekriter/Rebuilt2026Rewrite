@@ -16,16 +16,19 @@ import frc.robot.config.LauncherConfig.ShooterConfig;
 import frc.robot.config.LauncherConfig.TurretConfig;
 import frc.robot.config.Overrides;
 import frc.robot.telemetry.Telemetry;
+import frc.robot.telemetry.writer.compound.SubsystemWriter;
 import frc.robot.util.AlertUtils;
 import frc.robot.util.MotorUtils;
 import java.util.Optional;
 
 public final class Launcher extends SubsystemBase {
 
+    private SubsystemWriter<Launcher> subsystemWriter = Telemetry.makeSubsystemWriter(this, "/");
+
     // ===Turret===
     private Optional<SparkMax> turret;
 
-    private final Alert
+    private static final Alert
             turretDisconnectedAlert = AlertUtils.makeDisconnectAlert(TurretConfig.motorName, TurretConfig.canID),
             turretTempWarnAlert = AlertUtils.makeTempWarnAlert(TurretConfig.motorName, TurretConfig.canID),
             turretThermalShutdownAlert =
@@ -38,7 +41,7 @@ public final class Launcher extends SubsystemBase {
     // ===Shooter===
     private Optional<SparkFlex> shooter;
 
-    private final Alert
+    private static final Alert
             shooterDisconnectedAlert = AlertUtils.makeDisconnectAlert(ShooterConfig.motorName, ShooterConfig.canID),
             shooterTempWarnAlert = AlertUtils.makeTempWarnAlert(ShooterConfig.motorName, ShooterConfig.canID),
             shooterThermalShutdownAlert =
@@ -90,7 +93,9 @@ public final class Launcher extends SubsystemBase {
     }
 
     @Override
-    public void periodic() {}
+    public void periodic() {
+        subsystemWriter.update();
+    }
 
     public void pollFlags(LauncherFlags flags) {
         if (turret.isEmpty()) {

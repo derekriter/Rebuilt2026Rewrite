@@ -2,10 +2,12 @@ package frc.robot.telemetry.writer;
 
 import edu.wpi.first.networktables.IntegerPublisher;
 import edu.wpi.first.networktables.IntegerTopic;
+import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.util.datalog.IntegerLogEntry;
 import edu.wpi.first.wpilibj.DataLogManager;
 import frc.robot.config.TelemetryConfig;
+import frc.robot.telemetry.Telemetry;
 
 public class LongWriter implements AutoCloseable {
     private IntegerPublisher ntPublisher;
@@ -19,16 +21,24 @@ public class LongWriter implements AutoCloseable {
     /**
      * DO NOT USE OUTSIDE Telemetry.java!!!
      */
-    public LongWriter(String key, boolean _includeNTInChecks, boolean _disableChecks) {
+    public LongWriter(String key, String unit, boolean _includeNTInChecks, boolean _disableChecks) {
         if (TelemetryConfig.telemetryLevel.logToNT) {
             IntegerTopic ntTopic = NetworkTableInstance.getDefault().getIntegerTopic(key);
             ntPublisher = ntTopic.publish();
             logEntry = null;
+
+            if (unit != null) {
+                try {
+                    ntTopic.setProperty("unit", '"' + unit + '"');
+                } catch (IllegalArgumentException e) {
+                    Telemetry.reportWarning(e, true);
+                }
+            }
         } else {
             ntPublisher = null;
 
             if (TelemetryConfig.telemetryLevel.logToFile) {
-                logEntry = new IntegerLogEntry(DataLogManager.getLog(), key);
+                logEntry = new IntegerLogEntry(DataLogManager.getLog(), NetworkTable.normalizeKey("NT:/" + key, false));
             } else {
                 logEntry = null;
             }

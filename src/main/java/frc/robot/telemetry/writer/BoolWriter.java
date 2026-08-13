@@ -2,10 +2,12 @@ package frc.robot.telemetry.writer;
 
 import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.BooleanTopic;
+import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.util.datalog.BooleanLogEntry;
 import edu.wpi.first.wpilibj.DataLogManager;
 import frc.robot.config.TelemetryConfig;
+import frc.robot.telemetry.Telemetry;
 
 public class BoolWriter implements AutoCloseable {
     private BooleanPublisher ntPublisher;
@@ -19,16 +21,24 @@ public class BoolWriter implements AutoCloseable {
     /**
      * DO NOT USE OUTSIDE Telemetry.java!!!
      */
-    public BoolWriter(String key, boolean _includeNTInChecks, boolean _disableChecks) {
+    public BoolWriter(String key, String unit, boolean _includeNTInChecks, boolean _disableChecks) {
         if (TelemetryConfig.telemetryLevel.logToNT) {
             BooleanTopic ntTopic = NetworkTableInstance.getDefault().getBooleanTopic(key);
             ntPublisher = ntTopic.publish();
             logEntry = null;
+
+            if (unit != null) {
+                try {
+                    ntTopic.setProperty("unit", '"' + unit + '"');
+                } catch (IllegalArgumentException e) {
+                    Telemetry.reportWarning(e, true);
+                }
+            }
         } else {
             ntPublisher = null;
 
             if (TelemetryConfig.telemetryLevel.logToFile) {
-                logEntry = new BooleanLogEntry(DataLogManager.getLog(), key);
+                logEntry = new BooleanLogEntry(DataLogManager.getLog(), NetworkTable.normalizeKey("NT:/" + key, false));
             } else {
                 logEntry = null;
             }

@@ -2,10 +2,12 @@ package frc.robot.telemetry.writer;
 
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.DoubleTopic;
+import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.util.datalog.DoubleLogEntry;
 import edu.wpi.first.wpilibj.DataLogManager;
 import frc.robot.config.TelemetryConfig;
+import frc.robot.telemetry.Telemetry;
 
 public class DoubleWriter implements AutoCloseable {
     private DoublePublisher ntPublisher;
@@ -19,16 +21,24 @@ public class DoubleWriter implements AutoCloseable {
     /**
      * DO NOT USE OUTSIDE Telemetry.java!!!
      */
-    public DoubleWriter(String key, boolean _includeNTInChecks, boolean _disableChecks) {
+    public DoubleWriter(String key, String unit, boolean _includeNTInChecks, boolean _disableChecks) {
         if (TelemetryConfig.telemetryLevel.logToNT) {
             DoubleTopic ntTopic = NetworkTableInstance.getDefault().getDoubleTopic(key);
             ntPublisher = ntTopic.publish();
             logEntry = null;
+
+            if (unit != null) {
+                try {
+                    ntTopic.setProperty("unit", '"' + unit + '"');
+                } catch (IllegalArgumentException e) {
+                    Telemetry.reportWarning(e, true);
+                }
+            }
         } else {
             ntPublisher = null;
 
             if (TelemetryConfig.telemetryLevel.logToFile) {
-                logEntry = new DoubleLogEntry(DataLogManager.getLog(), key);
+                logEntry = new DoubleLogEntry(DataLogManager.getLog(), NetworkTable.normalizeKey("NT:/" + key, false));
             } else {
                 logEntry = null;
             }
