@@ -133,7 +133,7 @@ tasks.withType(JavaCompile) {
     options.compilerArgs.add '-XDstringConcat=inline'
 }
 
-def dateTimeFormat = "yyyy-MM-dd HH:mm:ss"; //this format is ideal for sorting
+def dateTimeFormat = "dd MMM yyyy, hh:mm:ss a";
 
 // Create version file
 project.compileJava.dependsOn(createVersionFile)

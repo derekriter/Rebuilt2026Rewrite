@@ -40,8 +40,8 @@ public class RawWriter implements AutoCloseable {
         disableChecks = _disableChecks;
     }
 
-    public void set(byte[] val) {
-        if (ntPublisher == null && logEntry == null) return;
+    public boolean set(byte[] val) {
+        if (ntPublisher == null && logEntry == null) return false;
 
         if (val == null) val = new byte[] {};
 
@@ -49,7 +49,7 @@ public class RawWriter implements AutoCloseable {
             ntPublisher.set(val);
         }
 
-        if (!disableChecks && hasValue && Arrays.equals(val, currValue)) return;
+        if (!disableChecks && hasValue && Arrays.equals(val, currValue)) return false;
 
         if (includeNTInChecks && ntPublisher != null) {
             ntPublisher.set(val);
@@ -62,6 +62,8 @@ public class RawWriter implements AutoCloseable {
             currValue = val.clone();
             hasValue = true;
         }
+
+        return true;
     }
 
     @Override

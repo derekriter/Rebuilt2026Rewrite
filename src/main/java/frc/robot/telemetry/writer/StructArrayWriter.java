@@ -65,8 +65,8 @@ public class StructArrayWriter<T extends StructSerializable> implements AutoClos
         nullFallback = _nullFallback;
     }
 
-    public void set(T[] val) {
-        if (ntPublisher == null && logEntry == null) return;
+    public boolean set(T[] val) {
+        if (ntPublisher == null && logEntry == null) return false;
 
         if (val == null) val = nullFallback;
 
@@ -74,7 +74,7 @@ public class StructArrayWriter<T extends StructSerializable> implements AutoClos
             ntPublisher.set(val);
         }
 
-        if (!disableChecks && hasValue && isEqual != null && isEqual.test(val, currValue)) return;
+        if (!disableChecks && hasValue && isEqual != null && isEqual.test(val, currValue)) return false;
 
         if (includeNTInChecks && ntPublisher != null) {
             ntPublisher.set(val);
@@ -87,6 +87,8 @@ public class StructArrayWriter<T extends StructSerializable> implements AutoClos
             currValue = clone.clone(val);
             hasValue = true;
         }
+
+        return true;
     }
 
     @Override

@@ -39,8 +39,8 @@ public class StringWriter implements AutoCloseable {
         disableChecks = _disableChecks;
     }
 
-    public void set(String val) {
-        if (ntPublisher == null && logEntry == null) return;
+    public boolean set(String val) {
+        if (ntPublisher == null && logEntry == null) return false;
 
         if (val == null) val = "null";
 
@@ -48,7 +48,7 @@ public class StringWriter implements AutoCloseable {
             ntPublisher.set(val);
         }
 
-        if (!disableChecks && hasValue && val.equals(currValue)) return;
+        if (!disableChecks && hasValue && val.equals(currValue)) return false;
 
         if (includeNTInChecks && ntPublisher != null) {
             ntPublisher.set(val);
@@ -61,6 +61,8 @@ public class StringWriter implements AutoCloseable {
             currValue = val;
             hasValue = true;
         }
+
+        return true;
     }
 
     @Override

@@ -34,6 +34,7 @@ import edu.wpi.first.wpilibj.Watchdog;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.Robot;
 import frc.robot.config.TelemetryConfig;
+import frc.robot.constants.BuildConstants;
 import frc.robot.telemetry.writer.BoolArrayWriter;
 import frc.robot.telemetry.writer.BoolWriter;
 import frc.robot.telemetry.writer.DoubleArrayWriter;
@@ -50,11 +51,14 @@ import frc.robot.telemetry.writer.StructWriter;
 import frc.robot.util.CloneOperation;
 import frc.robot.util.EqualityTest;
 import java.lang.reflect.Field;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.TimeZone;
 
 public class Telemetry {
 
-    // TODO: add log metadata
+    // TODO: hardware and class writers
 
     private static final Alert flashdriveNotRecognizedAlert =
             new Alert("Logging flashdrive not recognized", AlertType.kError);
@@ -98,6 +102,7 @@ public class Telemetry {
             DataLogManager.logNetworkTables(true);
             DriverStation.startDataLog(DataLogManager.getLog(), true);
 
+            // diagnostics
             try (StringWriter logDirectoryWriter = makeStringWriter("Telem", "logDirectory");
                     BoolWriter recognizedWriter = makeBoolWriter("Telem", "flashdriveRecognized")) {
                 String logDir = DataLogManager.getLogDir();
@@ -110,6 +115,45 @@ public class Telemetry {
                 flashdriveNotRecognizedAlert.set(!loggingToFlash);
             }
         }
+
+        // metadata
+        makeStringWriter(
+                        "Metadata",
+                        "projectName",
+                        BuildConstants.MAVEN_NAME == null ? "null" : BuildConstants.MAVEN_NAME)
+                .close();
+        makeStringWriter(
+                        "Metadata", "buildDate", BuildConstants.BUILD_DATE == null ? "null" : BuildConstants.BUILD_DATE)
+                .close();
+        makeStringWriter("Metadata", "commitSHA", BuildConstants.GIT_SHA == null ? "null" : BuildConstants.GIT_SHA)
+                .close();
+        makeStringWriter("Metadata", "commitDate", BuildConstants.GIT_DATE == null ? "null" : BuildConstants.GIT_DATE)
+                .close();
+        makeStringWriter(
+                        "Metadata",
+                        "commitBranch",
+                        BuildConstants.GIT_BRANCH == null ? "null" : BuildConstants.GIT_BRANCH)
+                .close();
+        makeStringWriter(
+                        "Metadata",
+                        "gitDirty",
+                        switch (BuildConstants.DIRTY) {
+                            case 0 -> "clean";
+                            case 1 -> "dirty";
+                            default -> "Unknown";
+                        })
+                .close();
+        makeStringWriter("Metadata", "runtimeType", Robot.getRuntimeType().toString())
+                .close();
+        makeStringWriter(
+                        "Metadata",
+                        "initDate",
+                        new SimpleDateFormat("dd MMM yyyy, hh:mm:ss a")
+                                .format(Calendar.getInstance(TimeZone.getTimeZone("America/Detroit"))
+                                        .getTime()))
+                .close();
+        makeStringWriter("Metadata", "telemetryLevel", TelemetryConfig.telemetryLevel.name())
+                .close();
 
         try (StringWriter levelWriter = makeStringWriter("Telem", "telemetryLevel")) {
             levelWriter.set(TelemetryConfig.telemetryLevel.name());
@@ -127,6 +171,7 @@ public class Telemetry {
 
     /**
      * Use instead of System.out.println
+     * USE LIGHTLY! Do not use this in any periodic calls, as println can be very expensive
      */
     public static void println(String msg) {
         // if (msg == null) {
@@ -259,8 +304,7 @@ public class Telemetry {
 
     public static BoolArrayWriter makeBoolArrayWriterEx(
             String table, String name, boolean[] initialValue, boolean includeNTInChecks, boolean disableChecks) {
-        var entry =
-                new BoolArrayWriter(NetworkTable.normalizeKey(table + "/" + name), includeNTInChecks, disableChecks);
+        var entry = makeBoolArrayWriterEx(table, name, includeNTInChecks, disableChecks);
         entry.set(initialValue);
         return entry;
     }
@@ -295,7 +339,7 @@ public class Telemetry {
 
     public static BoolWriter makeBoolWriterEx(
             String table, String name, boolean initialValue, boolean includeNTInChecks, boolean disableChecks) {
-        var entry = new BoolWriter(NetworkTable.normalizeKey(table + "/" + name), includeNTInChecks, disableChecks);
+        var entry = makeBoolWriterEx(table, name, includeNTInChecks, disableChecks);
         entry.set(initialValue);
         return entry;
     }
@@ -330,8 +374,7 @@ public class Telemetry {
 
     public static DoubleArrayWriter makeDoubleArrayWriterEx(
             String table, String name, double[] initialValue, boolean includeNTInChecks, boolean disableChecks) {
-        var entry =
-                new DoubleArrayWriter(NetworkTable.normalizeKey(table + "/" + name), includeNTInChecks, disableChecks);
+        var entry = makeDoubleArrayWriterEx(table, name, includeNTInChecks, disableChecks);
         entry.set(initialValue);
         return entry;
     }
@@ -366,7 +409,7 @@ public class Telemetry {
 
     public static DoubleWriter makeDoubleWriterEx(
             String table, String name, double initialValue, boolean includeNTInChecks, boolean disableChecks) {
-        var entry = new DoubleWriter(NetworkTable.normalizeKey(table + "/" + name), includeNTInChecks, disableChecks);
+        var entry = makeDoubleWriterEx(table, name, includeNTInChecks, disableChecks);
         entry.set(initialValue);
         return entry;
     }
@@ -401,8 +444,7 @@ public class Telemetry {
 
     public static FloatArrayWriter makeFloatArrayWriterEx(
             String table, String name, float[] initialValue, boolean includeNTInChecks, boolean disableChecks) {
-        var entry =
-                new FloatArrayWriter(NetworkTable.normalizeKey(table + "/" + name), includeNTInChecks, disableChecks);
+        var entry = makeFloatArrayWriterEx(table, name, includeNTInChecks, disableChecks);
         entry.set(initialValue);
         return entry;
     }
@@ -437,7 +479,7 @@ public class Telemetry {
 
     public static FloatWriter makeFloatWriterEx(
             String table, String name, float initialValue, boolean includeNTInChecks, boolean disableChecks) {
-        var entry = new FloatWriter(NetworkTable.normalizeKey(table + "/" + name), includeNTInChecks, disableChecks);
+        var entry = makeFloatWriterEx(table, name, includeNTInChecks, disableChecks);
         entry.set(initialValue);
         return entry;
     }
@@ -472,8 +514,7 @@ public class Telemetry {
 
     public static LongArrayWriter makeLongArrayWriterEx(
             String table, String name, long[] initialValue, boolean includeNTInChecks, boolean disableChecks) {
-        var entry =
-                new LongArrayWriter(NetworkTable.normalizeKey(table + "/" + name), includeNTInChecks, disableChecks);
+        var entry = makeLongArrayWriterEx(table, name, includeNTInChecks, disableChecks);
         entry.set(initialValue);
         return entry;
     }
@@ -508,7 +549,7 @@ public class Telemetry {
 
     public static LongWriter makeLongWriterEx(
             String table, String name, long initialValue, boolean includeNTInChecks, boolean disableChecks) {
-        var entry = new LongWriter(NetworkTable.normalizeKey(table + "/" + name), includeNTInChecks, disableChecks);
+        var entry = makeLongWriterEx(table, name, includeNTInChecks, disableChecks);
         entry.set(initialValue);
         return entry;
     }
@@ -554,8 +595,7 @@ public class Telemetry {
             byte[] initialValue,
             boolean includeNTInChecks,
             boolean disableChecks) {
-        var entry = new RawWriter(
-                typeString, NetworkTable.normalizeKey(table + "/" + name), includeNTInChecks, disableChecks);
+        var entry = makeRawWriterEx(typeString, table, name, includeNTInChecks, disableChecks);
         entry.set(initialValue);
         return entry;
     }
@@ -590,8 +630,7 @@ public class Telemetry {
 
     public static StringArrayWriter makeStringArrayWriterEx(
             String table, String name, String[] initialValue, boolean includeNTInChecks, boolean disableChecks) {
-        var entry =
-                new StringArrayWriter(NetworkTable.normalizeKey(table + "/" + name), includeNTInChecks, disableChecks);
+        var entry = makeStringArrayWriterEx(table, name, includeNTInChecks, disableChecks);
         entry.set(initialValue);
         return entry;
     }
@@ -626,7 +665,7 @@ public class Telemetry {
 
     public static StringWriter makeStringWriterEx(
             String table, String name, String initialValue, boolean includeNTInChecks, boolean disableChecks) {
-        var entry = new StringWriter(NetworkTable.normalizeKey(table + "/" + name), includeNTInChecks, disableChecks);
+        var entry = makeStringWriterEx(table, name, includeNTInChecks, disableChecks);
         entry.set(initialValue);
         return entry;
     }

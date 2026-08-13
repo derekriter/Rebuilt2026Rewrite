@@ -40,8 +40,8 @@ public class LongArrayWriter implements AutoCloseable {
         disableChecks = _disableChecks;
     }
 
-    public void set(long[] val) {
-        if (ntPublisher == null && logEntry == null) return;
+    public boolean set(long[] val) {
+        if (ntPublisher == null && logEntry == null) return false;
 
         if (val == null) val = new long[] {};
 
@@ -49,7 +49,7 @@ public class LongArrayWriter implements AutoCloseable {
             ntPublisher.set(val);
         }
 
-        if (!disableChecks && hasValue && Arrays.equals(val, currValue)) return;
+        if (!disableChecks && hasValue && Arrays.equals(val, currValue)) return false;
 
         if (includeNTInChecks && ntPublisher != null) {
             ntPublisher.set(val);
@@ -62,6 +62,8 @@ public class LongArrayWriter implements AutoCloseable {
             currValue = val.clone();
             hasValue = true;
         }
+
+        return true;
     }
 
     @Override

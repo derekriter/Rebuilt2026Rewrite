@@ -39,14 +39,14 @@ public class BoolWriter implements AutoCloseable {
         disableChecks = _disableChecks;
     }
 
-    public void set(boolean val) {
-        if (ntPublisher == null && logEntry == null) return;
+    public boolean set(boolean val) {
+        if (ntPublisher == null && logEntry == null) return false;
 
         if (!includeNTInChecks && ntPublisher != null) {
             ntPublisher.set(val);
         }
 
-        if (!disableChecks && hasValue && val == currValue) return;
+        if (!disableChecks && hasValue && val == currValue) return false;
 
         if (includeNTInChecks && ntPublisher != null) {
             ntPublisher.set(val);
@@ -59,6 +59,8 @@ public class BoolWriter implements AutoCloseable {
             currValue = val;
             hasValue = true;
         }
+
+        return true;
     }
 
     @Override
