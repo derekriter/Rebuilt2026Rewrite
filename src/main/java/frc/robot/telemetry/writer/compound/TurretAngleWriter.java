@@ -25,7 +25,7 @@ public class TurretAngleWriter implements AutoCloseable {
         mechDegWriter = Telemetry.makeDoubleWriterEx(
                 table, "mechDeg", TelemetryUnits.degrees, includeNTInChecks, disableChecks);
         isWrappedWriter = Telemetry.makeBoolWriterEx(table, "isWrapped", null, includeNTInChecks, disableChecks);
-        isLegalWriter = Telemetry.makeBoolWriterEx(table, "isLegel", null, includeNTInChecks, disableChecks);
+        isLegalWriter = Telemetry.makeBoolWriterEx(table, "isLegal", null, includeNTInChecks, disableChecks);
 
         nullFallback = _nullFallback;
     }

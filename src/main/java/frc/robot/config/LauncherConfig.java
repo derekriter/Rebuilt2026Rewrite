@@ -21,9 +21,9 @@ import frc.robot.subsystems.launcher.TurretAngle;
 
 public final class LauncherConfig {
     public static final class TurretConfig {
-
         public static final String systemName = "turret";
         public static final int canID = 15;
+        public static final int channelID = 15;
         public static final String motorName = "turretMotor";
 
         public static final SparkMaxConfig motorConfig;
@@ -62,6 +62,7 @@ public final class LauncherConfig {
     public static final class ShooterConfig {
         public static final String systemName = "shooter";
         public static final int canID = 4;
+        public static final int channelID = 4;
         public static final String motorName = "shooterMotor";
 
         public static final SparkFlexConfig motorConfig;

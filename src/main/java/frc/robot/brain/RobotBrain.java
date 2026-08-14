@@ -72,6 +72,7 @@ public class RobotBrain {
             state.timeLeftInPhase.mut_replace(state.phase.getTimeRemaining(state.modeTime));
         }
 
+        RobotContainer.instance().pdh.update();
         RobotContainer.instance().launcher.report(state.launcherReport);
 
         boolean driver2IsMovingJoysticks =

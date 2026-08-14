@@ -18,6 +18,7 @@ public class LongArrayWriter implements AutoCloseable {
 
     private boolean hasValue;
     private long[] currValue;
+    private static final long[] nullFallback = new long[] {};
 
     /**
      * DO NOT USE OUTSIDE Telemetry.java!!!
@@ -54,7 +55,7 @@ public class LongArrayWriter implements AutoCloseable {
     public boolean set(long[] val) {
         if (ntPublisher == null && logEntry == null) return false;
 
-        if (val == null) val = new long[] {};
+        if (val == null) val = nullFallback;
 
         if (!includeNTInChecks && ntPublisher != null) {
             ntPublisher.set(val);

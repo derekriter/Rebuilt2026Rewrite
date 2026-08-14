@@ -4,11 +4,11 @@
 
 package frc.robot;
 
-import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.commands.AimAtTarget;
 import frc.robot.commands.HomeLauncher;
 import frc.robot.config.ControllerConfig;
+import frc.robot.pdh.PDH;
 import frc.robot.subsystems.launcher.Launcher;
 import frc.robot.subsystems.swerve.Swerve;
 
@@ -28,8 +28,7 @@ public final class RobotContainer {
         return _inst;
     }
 
-    // TODO: telemeterize PDP
-    public final PowerDistribution pdp = new PowerDistribution();
+    public final PDH pdh = new PDH();
 
     public final Swerve swerve = new Swerve();
     public final Launcher launcher = new Launcher();

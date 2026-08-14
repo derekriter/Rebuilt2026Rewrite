@@ -18,6 +18,7 @@ public class RawWriter implements AutoCloseable {
 
     private boolean hasValue;
     private byte[] currValue;
+    private final byte[] nullFallback = new byte[] {};
 
     /**
      * DO NOT USE OUTSIDE Telemetry.java!!!
@@ -53,7 +54,7 @@ public class RawWriter implements AutoCloseable {
     public boolean set(byte[] val) {
         if (ntPublisher == null && logEntry == null) return false;
 
-        if (val == null) val = new byte[] {};
+        if (val == null) val = nullFallback;
 
         if (!includeNTInChecks && ntPublisher != null) {
             ntPublisher.set(val);

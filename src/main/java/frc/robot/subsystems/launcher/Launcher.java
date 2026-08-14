@@ -12,6 +12,7 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.RobotContainer;
 import frc.robot.config.LauncherConfig.ShooterConfig;
 import frc.robot.config.LauncherConfig.TurretConfig;
 import frc.robot.config.Overrides;
@@ -31,13 +32,14 @@ public final class Launcher extends SubsystemBase {
     private SubsystemWriter<Launcher> subsystemWriter = Telemetry.makeSubsystemWriter(this, "/");
 
     // ===Turret===
-    private Optional<SparkMax> turret;
+    private final Optional<SparkMax> turret;
 
-    private static final Alert
+    private final Alert
             turretDisconnectedAlert = AlertUtils.makeDisconnectAlert(TurretConfig.motorName, TurretConfig.canID),
             turretTempWarnAlert = AlertUtils.makeTempWarnAlert(TurretConfig.motorName, TurretConfig.canID),
             turretThermalShutdownAlert =
-                    AlertUtils.makeThermalShutdownAlert(TurretConfig.motorName, TurretConfig.canID);
+                    AlertUtils.makeThermalShutdownAlert(TurretConfig.motorName, TurretConfig.canID),
+            turretBreakerAlert = AlertUtils.makeBreakerTripAlert(TurretConfig.motorName, TurretConfig.channelID);
 
     private TurretBuffer turretBuffer = new TurretBuffer();
     private boolean turretConnectedLast = false;
@@ -54,15 +56,17 @@ public final class Launcher extends SubsystemBase {
     private final BoolWriter turretThermalShutdownWriter;
     private final TurretAngleWriter turretTargetWriter;
     private final BoolWriter turretAtHomingLimitWriter;
+    private final BoolWriter turretBreakerWriter;
 
     // ===Shooter===
-    private Optional<SparkFlex> shooter;
+    private final Optional<SparkFlex> shooter;
 
-    private static final Alert
+    private final Alert
             shooterDisconnectedAlert = AlertUtils.makeDisconnectAlert(ShooterConfig.motorName, ShooterConfig.canID),
             shooterTempWarnAlert = AlertUtils.makeTempWarnAlert(ShooterConfig.motorName, ShooterConfig.canID),
             shooterThermalShutdownAlert =
-                    AlertUtils.makeThermalShutdownAlert(ShooterConfig.motorName, ShooterConfig.canID);
+                    AlertUtils.makeThermalShutdownAlert(ShooterConfig.motorName, ShooterConfig.canID),
+            shooterBreakerAlert = AlertUtils.makeBreakerTripAlert(ShooterConfig.motorName, ShooterConfig.channelID);
 
     private ShooterBuffer shooterBuffer = new ShooterBuffer();
     private boolean shooterConnectedLast = false;
@@ -79,6 +83,7 @@ public final class Launcher extends SubsystemBase {
     private final BoolWriter shooterConnectedWriter, shooterCANWriter;
     private final BoolWriter shooterThermalShutdownWriter;
     private final ShooterTargetWriter shooterTargetWriter;
+    private final BoolWriter shooterBreakerWriter;
 
     public Launcher() {
         // ===Turret===
@@ -115,6 +120,7 @@ public final class Launcher extends SubsystemBase {
             turretThermalShutdownWriter = Telemetry.makeBoolWriter(getName(), "turretThermalShutdown");
             turretTargetWriter = Telemetry.makeTurretAngleWriterInitialEx(getName(), "turretTarget", null, false, true);
             turretAtHomingLimitWriter = Telemetry.makeBoolWriter(getName(), "turretAtHomingLimit");
+            turretBreakerWriter = Telemetry.makeBoolWriter(getName(), "turretBreakerTripped");
         }
 
         // ===Shooter===
@@ -151,6 +157,7 @@ public final class Launcher extends SubsystemBase {
             shooterThermalShutdownWriter = Telemetry.makeBoolWriter(getName(), "shooterThermalShutdown");
             shooterTargetWriter =
                     Telemetry.makeShooterTargetWriterInitialEx(getName(), "shooterTarget", null, false, true);
+            shooterBreakerWriter = Telemetry.makeBoolWriter(getName(), "shooterBreakerTripped");
         }
     }
 
@@ -177,6 +184,7 @@ public final class Launcher extends SubsystemBase {
             turretBuffer.voltageOut_V = t.getBusVoltage() * turretBuffer.appliedOut_perc; // frame 0 & 1
             turretBuffer.currentOut_A = t.getOutputCurrent(); // frame 1
             turretBuffer.connected = !t.getFaults().can; // frame 0
+            boolean breakerTripped = RobotContainer.instance().pdh.isBreakerTripped(TurretConfig.channelID);
 
             turretPosWriter.set(turretBuffer.pos_rots);
             turretVelWriter.set(turretBuffer.vel_RPM);
@@ -188,6 +196,8 @@ public final class Launcher extends SubsystemBase {
             turretCANWriter.set(turretBuffer.connected);
             turretDisconnectedAlert.set(!turretBuffer.connected);
             turretAtHomingLimitWriter.set(isTurretAtHomingLimit());
+            turretBreakerAlert.set(breakerTripped);
+            turretBreakerWriter.set(breakerTripped);
             if (turretBuffer.connected != turretConnectedLast) {
                 if (turretBuffer.connected) {
                     Telemetry.println(
@@ -225,7 +235,7 @@ public final class Launcher extends SubsystemBase {
                     }
                 }
 
-                report.turretOperational = turretBuffer.connected && !turretThermalShutdown;
+                report.turretOperational = turretBuffer.connected && !turretThermalShutdown && !breakerTripped;
 
                 turretThermalShutdownLast = turretThermalShutdown;
             }
@@ -248,6 +258,7 @@ public final class Launcher extends SubsystemBase {
             shooterBuffer.voltageOut_V = s.getBusVoltage() * shooterBuffer.appliedOut_perc; // frame 0 & 1
             shooterBuffer.currentOut_A = s.getOutputCurrent(); // frame 1
             shooterBuffer.connected = !s.getFaults().can; // frame 0
+            boolean breakerTripped = RobotContainer.instance().pdh.isBreakerTripped(ShooterConfig.channelID);
 
             shooterPosWriter.set(shooterBuffer.pos_rots);
             shooterVelWriter.set(shooterBuffer.vel_RPM);
@@ -258,6 +269,8 @@ public final class Launcher extends SubsystemBase {
             shooterConnectedWriter.set(shooterBuffer.connected);
             shooterCANWriter.set(shooterBuffer.connected);
             shooterDisconnectedAlert.set(!shooterBuffer.connected);
+            shooterBreakerAlert.set(breakerTripped);
+            shooterBreakerWriter.set(breakerTripped);
             if (shooterBuffer.connected != shooterConnectedLast) {
                 if (shooterBuffer.connected) {
                     Telemetry.println(
@@ -296,7 +309,7 @@ public final class Launcher extends SubsystemBase {
                     }
                 }
 
-                report.shooterOperational = shooterBuffer.connected && !shooterThermalShutdown;
+                report.shooterOperational = shooterBuffer.connected && !shooterThermalShutdown && !breakerTripped;
 
                 shooterThermalShutdownLast = shooterThermalShutdown;
             }

@@ -18,6 +18,7 @@ public class BoolArrayWriter implements AutoCloseable {
 
     private boolean hasValue;
     private boolean[] currValue;
+    private static final boolean[] nullFallback = new boolean[] {};
 
     /**
      * DO NOT USE OUTSIDE Telemetry.java!!!
@@ -54,7 +55,7 @@ public class BoolArrayWriter implements AutoCloseable {
     public boolean set(boolean[] val) {
         if (ntPublisher == null && logEntry == null) return false;
 
-        if (val == null) val = new boolean[] {};
+        if (val == null) val = nullFallback;
 
         if (!includeNTInChecks && ntPublisher != null) {
             ntPublisher.set(val);

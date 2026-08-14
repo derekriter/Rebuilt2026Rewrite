@@ -23,7 +23,7 @@ public class ShooterTargetWriter implements AutoCloseable {
                 Telemetry.makeDoubleWriterEx(table, "velocity", TelemetryUnits.rpm, includeNTInChecks, disableChecks);
         distanceWriter = Telemetry.makeDoubleWriterEx(
                 table, "distance", TelemetryUnits.meters, includeNTInChecks, disableChecks);
-        isLegalWriter = Telemetry.makeBoolWriterEx(table, "isLegel", null, includeNTInChecks, disableChecks);
+        isLegalWriter = Telemetry.makeBoolWriterEx(table, "isLegal", null, includeNTInChecks, disableChecks);
 
         nullFallback = _nullFallback;
     }

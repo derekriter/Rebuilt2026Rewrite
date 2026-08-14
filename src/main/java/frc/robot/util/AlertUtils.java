@@ -27,4 +27,8 @@ public class AlertUtils {
     public static Alert makeSafetyDisabledAlert(String systemName) {
         return new Alert(String.format("%s safety disabled by override", systemName), AlertType.kWarning);
     }
+
+    public static Alert makeBreakerTripAlert(String deviceName, int channel) {
+        return new Alert(String.format("PDH breaker %d (%s) tripped", channel, deviceName), AlertType.kError);
+    }
 }

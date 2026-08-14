@@ -18,6 +18,7 @@ public class DoubleArrayWriter implements AutoCloseable {
 
     private boolean hasValue;
     private double[] currValue;
+    private static final double[] nullFallback = new double[] {};
 
     /**
      * DO NOT USE OUTSIDE Telemetry.java!!!
@@ -54,7 +55,7 @@ public class DoubleArrayWriter implements AutoCloseable {
     public boolean set(double[] val) {
         if (ntPublisher == null && logEntry == null) return false;
 
-        if (val == null) val = new double[] {};
+        if (val == null) val = nullFallback;
 
         if (!includeNTInChecks && ntPublisher != null) {
             ntPublisher.set(val);

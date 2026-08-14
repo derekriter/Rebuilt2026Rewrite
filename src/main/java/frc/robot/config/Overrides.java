@@ -9,15 +9,35 @@ public final class Overrides {
     public static final boolean disableTurretSafety = false;
     public static final boolean disableTurret = false;
 
+    public static final boolean disablePDHMonitoring = false;
+
     public static void telemeterizeOverrides() {
-        Telemetry.makeBoolWriterInitialEx("Overrides", "disableShooterSafety", null, disableShooterSafety, false, true)
+        Telemetry.makeBoolWriterInitialEx(
+                        Overrides.class.getSimpleName(),
+                        "disableShooterSafety",
+                        null,
+                        disableShooterSafety,
+                        false,
+                        true)
                 .close();
-        Telemetry.makeBoolWriterInitialEx("Overrides", "disableShooter", null, disableShooter, false, true)
+        Telemetry.makeBoolWriterInitialEx(
+                        Overrides.class.getSimpleName(), "disableShooter", null, disableShooter, false, true)
                 .close();
 
-        Telemetry.makeBoolWriterInitialEx("Overrides", "disableTurretSafety", null, disableTurretSafety, false, true)
+        Telemetry.makeBoolWriterInitialEx(
+                        Overrides.class.getSimpleName(), "disableTurretSafety", null, disableTurretSafety, false, true)
                 .close();
-        Telemetry.makeBoolWriterInitialEx("Overrides", "disableTurret", null, disableTurret, false, true)
+        Telemetry.makeBoolWriterInitialEx(
+                        Overrides.class.getSimpleName(), "disableTurret", null, disableTurret, false, true)
+                .close();
+
+        Telemetry.makeBoolWriterInitialEx(
+                        Overrides.class.getSimpleName(),
+                        "disablePDHMonitoring",
+                        null,
+                        disablePDHMonitoring,
+                        false,
+                        true)
                 .close();
     }
 

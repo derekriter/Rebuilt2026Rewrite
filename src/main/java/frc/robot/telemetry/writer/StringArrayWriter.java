@@ -18,6 +18,7 @@ public class StringArrayWriter implements AutoCloseable {
 
     private boolean hasValue;
     private String[] currValue;
+    private static final String[] nullFallback = new String[] {};
 
     /**
      * DO NOT USE OUTSIDE Telemetry.java!!!
@@ -54,7 +55,7 @@ public class StringArrayWriter implements AutoCloseable {
     public boolean set(String[] val) {
         if (ntPublisher == null && logEntry == null) return false;
 
-        if (val == null) val = new String[] {};
+        if (val == null) val = nullFallback;
 
         if (!includeNTInChecks && ntPublisher != null) {
             ntPublisher.set(val);
