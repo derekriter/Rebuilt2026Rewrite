@@ -14,8 +14,6 @@ import edu.wpi.first.networktables.BooleanArraySubscriber;
 import edu.wpi.first.networktables.BooleanSubscriber;
 import edu.wpi.first.networktables.DoubleArraySubscriber;
 import edu.wpi.first.networktables.DoubleSubscriber;
-import edu.wpi.first.networktables.FloatArraySubscriber;
-import edu.wpi.first.networktables.FloatSubscriber;
 import edu.wpi.first.networktables.IntegerArraySubscriber;
 import edu.wpi.first.networktables.IntegerSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
@@ -40,8 +38,6 @@ import frc.robot.telemetry.writer.BoolArrayWriter;
 import frc.robot.telemetry.writer.BoolWriter;
 import frc.robot.telemetry.writer.DoubleArrayWriter;
 import frc.robot.telemetry.writer.DoubleWriter;
-import frc.robot.telemetry.writer.FloatArrayWriter;
-import frc.robot.telemetry.writer.FloatWriter;
 import frc.robot.telemetry.writer.LongArrayWriter;
 import frc.robot.telemetry.writer.LongWriter;
 import frc.robot.telemetry.writer.RawWriter;
@@ -541,120 +537,6 @@ public class Telemetry {
     public static DoubleSubscriber makeDoubleReader(String table, String name, double defaultValue) {
         return NetworkTableInstance.getDefault()
                 .getDoubleTopic(NetworkTable.normalizeKey(table + "/" + name))
-                .subscribe(defaultValue);
-    }
-
-    /*
-    float[]
-    */
-    public static FloatArrayWriter makeFloatArrayWriter(String table, String name) {
-        return makeFloatArrayWriterEx(
-                table, name, null, TelemetryConfig.defaultIncludeNTInChecks, TelemetryConfig.defaultDisableChecks);
-    }
-
-    public static FloatArrayWriter makeFloatArrayWriter(String table, String name, String unit) {
-        return makeFloatArrayWriterEx(
-                table, name, unit, TelemetryConfig.defaultIncludeNTInChecks, TelemetryConfig.defaultDisableChecks);
-    }
-
-    public static FloatArrayWriter makeFloatArrayWriterInitial(String table, String name, float[] initialValue) {
-        return makeFloatArrayWriterInitialEx(
-                table,
-                name,
-                null,
-                initialValue,
-                TelemetryConfig.defaultIncludeNTInChecks,
-                TelemetryConfig.defaultDisableChecks);
-    }
-
-    public static FloatArrayWriter makeFloatArrayWriterInitial(
-            String table, String name, String unit, float[] initialValue) {
-        return makeFloatArrayWriterInitialEx(
-                table,
-                name,
-                unit,
-                initialValue,
-                TelemetryConfig.defaultIncludeNTInChecks,
-                TelemetryConfig.defaultDisableChecks);
-    }
-
-    public static FloatArrayWriter makeFloatArrayWriterEx(
-            String table, String name, String unit, boolean includeNTInChecks, boolean disableChecks) {
-        return new FloatArrayWriter(
-                NetworkTable.normalizeKey(table + "/" + name), unit, includeNTInChecks, disableChecks);
-    }
-
-    public static FloatArrayWriter makeFloatArrayWriterInitialEx(
-            String table,
-            String name,
-            String unit,
-            float[] initialValue,
-            boolean includeNTInChecks,
-            boolean disableChecks) {
-        var entry = makeFloatArrayWriterEx(table, name, unit, includeNTInChecks, disableChecks);
-        entry.set(initialValue);
-        return entry;
-    }
-
-    public static FloatArraySubscriber makeFloatArrayReader(String table, String name, float[] defaultValue) {
-        return NetworkTableInstance.getDefault()
-                .getFloatArrayTopic(NetworkTable.normalizeKey(table + "/" + name))
-                .subscribe(defaultValue);
-    }
-
-    /*
-    float
-    */
-    public static FloatWriter makeFloatWriter(String table, String name) {
-        return makeFloatWriterEx(
-                table, name, null, TelemetryConfig.defaultIncludeNTInChecks, TelemetryConfig.defaultDisableChecks);
-    }
-
-    public static FloatWriter makeFloatWriter(String table, String name, String unit) {
-        return makeFloatWriterEx(
-                table, name, unit, TelemetryConfig.defaultIncludeNTInChecks, TelemetryConfig.defaultDisableChecks);
-    }
-
-    public static FloatWriter makeFloatWriterInitial(String table, String name, float initialValue) {
-        return makeFloatWriterInitialEx(
-                table,
-                name,
-                null,
-                initialValue,
-                TelemetryConfig.defaultIncludeNTInChecks,
-                TelemetryConfig.defaultDisableChecks);
-    }
-
-    public static FloatWriter makeFloatWriterInitial(String table, String name, String unit, float initialValue) {
-        return makeFloatWriterInitialEx(
-                table,
-                name,
-                unit,
-                initialValue,
-                TelemetryConfig.defaultIncludeNTInChecks,
-                TelemetryConfig.defaultDisableChecks);
-    }
-
-    public static FloatWriter makeFloatWriterEx(
-            String table, String name, String unit, boolean includeNTInChecks, boolean disableChecks) {
-        return new FloatWriter(NetworkTable.normalizeKey(table + "/" + name), unit, includeNTInChecks, disableChecks);
-    }
-
-    public static FloatWriter makeFloatWriterInitialEx(
-            String table,
-            String name,
-            String unit,
-            float initialValue,
-            boolean includeNTInChecks,
-            boolean disableChecks) {
-        var entry = makeFloatWriterEx(table, name, unit, includeNTInChecks, disableChecks);
-        entry.set(initialValue);
-        return entry;
-    }
-
-    public static FloatSubscriber makeFloatReader(String table, String name, float defaultValue) {
-        return NetworkTableInstance.getDefault()
-                .getFloatTopic(NetworkTable.normalizeKey(table + "/" + name))
                 .subscribe(defaultValue);
     }
 
