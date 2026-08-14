@@ -17,6 +17,7 @@ public final class ShooterTarget {
         vel = _vel;
     }
 
+    // from
     public static ShooterTarget fromShooterVelocity(AngularVelocity vel) {
         return new ShooterTarget(vel.mutableCopy());
     }
@@ -33,6 +34,7 @@ public final class ShooterTarget {
         return new ShooterTarget(RPM.mutable(381 * meters + 1614 + ShooterConfig.targetOffset.asShooterRPM()));
     }
 
+    // as
     public AngularVelocity asShooterVelocity() {
         return vel.copy();
     }
@@ -49,6 +51,7 @@ public final class ShooterTarget {
         return (vel.in(RPM) - ShooterConfig.targetOffset.asShooterRPM() - 1614) / 381.0d;
     }
 
+    // tests + operators
     public boolean isLegal() {
         return vel.gte(ShooterConfig.minRealTarget.vel) && vel.lte(ShooterConfig.maxRealTarget.vel);
     }

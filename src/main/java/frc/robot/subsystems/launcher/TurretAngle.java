@@ -16,6 +16,7 @@ public final class TurretAngle {
         mechAngle = _mechAngle;
     }
 
+    // from
     public static TurretAngle fromMechanismAngle(Angle mechAngle) {
         return new TurretAngle(mechAngle.mutableCopy());
     }
@@ -32,8 +33,13 @@ public final class TurretAngle {
         return new TurretAngle(Rotations.mutable(motorRots).mut_divide(TurretConfig.motorRotsPerMechRots));
     }
 
+    // as
     public Angle asMechanismAngle() {
         return mechAngle.copy();
+    }
+
+    public double asMechanismDegrees() {
+        return mechAngle.in(Degrees);
     }
 
     public Angle asMotorAngle() {
@@ -44,6 +50,7 @@ public final class TurretAngle {
         return mechAngle.in(Rotations) * TurretConfig.motorRotsPerMechRots;
     }
 
+    // tests + operators
     public boolean isWrapped() {
         return mechAngle.lt(TurretConfig.breakAngle.mechAngle)
                 && mechAngle.gte(TurretConfig.breakAngle.mechAngle.minus(Rotations.of(1)));

@@ -3,9 +3,9 @@ package frc.robot.brain;
 import static edu.wpi.first.units.Units.Seconds;
 
 import edu.wpi.first.units.measure.MutTime;
-import frc.robot.subsystems.launcher.LauncherFlags;
+import frc.robot.subsystems.launcher.LauncherReport;
 
-public class RobotState {
+public final class RobotState {
     public OpMode opMode = OpMode.DISABLED;
     public boolean isReal = true;
 
@@ -18,7 +18,7 @@ public class RobotState {
     public MutTime timeLeftInPhase = Seconds.mutable(-1);
     public FieldZone fieldZone = FieldZone.BLUE;
 
-    public LauncherFlags launcherFlags = new LauncherFlags();
+    public LauncherReport launcherReport = new LauncherReport();
     public boolean isTurretHomed = false;
 
     public TargetingMode targetingMode = TargetingMode.DISABLED;
@@ -37,7 +37,7 @@ public class RobotState {
         timeLeftInPhase.mut_replace(ref.timeLeftInPhase);
         fieldZone = ref.fieldZone;
 
-        launcherFlags.copyFrom(ref.launcherFlags);
+        launcherReport.copyFrom(ref.launcherReport);
         isTurretHomed = ref.isTurretHomed;
 
         targetingMode = ref.targetingMode;

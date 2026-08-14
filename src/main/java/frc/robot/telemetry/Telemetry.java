@@ -7,6 +7,7 @@ import com.revrobotics.util.StatusLogger;
 import edu.wpi.first.hal.DriverStationJNI;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
@@ -32,8 +33,12 @@ import edu.wpi.first.wpilibj.Watchdog;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc.robot.Robot;
+import frc.robot.brain.RobotState;
 import frc.robot.config.TelemetryConfig;
 import frc.robot.constants.BuildConstants;
+import frc.robot.subsystems.launcher.LauncherReport;
+import frc.robot.subsystems.launcher.ShooterTarget;
+import frc.robot.subsystems.launcher.TurretAngle;
 import frc.robot.telemetry.writer.BoolArrayWriter;
 import frc.robot.telemetry.writer.BoolWriter;
 import frc.robot.telemetry.writer.DoubleArrayWriter;
@@ -45,9 +50,11 @@ import frc.robot.telemetry.writer.StringArrayWriter;
 import frc.robot.telemetry.writer.StringWriter;
 import frc.robot.telemetry.writer.StructArrayWriter;
 import frc.robot.telemetry.writer.StructWriter;
-import frc.robot.telemetry.writer.compound.LauncherFlagsWriter;
+import frc.robot.telemetry.writer.compound.LauncherReportWriter;
 import frc.robot.telemetry.writer.compound.RobotStateWriter;
+import frc.robot.telemetry.writer.compound.ShooterTargetWriter;
 import frc.robot.telemetry.writer.compound.SubsystemWriter;
+import frc.robot.telemetry.writer.compound.TurretAngleWriter;
 import frc.robot.util.CloneOperation;
 import frc.robot.util.EqualityTest;
 import java.lang.reflect.Field;
@@ -58,8 +65,6 @@ import java.util.TimeZone;
 
 public class Telemetry {
 
-    // TODO: hardware and class writers
-
     private static final Alert flashdriveNotRecognizedAlert =
             new Alert("Logging flashdrive not recognized", AlertType.kError);
 
@@ -67,11 +72,18 @@ public class Telemetry {
 
     private static final Pose2d[] pose2dArrayNullFallback = new Pose2d[0];
     private static final Pose3d[] pose3dArrayNullFallback = new Pose3d[0];
-    private static final ChassisSpeeds chassisSpeedsNullFallback = new ChassisSpeeds();
-    private static final SwerveModuleState swerveModuleStateNullFallback = new SwerveModuleState();
+    private static final ChassisSpeeds chassisSpeedsNullFallback =
+            new ChassisSpeeds(Double.NaN, Double.NaN, Double.NaN);
+    private static final SwerveModuleState swerveModuleStateNullFallback =
+            new SwerveModuleState(Double.NaN, new Rotation2d(Double.NaN));
     private static final SwerveModuleState[] swerveModuleStateArrayNullFallback = new SwerveModuleState[0];
-    private static final SwerveModulePosition swerveModulePositionNullFallback = new SwerveModulePosition();
+    private static final SwerveModulePosition swerveModulePositionNullFallback =
+            new SwerveModulePosition(Double.NaN, new Rotation2d(Double.NaN));
     private static final SwerveModulePosition[] swerveModulePositionArrayNullFallback = new SwerveModulePosition[0];
+    private static final RobotState robotStateNullFallback = new RobotState();
+    private static final LauncherReport launcherReportNullFallback = new LauncherReport();
+    private static final TurretAngle turretAngleNullFallback = TurretAngle.fromMechanismDeg(Double.NaN);
+    private static final ShooterTarget shooterTargetAngleNullFallback = ShooterTarget.fromShooterRPM(Double.NaN);
 
     public static void init(Robot robot) {
         if (hasInited) return;
@@ -1460,14 +1472,94 @@ public class Telemetry {
     RobotState
     */
     public static RobotStateWriter makeRobotStateWriter(String table, String name) {
-        return new RobotStateWriter(NetworkTable.normalizeKey(table + "/" + name));
+        return new RobotStateWriter(NetworkTable.normalizeKey(table + "/" + name), robotStateNullFallback);
+    }
+
+    public static RobotStateWriter makeRobotStateWriterInitial(String table, String name, RobotState initialValue) {
+        var entry = makeRobotStateWriter(table, name);
+        entry.set(initialValue);
+        return entry;
     }
 
     /*
-    LauncherFlags
+    LauncherReport
     */
-    public static LauncherFlagsWriter makeLauncherFlagsWriter(String table, String name) {
-        return new LauncherFlagsWriter(NetworkTable.normalizeKey(table + "/" + name));
+    public static LauncherReportWriter makeLauncherReportWriter(String table, String name) {
+        return new LauncherReportWriter(NetworkTable.normalizeKey(table + "/" + name), launcherReportNullFallback);
+    }
+
+    public static LauncherReportWriter makeLauncherReportWriterInitial(
+            String table, String name, LauncherReport initialValue) {
+        var entry = makeLauncherReportWriter(table, name);
+        entry.set(initialValue);
+        return entry;
+    }
+
+    /*
+    TurretAngle
+    */
+    public static TurretAngleWriter makeTurretAngleWriter(String table, String name) {
+        return makeTurretAngleWriterEx(
+                table, name, TelemetryConfig.defaultIncludeNTInChecks, TelemetryConfig.defaultDisableChecks);
+    }
+
+    public static TurretAngleWriter makeTurretAngleWriterInitial(String table, String name, TurretAngle initialValue) {
+        return makeTurretAngleWriterInitialEx(
+                table,
+                name,
+                initialValue,
+                TelemetryConfig.defaultIncludeNTInChecks,
+                TelemetryConfig.defaultDisableChecks);
+    }
+
+    public static TurretAngleWriter makeTurretAngleWriterEx(
+            String table, String name, boolean includeNTInChecks, boolean disableChecks) {
+        return new TurretAngleWriter(
+                NetworkTable.normalizeKey(table + "/" + name),
+                includeNTInChecks,
+                disableChecks,
+                turretAngleNullFallback);
+    }
+
+    public static TurretAngleWriter makeTurretAngleWriterInitialEx(
+            String table, String name, TurretAngle initialValue, boolean includeNTInChecks, boolean disableChecks) {
+        var entry = makeTurretAngleWriterEx(table, name, includeNTInChecks, disableChecks);
+        entry.set(initialValue);
+        return entry;
+    }
+
+    /*
+    ShooterTarget
+    */
+    public static ShooterTargetWriter makeShooterTargetWriter(String table, String name) {
+        return makeShooterTargetWriterEx(
+                table, name, TelemetryConfig.defaultIncludeNTInChecks, TelemetryConfig.defaultDisableChecks);
+    }
+
+    public static ShooterTargetWriter makeShooterTargetWriterInitial(
+            String table, String name, ShooterTarget initialValue) {
+        return makeShooterTargetWriterInitialEx(
+                table,
+                name,
+                initialValue,
+                TelemetryConfig.defaultIncludeNTInChecks,
+                TelemetryConfig.defaultDisableChecks);
+    }
+
+    public static ShooterTargetWriter makeShooterTargetWriterEx(
+            String table, String name, boolean includeNTInChecks, boolean disableChecks) {
+        return new ShooterTargetWriter(
+                NetworkTable.normalizeKey(table + "/" + name),
+                includeNTInChecks,
+                disableChecks,
+                shooterTargetAngleNullFallback);
+    }
+
+    public static ShooterTargetWriter makeShooterTargetWriterInitialEx(
+            String table, String name, ShooterTarget initialValue, boolean includeNTInChecks, boolean disableChecks) {
+        var entry = makeShooterTargetWriterEx(table, name, includeNTInChecks, disableChecks);
+        entry.set(initialValue);
+        return entry;
     }
 
     private Telemetry() {}

@@ -72,7 +72,7 @@ public class RobotBrain {
             state.timeLeftInPhase.mut_replace(state.phase.getTimeRemaining(state.modeTime));
         }
 
-        RobotContainer.instance().launcher.pollFlags(state.launcherFlags);
+        RobotContainer.instance().launcher.report(state.launcherReport);
 
         boolean driver2IsMovingJoysticks =
                 Math.abs(RobotContainer.instance().driver2.getLeftX()) > ControllerConfig.overrideTurretThreshold
@@ -90,8 +90,8 @@ public class RobotBrain {
 
     @SuppressWarnings("unused")
     public void determineModes() {
-        boolean shooterCanRun = !Overrides.disableShooter && state.launcherFlags.shooterOperational;
-        boolean turretCanRun = !Overrides.disableTurret && state.launcherFlags.turretOperational;
+        boolean shooterCanRun = !Overrides.disableShooter && state.launcherReport.shooterOperational;
+        boolean turretCanRun = !Overrides.disableTurret && state.launcherReport.turretOperational;
 
         switch (state.opMode) {
             case DISABLED, TEST -> {

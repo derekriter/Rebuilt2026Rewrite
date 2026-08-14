@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.brain.RobotBrain;
 import frc.robot.brain.RobotState;
+import frc.robot.config.Overrides;
 import frc.robot.telemetry.Telemetry;
 import frc.robot.util.ControllerUtil;
 import java.util.Optional;
@@ -32,6 +33,7 @@ public final class Robot extends TimedRobot {
 
     private Robot() {
         Telemetry.init(this);
+        Overrides.telemeterizeOverrides();
         RobotContainer.instance();
 
         brain = new RobotBrain();
@@ -41,7 +43,7 @@ public final class Robot extends TimedRobot {
     public void robotPeriodic() {
         brain.pollState();
         brain.determineModes();
-        RobotBrain.robotStateWriter.update(brain.state);
+        RobotBrain.robotStateWriter.set(brain.state);
         brain.runCommands();
 
         /*

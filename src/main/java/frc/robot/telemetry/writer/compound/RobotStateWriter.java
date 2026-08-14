@@ -23,16 +23,18 @@ public class RobotStateWriter implements AutoCloseable {
     private final DoubleWriter timeLeftInPhaseWriter;
     private final StringWriter fieldZoneWriter;
 
-    private final LauncherFlagsWriter launcherFlagsWriter;
+    private final LauncherReportWriter launcherReportWriter;
     private final BoolWriter isTurretHomedWriter;
 
     private final StringWriter targetingModeWriter;
     private final BoolWriter overrideTurretWriter;
 
+    private final RobotState nullFallback;
+
     /**
      * DO NOT USE OUTSIDE Telemetry.java!!!
      */
-    public RobotStateWriter(String table) {
+    public RobotStateWriter(String table, RobotState _nullFallback) {
         opModeWriter = Telemetry.makeStringWriterEx(table, "opMode", null, true, false);
         isRealWriter = Telemetry.makeBoolWriterEx(table, "isReal", null, true, false);
 
@@ -46,14 +48,18 @@ public class RobotStateWriter implements AutoCloseable {
                 Telemetry.makeDoubleWriterEx(table, "timeLeftInPhase", TelemetryUnits.seconds, true, true);
         fieldZoneWriter = Telemetry.makeStringWriterEx(table, "fieldZone", null, true, false);
 
-        launcherFlagsWriter = Telemetry.makeLauncherFlagsWriter(table, "launcherFlags");
+        launcherReportWriter = Telemetry.makeLauncherReportWriter(table, "launcherReport");
         isTurretHomedWriter = Telemetry.makeBoolWriterEx(table, "isTurretHomed", null, true, false);
 
         targetingModeWriter = Telemetry.makeStringWriterEx(table, "targetingMode", null, true, false);
         overrideTurretWriter = Telemetry.makeBoolWriterEx(table, "overrideTurret", null, true, false);
+
+        nullFallback = _nullFallback;
     }
 
-    public void update(RobotState state) {
+    public void set(RobotState state) {
+        if (state == null) state = nullFallback;
+
         opModeWriter.set(state.opMode.name());
         isRealWriter.set(state.isReal);
 
@@ -66,7 +72,7 @@ public class RobotStateWriter implements AutoCloseable {
         timeLeftInPhaseWriter.set(state.timeLeftInPhase.in(Seconds));
         fieldZoneWriter.set(state.fieldZone.name());
 
-        launcherFlagsWriter.update(state.launcherFlags);
+        launcherReportWriter.set(state.launcherReport);
         isTurretHomedWriter.set(state.isTurretHomed);
 
         targetingModeWriter.set(state.targetingMode.name());
@@ -84,7 +90,7 @@ public class RobotStateWriter implements AutoCloseable {
         phaseWriter.close();
         timeLeftInPhaseWriter.close();
         fieldZoneWriter.close();
-        launcherFlagsWriter.close();
+        launcherReportWriter.close();
         isTurretHomedWriter.close();
         targetingModeWriter.close();
         overrideTurretWriter.close();

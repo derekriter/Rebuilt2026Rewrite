@@ -16,7 +16,12 @@ import frc.robot.config.LauncherConfig.ShooterConfig;
 import frc.robot.config.LauncherConfig.TurretConfig;
 import frc.robot.config.Overrides;
 import frc.robot.telemetry.Telemetry;
+import frc.robot.telemetry.TelemetryUnits;
+import frc.robot.telemetry.writer.BoolWriter;
+import frc.robot.telemetry.writer.DoubleWriter;
+import frc.robot.telemetry.writer.compound.ShooterTargetWriter;
 import frc.robot.telemetry.writer.compound.SubsystemWriter;
+import frc.robot.telemetry.writer.compound.TurretAngleWriter;
 import frc.robot.util.AlertUtils;
 import frc.robot.util.MotorUtils;
 import java.util.Optional;
@@ -34,9 +39,20 @@ public final class Launcher extends SubsystemBase {
             turretThermalShutdownAlert =
                     AlertUtils.makeThermalShutdownAlert(TurretConfig.motorName, TurretConfig.canID);
 
+    private TurretBuffer turretBuffer = new TurretBuffer();
     private boolean turretConnectedLast = false;
     private boolean turretThermalShutdown = false;
     private boolean turretThermalShutdownLast = false;
+
+    private final DoubleWriter turretPosWriter;
+    private final DoubleWriter turretVelWriter;
+    private final DoubleWriter turretTempWriter;
+    private final DoubleWriter turretAppliedOutWriter;
+    private final DoubleWriter turretVoltageOutWriter;
+    private final DoubleWriter turretCurrentOutWriter;
+    private final BoolWriter turretConnectedWriter, turretCANWriter;
+    private final BoolWriter turretThermalShutdownWriter;
+    private final TurretAngleWriter turretTargetWriter;
 
     // ===Shooter===
     private Optional<SparkFlex> shooter;
@@ -47,17 +63,32 @@ public final class Launcher extends SubsystemBase {
             shooterThermalShutdownAlert =
                     AlertUtils.makeThermalShutdownAlert(ShooterConfig.motorName, ShooterConfig.canID);
 
+    private ShooterBuffer shooterBuffer = new ShooterBuffer();
     private boolean shooterConnectedLast = false;
     private boolean shooterThermalShutdown = false;
     private boolean shooterThermalShutdownLast = false;
-    private double lastShooterTarget = Double.NaN;
+    private double lastShooterTarget_RPM = Double.NaN;
+
+    private final DoubleWriter shooterPosWriter;
+    private final DoubleWriter shooterVelWriter;
+    private final DoubleWriter shooterTempWriter;
+    private final DoubleWriter shooterAppliedOutWriter;
+    private final DoubleWriter shooterVoltageOutWriter;
+    private final DoubleWriter shooterCurrentOutWriter;
+    private final BoolWriter shooterConnectedWriter, shooterCANWriter;
+    private final BoolWriter shooterThermalShutdownWriter;
+    private final ShooterTargetWriter shooterTargetWriter;
 
     public Launcher() {
         // ===Turret===
+        turretCANWriter =
+                Telemetry.makeBoolWriter("CAN", String.format("%s_%s", TurretConfig.motorName, TurretConfig.canID));
         if (Overrides.disableTurret) {
             turret = Optional.empty();
 
             AlertUtils.makeSystemDisabledAlert(TurretConfig.systemName).set(true);
+            turretCANWriter.set(false);
+            turretCANWriter.close();
         } else {
             if (Overrides.disableTurretSafety) {
                 AlertUtils.makeSafetyDisabledAlert(TurretConfig.systemName).set(true);
@@ -70,13 +101,29 @@ public final class Launcher extends SubsystemBase {
                     TurretConfig.motorConfig,
                     ResetMode.kResetSafeParameters,
                     PersistMode.kPersistParameters);
+
+            String bufferTable = getName() + "/turretBuffer";
+            turretPosWriter = Telemetry.makeDoubleWriter(bufferTable, "pos", TelemetryUnits.rotations);
+            turretVelWriter = Telemetry.makeDoubleWriter(bufferTable, "vel", TelemetryUnits.rpm);
+            turretTempWriter = Telemetry.makeDoubleWriter(bufferTable, "temp", TelemetryUnits.celsius);
+            turretAppliedOutWriter = Telemetry.makeDoubleWriter(bufferTable, "appliedOut");
+            turretVoltageOutWriter = Telemetry.makeDoubleWriter(bufferTable, "voltageOut", TelemetryUnits.volts);
+            turretCurrentOutWriter = Telemetry.makeDoubleWriter(bufferTable, "currentOut", TelemetryUnits.amps);
+            turretConnectedWriter = Telemetry.makeBoolWriter(bufferTable, "connected");
+
+            turretThermalShutdownWriter = Telemetry.makeBoolWriter(getName(), "turretThermalShutdown");
+            turretTargetWriter = Telemetry.makeTurretAngleWriterInitialEx(getName(), "turretTarget", null, false, true);
         }
 
         // ===Shooter===
+        shooterCANWriter =
+                Telemetry.makeBoolWriter("CAN", String.format("%s_%s", ShooterConfig.motorName, ShooterConfig.canID));
         if (Overrides.disableShooter) {
             shooter = Optional.empty();
 
             AlertUtils.makeSystemDisabledAlert(ShooterConfig.systemName).set(true);
+            shooterCANWriter.set(false);
+            shooterCANWriter.close();
         } else {
             if (Overrides.disableShooterSafety) {
                 AlertUtils.makeSafetyDisabledAlert(ShooterConfig.systemName).set(true);
@@ -89,6 +136,19 @@ public final class Launcher extends SubsystemBase {
                     ShooterConfig.motorConfig,
                     ResetMode.kResetSafeParameters,
                     PersistMode.kPersistParameters);
+
+            String bufferTable = getName() + "/shooterBuffer";
+            shooterPosWriter = Telemetry.makeDoubleWriter(bufferTable, "pos", TelemetryUnits.rotations);
+            shooterVelWriter = Telemetry.makeDoubleWriter(bufferTable, "vel", TelemetryUnits.rpm);
+            shooterTempWriter = Telemetry.makeDoubleWriter(bufferTable, "temp", TelemetryUnits.celsius);
+            shooterAppliedOutWriter = Telemetry.makeDoubleWriter(bufferTable, "appliedOut");
+            shooterVoltageOutWriter = Telemetry.makeDoubleWriter(bufferTable, "voltageOut", TelemetryUnits.volts);
+            shooterCurrentOutWriter = Telemetry.makeDoubleWriter(bufferTable, "currentOut", TelemetryUnits.amps);
+            shooterConnectedWriter = Telemetry.makeBoolWriter(bufferTable, "connected");
+
+            shooterThermalShutdownWriter = Telemetry.makeBoolWriter(getName(), "shooterThermalShutdown");
+            shooterTargetWriter =
+                    Telemetry.makeShooterTargetWriterInitialEx(getName(), "shooterTarget", null, false, true);
         }
     }
 
@@ -97,27 +157,55 @@ public final class Launcher extends SubsystemBase {
         subsystemWriter.update();
     }
 
-    public void pollFlags(LauncherFlags flags) {
+    public void report(LauncherReport report) {
+        turretReport(report);
+        shooterReport(report);
+    }
+
+    private void turretReport(LauncherReport report) {
         if (turret.isEmpty()) {
-            flags.turretOperational = false;
+            report.turretOperational = false;
         } else {
             SparkMax t = turret.get();
-            boolean connected = !t.getFaults().can;
+
+            turretBuffer.pos_rots = t.getEncoder().getPosition(); // frame 2
+            turretBuffer.vel_RPM = t.getEncoder().getVelocity(); // frame 1
+            turretBuffer.temp_C = t.getMotorTemperature(); // frame 1
+            turretBuffer.appliedOut_perc = t.getAppliedOutput(); // frame 0
+            turretBuffer.voltageOut_V = t.getBusVoltage() * turretBuffer.appliedOut_perc; // frame 0 & 1
+            turretBuffer.currentOut_A = t.getOutputCurrent(); // frame 1
+            turretBuffer.connected = !t.getFaults().can; // frame 0
+
+            turretPosWriter.set(turretBuffer.pos_rots);
+            turretVelWriter.set(turretBuffer.vel_RPM);
+            turretTempWriter.set(turretBuffer.temp_C);
+            turretAppliedOutWriter.set(turretBuffer.appliedOut_perc);
+            turretVoltageOutWriter.set(turretBuffer.voltageOut_V);
+            turretCurrentOutWriter.set(turretBuffer.currentOut_A);
+            turretConnectedWriter.set(turretBuffer.connected);
+            turretCANWriter.set(turretBuffer.connected);
+            turretDisconnectedAlert.set(!turretBuffer.connected);
+            if (turretBuffer.connected != turretConnectedLast) {
+                if (turretBuffer.connected) {
+                    Telemetry.println(
+                            String.format("Connected to %s (CAN %d)", TurretConfig.motorName, TurretConfig.canID));
+                } else {
+                    Telemetry.reportWarning(
+                            String.format("Lost connection to %s (CAN %d)", TurretConfig.motorName, TurretConfig.canID),
+                            false);
+                }
+            }
 
             if (Overrides.disableTurretSafety) {
-                flags.turretOperational = true;
+                report.turretOperational = true;
             } else {
-                double temp = t.getMotorTemperature();
-
-                boolean gettingToasty = temp >= TurretConfig.tempWarnThreshold.in(Celsius);
-                boolean overheating = temp >= TurretConfig.thermalShutdownThreshold.in(Celsius);
+                boolean gettingToasty = turretBuffer.temp_C >= TurretConfig.tempWarnThreshold.in(Celsius);
+                boolean overheating = turretBuffer.temp_C >= TurretConfig.thermalShutdownThreshold.in(Celsius);
                 turretThermalShutdown = (overheating || turretThermalShutdown) && gettingToasty;
 
-                flags.turretOperational = connected && !turretThermalShutdown;
-
+                turretThermalShutdownWriter.set(turretThermalShutdown);
                 turretTempWarnAlert.set(gettingToasty && !turretThermalShutdown);
                 turretThermalShutdownAlert.set(turretThermalShutdown);
-
                 if (turretThermalShutdown != turretThermalShutdownLast) {
                     if (turretThermalShutdown) {
                         Telemetry.reportWarning(
@@ -134,45 +222,61 @@ public final class Launcher extends SubsystemBase {
                     }
                 }
 
+                report.turretOperational = turretBuffer.connected && !turretThermalShutdown;
+
                 turretThermalShutdownLast = turretThermalShutdown;
             }
 
-            turretDisconnectedAlert.set(!connected);
+            turretConnectedLast = turretBuffer.connected;
+        }
+    }
 
-            if (connected != turretConnectedLast) {
-                if (connected) {
+    private void shooterReport(LauncherReport report) {
+        if (shooter.isEmpty()) {
+            report.shooterOperational = false;
+            report.shooterIsAtTarget = false;
+        } else {
+            SparkFlex s = shooter.get();
+
+            shooterBuffer.pos_rots = s.getEncoder().getPosition(); // frame 2
+            shooterBuffer.vel_RPM = s.getEncoder().getVelocity(); // frame 1
+            shooterBuffer.temp_C = s.getMotorTemperature(); // frame 1
+            shooterBuffer.appliedOut_perc = s.getAppliedOutput(); // frame 0
+            shooterBuffer.voltageOut_V = s.getBusVoltage() * shooterBuffer.appliedOut_perc; // frame 0 & 1
+            shooterBuffer.currentOut_A = s.getOutputCurrent(); // frame 1
+            shooterBuffer.connected = !s.getFaults().can; // frame 0
+
+            shooterPosWriter.set(shooterBuffer.pos_rots);
+            shooterVelWriter.set(shooterBuffer.vel_RPM);
+            shooterTempWriter.set(shooterBuffer.temp_C);
+            shooterAppliedOutWriter.set(shooterBuffer.appliedOut_perc);
+            shooterVoltageOutWriter.set(shooterBuffer.voltageOut_V);
+            shooterCurrentOutWriter.set(shooterBuffer.currentOut_A);
+            shooterConnectedWriter.set(shooterBuffer.connected);
+            shooterCANWriter.set(shooterBuffer.connected);
+            shooterDisconnectedAlert.set(!shooterBuffer.connected);
+            if (shooterBuffer.connected != shooterConnectedLast) {
+                if (shooterBuffer.connected) {
                     Telemetry.println(
-                            String.format("Connected to %s (CAN %d)", TurretConfig.motorName, TurretConfig.canID));
+                            String.format("Connected to %s (CAN %d)", ShooterConfig.motorName, ShooterConfig.canID));
                 } else {
                     Telemetry.reportWarning(
-                            String.format("Lost connection to %s (CAN %d)", TurretConfig.motorName, TurretConfig.canID),
+                            String.format(
+                                    "Lost connection to %s (CAN %d)", ShooterConfig.motorName, ShooterConfig.canID),
                             false);
                 }
             }
 
-            turretConnectedLast = connected;
-        }
-
-        if (shooter.isEmpty()) {
-            flags.shooterOperational = false;
-        } else {
-            SparkFlex s = shooter.get();
-            boolean connected = !s.getFaults().can;
-
             if (Overrides.disableShooterSafety) {
-                flags.shooterOperational = true;
+                report.shooterOperational = true;
             } else {
-                double temp = s.getMotorTemperature();
-
-                boolean gettingToasty = temp >= ShooterConfig.tempWarnThreshold.in(Celsius);
-                boolean overheating = temp >= ShooterConfig.thermalShutdownThreshold.in(Celsius);
+                boolean gettingToasty = shooterBuffer.temp_C >= ShooterConfig.tempWarnThreshold.in(Celsius);
+                boolean overheating = shooterBuffer.temp_C >= ShooterConfig.thermalShutdownThreshold.in(Celsius);
                 shooterThermalShutdown = (overheating || shooterThermalShutdown) && gettingToasty;
 
-                flags.shooterOperational = connected && !shooterThermalShutdown;
-
+                shooterThermalShutdownWriter.set(shooterThermalShutdown);
                 shooterTempWarnAlert.set(gettingToasty && !shooterThermalShutdown);
                 shooterThermalShutdownAlert.set(shooterThermalShutdown);
-
                 if (shooterThermalShutdown != shooterThermalShutdownLast) {
                     if (shooterThermalShutdown) {
                         Telemetry.reportWarning(
@@ -189,25 +293,13 @@ public final class Launcher extends SubsystemBase {
                     }
                 }
 
+                report.shooterOperational = shooterBuffer.connected && !shooterThermalShutdown;
+
                 shooterThermalShutdownLast = shooterThermalShutdown;
             }
-            flags.shooterIsAtTarget = isShooterAtTarget();
+            report.shooterIsAtTarget = isShooterAtTarget();
 
-            shooterDisconnectedAlert.set(!connected);
-
-            if (connected != shooterConnectedLast) {
-                if (connected) {
-                    Telemetry.println(
-                            String.format("Connected to %s (CAN %d)", ShooterConfig.motorName, ShooterConfig.canID));
-                } else {
-                    Telemetry.reportWarning(
-                            String.format(
-                                    "Lost connection to %s (CAN %d)", ShooterConfig.motorName, ShooterConfig.canID),
-                            false);
-                }
-            }
-
-            shooterConnectedLast = connected;
+            shooterConnectedLast = shooterBuffer.connected;
         }
     }
 
@@ -218,26 +310,28 @@ public final class Launcher extends SubsystemBase {
         if (!ang.isLegal()) return;
 
         turret.get().getClosedLoopController().setSetpoint(ang.asMotorRotations(), ControlType.kPosition);
+        turretTargetWriter.set(ang);
     }
 
     public void setTurretDuty(double duty) {
         if (turret.isEmpty() || (turretThermalShutdown && duty != 0)) return;
 
         turret.get().set(duty);
+        turretTargetWriter.set(null);
     }
 
     public void stopTurret() {
         if (turret.isEmpty()) return;
 
         turret.get().stopMotor();
+        turretTargetWriter.set(null);
     }
 
     public boolean isTurretAtHomingLimit() {
         if (turret.isEmpty()) return false;
 
-        SparkMax t = turret.get();
-        return t.getOutputCurrent() > TurretConfig.homingThresholdCurrent.in(Amps)
-                || Math.abs(t.getEncoder().getVelocity()) < TurretConfig.homingThresholdVel.in(RPM);
+        return turretBuffer.currentOut_A > TurretConfig.homingThresholdCurrent.in(Amps)
+                || Math.abs(turretBuffer.vel_RPM) < TurretConfig.homingThresholdVel.in(RPM);
     }
 
     public void setAsTurretHomingPosition() {
@@ -250,7 +344,8 @@ public final class Launcher extends SubsystemBase {
         if (shooter.isEmpty() || (shooterThermalShutdown && volts != 0)) return;
 
         shooter.get().setVoltage(volts);
-        lastShooterTarget = Double.NaN;
+        lastShooterTarget_RPM = Double.NaN;
+        shooterTargetWriter.set(null);
     }
 
     public void setShooterTarget(ShooterTarget trg) {
@@ -258,24 +353,26 @@ public final class Launcher extends SubsystemBase {
 
         if (!trg.isLegal()) trg.clampToLegalRange();
 
-        lastShooterTarget = trg.asShooterRPM();
-        shooter.get().getClosedLoopController().setSetpoint(lastShooterTarget, ControlType.kVelocity);
+        lastShooterTarget_RPM = trg.asShooterRPM();
+        shooter.get().getClosedLoopController().setSetpoint(lastShooterTarget_RPM, ControlType.kVelocity);
+        shooterTargetWriter.set(trg);
     }
 
     public void stopShooter() {
         if (shooter.isEmpty()) return;
 
         shooter.get().stopMotor();
+        shooterTargetWriter.set(null);
     }
 
     public boolean isShooterAtTarget() {
         if (shooter.isEmpty()) return false;
-        if (Double.isNaN(lastShooterTarget)) return false;
+        if (Double.isNaN(lastShooterTarget_RPM)) return false;
 
-        double vel = shooter.get().getEncoder().getVelocity();
         double upwardTol = ShooterConfig.upwardTolerance.asShooterRPM();
         double downwardTol = ShooterConfig.downwardTolerance.asShooterRPM();
 
-        return vel <= lastShooterTarget + upwardTol && vel >= lastShooterTarget - downwardTol;
+        return shooterBuffer.vel_RPM <= lastShooterTarget_RPM + upwardTol
+                && shooterBuffer.vel_RPM >= lastShooterTarget_RPM - downwardTol;
     }
 }
