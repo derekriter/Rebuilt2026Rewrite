@@ -11,11 +11,18 @@ import frc.robot.subsystems.launcher.Launcher;
 import frc.robot.subsystems.launcher.ShooterTarget;
 import frc.robot.subsystems.launcher.TurretAngle;
 import frc.robot.subsystems.swerve.Swerve;
+import frc.robot.telemetry.Telemetry;
+import frc.robot.telemetry.TelemetryUnits;
+import frc.robot.telemetry.writer.DoubleWriter;
 import frc.robot.util.ControllerUtil;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 public class AimAtTarget extends Command {
+
+    private static final DoubleWriter extraRPMWriter = Telemetry.makeDoubleWriterInitial(
+            AimAtTarget.class.getSimpleName(), "extraRPM", TelemetryUnits.rpm, Double.NaN);
+
     private final Launcher launcher;
     private final Swerve swerve_noDep;
     private final Supplier<Translation2d> targetSupplier;
@@ -78,6 +85,7 @@ public class AimAtTarget extends Command {
 
         // quicky and hacky compensation button for driver 2
         double extraRPM = RobotContainer.instance().driver2.getRightBumperButton() ? 100 : 0;
+        extraRPMWriter.set(extraRPM);
         st.add(ShooterTarget.fromShooterRPM(extraRPM));
 
         st.clampToLegalRange();
@@ -88,6 +96,8 @@ public class AimAtTarget extends Command {
     public void end(boolean interrupted) {
         launcher.stopTurret();
         launcher.stopShooter();
+
+        extraRPMWriter.set(Double.NaN);
     }
 
     @Override

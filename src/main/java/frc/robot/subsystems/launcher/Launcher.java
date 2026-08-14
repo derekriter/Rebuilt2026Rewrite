@@ -53,6 +53,7 @@ public final class Launcher extends SubsystemBase {
     private final BoolWriter turretConnectedWriter, turretCANWriter;
     private final BoolWriter turretThermalShutdownWriter;
     private final TurretAngleWriter turretTargetWriter;
+    private final BoolWriter turretAtHomingLimitWriter;
 
     // ===Shooter===
     private Optional<SparkFlex> shooter;
@@ -113,6 +114,7 @@ public final class Launcher extends SubsystemBase {
 
             turretThermalShutdownWriter = Telemetry.makeBoolWriter(getName(), "turretThermalShutdown");
             turretTargetWriter = Telemetry.makeTurretAngleWriterInitialEx(getName(), "turretTarget", null, false, true);
+            turretAtHomingLimitWriter = Telemetry.makeBoolWriter(getName(), "turretAtHomingLimit");
         }
 
         // ===Shooter===
@@ -185,6 +187,7 @@ public final class Launcher extends SubsystemBase {
             turretConnectedWriter.set(turretBuffer.connected);
             turretCANWriter.set(turretBuffer.connected);
             turretDisconnectedAlert.set(!turretBuffer.connected);
+            turretAtHomingLimitWriter.set(isTurretAtHomingLimit());
             if (turretBuffer.connected != turretConnectedLast) {
                 if (turretBuffer.connected) {
                     Telemetry.println(
