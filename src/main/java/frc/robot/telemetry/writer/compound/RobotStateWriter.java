@@ -13,6 +13,7 @@ public class RobotStateWriter implements AutoCloseable {
 
     private final StringWriter opModeWriter;
     private final BoolWriter isRealWriter;
+    private final BoolWriter isDSAttachedWriter;
 
     private final BoolWriter isRedWriter;
     private final BoolWriter autoWinnerIsKnownWriter;
@@ -22,12 +23,14 @@ public class RobotStateWriter implements AutoCloseable {
     private final StringWriter phaseWriter;
     private final DoubleWriter timeLeftInPhaseWriter;
     private final StringWriter fieldZoneWriter;
+    private final BoolWriter isHubActiveWriter;
 
     private final LauncherReportWriter launcherReportWriter;
     private final BoolWriter isTurretHomedWriter;
 
     private final StringWriter targetingModeWriter;
     private final BoolWriter overrideTurretWriter;
+    private final StringWriter ledsModeWriter;
 
     private final RobotState nullFallback;
 
@@ -37,6 +40,7 @@ public class RobotStateWriter implements AutoCloseable {
     public RobotStateWriter(String table, RobotState _nullFallback) {
         opModeWriter = Telemetry.makeStringWriterEx(table, "opMode", null, true, false);
         isRealWriter = Telemetry.makeBoolWriterEx(table, "isReal", null, true, false);
+        isDSAttachedWriter = Telemetry.makeBoolWriterEx(table, "isDSAttached", null, true, false);
 
         isRedWriter = Telemetry.makeBoolWriterEx(table, "isRed", null, true, false);
         autoWinnerIsKnownWriter = Telemetry.makeBoolWriterEx(table, "autoWinnerIsKnown", null, true, false);
@@ -47,12 +51,14 @@ public class RobotStateWriter implements AutoCloseable {
         timeLeftInPhaseWriter =
                 Telemetry.makeDoubleWriterEx(table, "timeLeftInPhase", TelemetryUnits.seconds, true, true);
         fieldZoneWriter = Telemetry.makeStringWriterEx(table, "fieldZone", null, true, false);
+        isHubActiveWriter = Telemetry.makeBoolWriterEx(table, "isHubActive", null, true, false);
 
         launcherReportWriter = Telemetry.makeLauncherReportWriter(table, "launcherReport");
         isTurretHomedWriter = Telemetry.makeBoolWriterEx(table, "isTurretHomed", null, true, false);
 
         targetingModeWriter = Telemetry.makeStringWriterEx(table, "targetingMode", null, true, false);
         overrideTurretWriter = Telemetry.makeBoolWriterEx(table, "overrideTurret", null, true, false);
+        ledsModeWriter = Telemetry.makeStringWriterEx(table, "ledsMode", null, true, false);
 
         nullFallback = _nullFallback;
     }
@@ -62,6 +68,7 @@ public class RobotStateWriter implements AutoCloseable {
 
         opModeWriter.set(state.opMode.name());
         isRealWriter.set(state.isReal);
+        isDSAttachedWriter.set(state.isDSAttached);
 
         isRedWriter.set(state.isRed);
         autoWinnerIsKnownWriter.set(state.autoWinnerIsKnown);
@@ -71,18 +78,21 @@ public class RobotStateWriter implements AutoCloseable {
         phaseWriter.set(state.phase.name());
         timeLeftInPhaseWriter.set(state.timeLeftInPhase.in(Seconds));
         fieldZoneWriter.set(state.fieldZone.name());
+        isHubActiveWriter.set(state.isHubActive);
 
         launcherReportWriter.set(state.launcherReport);
         isTurretHomedWriter.set(state.isTurretHomed);
 
         targetingModeWriter.set(state.targetingMode.name());
         overrideTurretWriter.set(state.overrideTurret);
+        ledsModeWriter.set(state.ledsMode.name());
     }
 
     @Override
     public void close() {
         opModeWriter.close();
         isRealWriter.close();
+        isDSAttachedWriter.close();
         isRedWriter.close();
         autoWinnerIsKnownWriter.close();
         didWinAutoWriter.close();
@@ -94,5 +104,6 @@ public class RobotStateWriter implements AutoCloseable {
         isTurretHomedWriter.close();
         targetingModeWriter.close();
         overrideTurretWriter.close();
+        ledsModeWriter.close();
     }
 }

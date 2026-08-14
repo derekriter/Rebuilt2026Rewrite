@@ -29,7 +29,7 @@ import java.util.Optional;
 
 public final class Launcher extends SubsystemBase {
 
-    private SubsystemWriter<Launcher> subsystemWriter = Telemetry.makeSubsystemWriter(this, "/");
+    private final SubsystemWriter<Launcher> subsystemWriter = Telemetry.makeSubsystemWriter(this, "/");
 
     // ===Turret===
     private final Optional<SparkMax> turret;

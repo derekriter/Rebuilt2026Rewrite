@@ -4,12 +4,22 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Seconds;
+
+import edu.wpi.first.wpilibj.LEDPattern;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.util.Color;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.commands.AimAtTarget;
 import frc.robot.commands.HomeLauncher;
 import frc.robot.config.ControllerConfig;
+import frc.robot.config.LEDsConfig;
 import frc.robot.pdh.PDH;
 import frc.robot.subsystems.launcher.Launcher;
+import frc.robot.subsystems.led.LEDs;
 import frc.robot.subsystems.swerve.Swerve;
 
 public final class RobotContainer {
@@ -32,6 +42,7 @@ public final class RobotContainer {
 
     public final Swerve swerve = new Swerve();
     public final Launcher launcher = new Launcher();
+    public final LEDs leds = new LEDs();
 
     public final XboxController driver1 = new XboxController(ControllerConfig.driver1Port);
     public final XboxController driver2 = new XboxController(ControllerConfig.driver2Port);
@@ -54,5 +65,66 @@ public final class RobotContainer {
                 .brain
                 .state
                 .overrideTurret);
+    }
+
+    public Command disconnLEDsCmd() {
+        return Commands.startEnd(() -> leds.applyPattern(LEDPattern.solid(Color.kRed)), leds::clear, leds)
+                .ignoringDisable(true)
+                .withName("disconnLEDsCmd");
+    }
+
+    public Command idleLEDsCmd() {
+        LEDPattern breathe = LEDPattern.solid(LEDsConfig.chargeGold).breathe(Seconds.of(2));
+        return Commands.runEnd(() -> leds.applyPattern(breathe), leds::clear, leds)
+                .ignoringDisable(true)
+                .withName("idleLEDsCmd");
+    }
+
+    public Command autonLEDsCmd() {
+        LEDPattern blink = LEDPattern.solid(LEDsConfig.orange)
+                .synchronizedBlink(RobotController::getRSLState); // doesnt work in sim, need to test on real robot
+        return Commands.runEnd(() -> leds.applyPattern(blink), leds::clear, leds)
+                .ignoringDisable(true)
+                .withName("autonLEDsCmd");
+    }
+
+    public Command okLEDsCmd() {
+        return Commands.startEnd(() -> leds.applyPattern(LEDPattern.solid(Color.kWhite)), leds::clear, leds)
+                .ignoringDisable(true)
+                .withName("okLEDsCmd");
+    }
+
+    public Command errorLEDsCmd() {
+        LEDPattern blink = LEDPattern.solid(Color.kRed).blink(Seconds.of(1 / 8.0));
+        return Commands.runEnd(() -> leds.applyPattern(blink), leds::clear, leds)
+                .ignoringDisable(true)
+                .withName("errorLEDsCmd");
+    }
+
+    public Command endgameLEDsCmd() {
+        LEDPattern rainbow =
+                LEDPattern.rainbow(255, 128).scrollAtAbsoluteSpeed(MetersPerSecond.of(4), LEDsConfig.ledSpacing);
+        return Commands.runEnd(() -> leds.applyPattern(rainbow), leds::clear, leds)
+                .ignoringDisable(true)
+                .withName("endgameLEDsCmd");
+    }
+
+    public Command shiftWarningLEDsCmd() {
+        LEDPattern blink = LEDPattern.solid(Color.kBlue).blink(Seconds.of(1 / 4.0));
+        return Commands.runEnd(() -> leds.applyPattern(blink), leds::clear, leds)
+                .ignoringDisable(true)
+                .withName("shiftWarningLEDsCmd");
+    }
+
+    public Command hubActiveLEDsCmd() {
+        return Commands.startEnd(() -> leds.applyPattern(LEDPattern.solid(LEDsConfig.chargeGreen)), leds::clear, leds)
+                .ignoringDisable(true)
+                .withName("hubActiveLEDsCmd");
+    }
+
+    public Command hubInactiveLEDsCmd() {
+        return Commands.startEnd(() -> leds.applyPattern(LEDPattern.solid(Color.kDimGray)), leds::clear, leds)
+                .ignoringDisable(true)
+                .withName("hubInactiveLEDsCmd");
     }
 }

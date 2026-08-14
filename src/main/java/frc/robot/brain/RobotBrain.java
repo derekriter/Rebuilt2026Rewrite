@@ -33,47 +33,18 @@ public class RobotBrain {
     }
 
     public void pollState() {
-        if (DriverStation.isTeleopEnabled()) {
-            state.opMode = OpMode.TELEOP;
-        } else if (DriverStation.isAutonomousEnabled()) {
-            state.opMode = OpMode.AUTON;
-        } else if (DriverStation.isTestEnabled()) {
-            state.opMode = OpMode.TEST;
-        } else {
-            state.opMode = OpMode.DISABLED;
-        }
+        pollOpModeAndAlliance();
 
-        if (lastState.isEmpty() || state.opMode != lastState.get().opMode) {
-            state.isRed = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red;
-            modeTimer.restart();
-            state.autoWinnerIsKnown = false;
-        }
+        RobotContainer.instance().pdh.update();
+        RobotContainer.instance().launcher.report(state.launcherReport);
+        RobotContainer.instance().leds.update();
 
-        state.modeTime.mut_replace(modeTimer.get(), Seconds);
         state.fieldZone =
                 FieldZone.fromRobotX(RobotContainer.instance().swerve.getPose().getMeasureX());
 
         if (state.opMode == OpMode.TELEOP) {
-            if (!state.autoWinnerIsKnown) {
-                String gameMessage = DriverStation.getGameSpecificMessage();
-
-                if (gameMessage != null && !gameMessage.isEmpty()) {
-                    if (gameMessage.charAt(0) == 'B') {
-                        state.autoWinnerIsKnown = true;
-                        state.didWinAuto = !state.isRed;
-                    } else if (gameMessage.charAt(0) == 'R') {
-                        state.autoWinnerIsKnown = true;
-                        state.didWinAuto = state.isRed;
-                    }
-                }
-            }
-
-            state.phase = TeleopPhase.fromTeleopTimer(state.modeTime);
-            state.timeLeftInPhase.mut_replace(state.phase.getTimeRemaining(state.modeTime));
+            pollTeleopData();
         }
-
-        RobotContainer.instance().pdh.update();
-        RobotContainer.instance().launcher.report(state.launcherReport);
 
         boolean driver2IsMovingJoysticks =
                 Math.abs(RobotContainer.instance().driver2.getLeftX()) > ControllerConfig.overrideTurretThreshold
@@ -89,14 +60,82 @@ public class RobotBrain {
         }
     }
 
+    private void pollOpModeAndAlliance() {
+        state.isDSAttached = DriverStation.isDSAttached();
+
+        if (DriverStation.isTeleopEnabled()) {
+            state.opMode = OpMode.TELEOP;
+        } else if (DriverStation.isAutonomousEnabled()) {
+            state.opMode = OpMode.AUTON;
+        } else if (DriverStation.isTestEnabled()) {
+            state.opMode = OpMode.TEST;
+        } else {
+            state.opMode = OpMode.DISABLED;
+        }
+
+        if (lastState.isEmpty() || state.opMode != lastState.get().opMode) {
+            state.isRed = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red;
+            state.autoWinnerIsKnown = false;
+
+            modeTimer.restart();
+            state.phase = TeleopPhase.TRANSITION_SHIFT;
+            state.timeLeftInPhase.mut_replace(Double.NaN, Seconds);
+            state.isHubActive = false;
+
+            state.overrideTurret = false;
+        }
+
+        state.modeTime.mut_replace(modeTimer.get(), Seconds);
+    }
+
+    private void pollTeleopData() {
+        if (!state.autoWinnerIsKnown) {
+            String gameMessage = DriverStation.getGameSpecificMessage();
+
+            if (gameMessage != null && !gameMessage.isEmpty()) {
+                if (Character.toUpperCase(gameMessage.charAt(0)) == 'B') {
+                    state.autoWinnerIsKnown = true;
+                    state.didWinAuto = !state.isRed;
+                } else if (Character.toUpperCase(gameMessage.charAt(0)) == 'R') {
+                    state.autoWinnerIsKnown = true;
+                    state.didWinAuto = state.isRed;
+                }
+            }
+        }
+
+        state.phase = TeleopPhase.fromTeleopTimer(state.modeTime);
+        state.timeLeftInPhase.mut_replace(state.phase.getTimeRemaining(state.modeTime));
+        if (state.autoWinnerIsKnown) {
+            state.isHubActive = state.phase.isHubEnabled(state.didWinAuto);
+        } else {
+            state.isHubActive = true;
+        }
+    }
+
     @SuppressWarnings("unused")
     public void determineModes() {
         boolean shooterCanRun = !Overrides.disableShooter && state.launcherReport.shooterOperational;
+        boolean shooterError = !state.launcherReport.shooterOperational && !Overrides.disableShooter;
         boolean turretCanRun = !Overrides.disableTurret && state.launcherReport.turretOperational;
+        boolean turretError = !state.launcherReport.turretOperational && !Overrides.disableTurret;
+
+        boolean hardwareError = shooterError || turretError;
 
         switch (state.opMode) {
-            case DISABLED, TEST -> {
+            case DISABLED -> {
                 state.targetingMode = TargetingMode.DISABLED;
+
+                if (hardwareError) {
+                    state.ledsMode = LEDsMode.ERROR;
+                } else if (state.isDSAttached) {
+                    state.ledsMode = LEDsMode.IDLE;
+                } else {
+                    state.ledsMode = LEDsMode.DISCONNECTED;
+                }
+            }
+            case TEST -> {
+                state.targetingMode = TargetingMode.DISABLED;
+                state.ledsMode = hardwareError ? LEDsMode.ERROR : LEDsMode.OK;
             }
             case TELEOP -> {
                 if (!shooterCanRun) {
@@ -109,6 +148,18 @@ public class RobotBrain {
                 } else {
                     state.targetingMode = TargetingMode.TARGETING_FZONE;
                 }
+
+                if (hardwareError) {
+                    state.ledsMode = LEDsMode.ERROR;
+                } else if (state.phase == TeleopPhase.ENDGAME) {
+                    state.ledsMode = LEDsMode.ENDGAME;
+                } else if (state.timeLeftInPhase.in(Seconds) <= 3) {
+                    state.ledsMode = LEDsMode.SHIFT_WARNING;
+                } else if (state.isHubActive) {
+                    state.ledsMode = LEDsMode.HUB_ACTIVE;
+                } else {
+                    state.ledsMode = LEDsMode.HUB_INACTIVE;
+                }
             }
             case AUTON -> {
                 if (Overrides.disableShooter || Overrides.disableTurret) {
@@ -118,6 +169,8 @@ public class RobotBrain {
                 } else {
                     state.targetingMode = TargetingMode.TARGETING_HUB;
                 }
+
+                state.ledsMode = hardwareError ? LEDsMode.ERROR : LEDsMode.AUTON;
             }
         }
     }
@@ -140,6 +193,38 @@ public class RobotBrain {
                                     }));
                 }
                 case DISABLED -> removeSubsystemDefaultCommand(RobotContainer.instance().launcher);
+            }
+        }
+
+        if (lastState.isEmpty() || state.ledsMode != lastState.get().ledsMode) {
+            switch (state.ledsMode) {
+                case DISCONNECTED -> changeSubsystemDefaultCommand(
+                        RobotContainer.instance().leds,
+                        RobotContainer.instance().disconnLEDsCmd());
+                case IDLE -> changeSubsystemDefaultCommand(
+                        RobotContainer.instance().leds,
+                        RobotContainer.instance().idleLEDsCmd());
+                case AUTON -> changeSubsystemDefaultCommand(
+                        RobotContainer.instance().leds,
+                        RobotContainer.instance().autonLEDsCmd());
+                case OK -> changeSubsystemDefaultCommand(
+                        RobotContainer.instance().leds,
+                        RobotContainer.instance().okLEDsCmd());
+                case ERROR -> changeSubsystemDefaultCommand(
+                        RobotContainer.instance().leds,
+                        RobotContainer.instance().errorLEDsCmd());
+                case ENDGAME -> changeSubsystemDefaultCommand(
+                        RobotContainer.instance().leds,
+                        RobotContainer.instance().endgameLEDsCmd());
+                case SHIFT_WARNING -> changeSubsystemDefaultCommand(
+                        RobotContainer.instance().leds,
+                        RobotContainer.instance().shiftWarningLEDsCmd());
+                case HUB_ACTIVE -> changeSubsystemDefaultCommand(
+                        RobotContainer.instance().leds,
+                        RobotContainer.instance().hubActiveLEDsCmd());
+                case HUB_INACTIVE -> changeSubsystemDefaultCommand(
+                        RobotContainer.instance().leds,
+                        RobotContainer.instance().hubInactiveLEDsCmd());
             }
         }
     }

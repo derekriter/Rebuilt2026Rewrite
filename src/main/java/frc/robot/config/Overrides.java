@@ -11,6 +11,8 @@ public final class Overrides {
 
     public static final boolean disablePDHMonitoring = false;
 
+    public static final boolean disableLEDs = false;
+
     public static void telemeterizeOverrides() {
         Telemetry.makeBoolWriterInitialEx(
                         Overrides.class.getSimpleName(),
@@ -38,6 +40,10 @@ public final class Overrides {
                         disablePDHMonitoring,
                         false,
                         true)
+                .close();
+
+        Telemetry.makeBoolWriterInitialEx(
+                        Overrides.class.getSimpleName(), "disabledLEDs", null, disableLEDs, false, true)
                 .close();
     }
 
