@@ -20,6 +20,11 @@ import frc.robot.subsystems.launcher.ShooterTarget;
 import frc.robot.subsystems.launcher.TurretAngle;
 
 public final class LauncherConfig {
+    public static final String systemName = "Launcher";
+
+    public static final Translation2d launcherOffset = new Translation2d(Inches.of(-6), Inches.of(-6));
+    public static final Time ballAirTime = Seconds.of(0.8);
+
     public static final class TurretConfig {
         public static final String systemName = "turret";
         public static final int canID = 15;
@@ -88,9 +93,6 @@ public final class LauncherConfig {
 
         private ShooterConfig() {}
     }
-
-    public static final Translation2d launcherOffset = new Translation2d(Inches.of(-6), Inches.of(-6));
-    public static final Time ballAirTime = Seconds.of(0.8);
 
     private LauncherConfig() {}
 }

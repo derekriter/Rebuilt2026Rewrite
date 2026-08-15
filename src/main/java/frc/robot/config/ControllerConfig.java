@@ -8,5 +8,9 @@ public final class ControllerConfig {
     public static final double overrideTurretThreshold = 0.5;
     public static final double overrideTurretDeadband = 0.1;
 
+    public static final double driveJoystickDeadband = 0.1;
+    public static final double turnJoystickDeadband = 0.1;
+    public static final int joystickExponent = 3;
+
     private ControllerConfig() {}
 }

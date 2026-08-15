@@ -1,8 +1,5 @@
 package frc.robot.brain;
 
-import static edu.wpi.first.units.Units.Seconds;
-
-import edu.wpi.first.units.measure.MutTime;
 import frc.robot.subsystems.launcher.LauncherReport;
 
 public final class RobotState {
@@ -14,9 +11,9 @@ public final class RobotState {
     public boolean autoWinnerIsKnown = false;
     public boolean didWinAuto = false;
 
-    public MutTime modeTime = Seconds.mutable(Double.NaN);
+    public double modeTime_s = Double.NaN;
     public TeleopPhase phase = TeleopPhase.TRANSITION_SHIFT;
-    public MutTime timeLeftInPhase = Seconds.mutable(Double.NaN);
+    public double timeLeftInPhase_s = Double.NaN;
     public FieldZone fieldZone = FieldZone.BLUE;
     public boolean isHubActive = false;
 
@@ -36,9 +33,9 @@ public final class RobotState {
         autoWinnerIsKnown = ref.autoWinnerIsKnown;
         didWinAuto = ref.didWinAuto;
 
-        modeTime.mut_replace(ref.modeTime);
+        modeTime_s = ref.modeTime_s;
         phase = ref.phase;
-        timeLeftInPhase.mut_replace(ref.timeLeftInPhase);
+        timeLeftInPhase_s = ref.timeLeftInPhase_s;
         fieldZone = ref.fieldZone;
         isHubActive = ref.isHubActive;
 

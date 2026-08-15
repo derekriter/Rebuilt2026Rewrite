@@ -18,10 +18,10 @@ public enum FieldZone {
         rightBound = _rightBound;
     }
 
-    public static FieldZone fromRobotX(Distance robotX) {
-        if (robotX.lt(BLUE.rightBound)) {
+    public static FieldZone fromRobotX(double robotX_m) {
+        if (robotX_m < BLUE.rightBound.in(Meters)) {
             return BLUE;
-        } else if (robotX.lte(NEUTRAL.rightBound)) {
+        } else if (robotX_m <= NEUTRAL.rightBound.in(Meters)) {
             return NEUTRAL;
         } else {
             return RED;

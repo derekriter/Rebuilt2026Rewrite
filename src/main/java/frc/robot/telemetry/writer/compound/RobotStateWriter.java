@@ -1,7 +1,5 @@
 package frc.robot.telemetry.writer.compound;
 
-import static edu.wpi.first.units.Units.Seconds;
-
 import frc.robot.brain.RobotState;
 import frc.robot.telemetry.Telemetry;
 import frc.robot.telemetry.TelemetryUnits;
@@ -74,9 +72,9 @@ public class RobotStateWriter implements AutoCloseable {
         autoWinnerIsKnownWriter.set(state.autoWinnerIsKnown);
         didWinAutoWriter.set(state.didWinAuto);
 
-        modeTimeWriter.set(state.modeTime.in(Seconds));
+        modeTimeWriter.set(state.modeTime_s);
         phaseWriter.set(state.phase.name());
-        timeLeftInPhaseWriter.set(state.timeLeftInPhase.in(Seconds));
+        timeLeftInPhaseWriter.set(state.timeLeftInPhase_s);
         fieldZoneWriter.set(state.fieldZone.name());
         isHubActiveWriter.set(state.isHubActive);
 
@@ -100,6 +98,7 @@ public class RobotStateWriter implements AutoCloseable {
         phaseWriter.close();
         timeLeftInPhaseWriter.close();
         fieldZoneWriter.close();
+        isHubActiveWriter.close();
         launcherReportWriter.close();
         isTurretHomedWriter.close();
         targetingModeWriter.close();

@@ -1,7 +1,5 @@
 package frc.robot.brain;
 
-import static edu.wpi.first.units.Units.Seconds;
-
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
@@ -39,8 +37,8 @@ public class RobotBrain {
         RobotContainer.instance().launcher.report(state.launcherReport);
         RobotContainer.instance().leds.update();
 
-        state.fieldZone =
-                FieldZone.fromRobotX(RobotContainer.instance().swerve.getPose().getMeasureX());
+        state.fieldZone = FieldZone.fromRobotX(
+                RobotContainer.instance().swerve.getStateCopy().Pose.getX());
 
         if (state.opMode == OpMode.TELEOP) {
             pollTeleopData();
@@ -79,13 +77,13 @@ public class RobotBrain {
 
             modeTimer.restart();
             state.phase = TeleopPhase.TRANSITION_SHIFT;
-            state.timeLeftInPhase.mut_replace(Double.NaN, Seconds);
+            state.timeLeftInPhase_s = Double.NaN;
             state.isHubActive = false;
 
             state.overrideTurret = false;
         }
 
-        state.modeTime.mut_replace(modeTimer.get(), Seconds);
+        state.modeTime_s = modeTimer.get();
     }
 
     private void pollTeleopData() {
@@ -103,8 +101,8 @@ public class RobotBrain {
             }
         }
 
-        state.phase = TeleopPhase.fromTeleopTimer(state.modeTime);
-        state.timeLeftInPhase.mut_replace(state.phase.getTimeRemaining(state.modeTime));
+        state.phase = TeleopPhase.fromTeleopTime(state.modeTime_s);
+        state.timeLeftInPhase_s = state.phase.getTimeRemaining_s(state.modeTime_s);
         if (state.autoWinnerIsKnown) {
             state.isHubActive = state.phase.isHubEnabled(state.didWinAuto);
         } else {
@@ -153,7 +151,7 @@ public class RobotBrain {
                     state.ledsMode = LEDsMode.ERROR;
                 } else if (state.phase == TeleopPhase.ENDGAME) {
                     state.ledsMode = LEDsMode.ENDGAME;
-                } else if (state.timeLeftInPhase.in(Seconds) <= 3) {
+                } else if (state.timeLeftInPhase_s <= 3) {
                     state.ledsMode = LEDsMode.SHIFT_WARNING;
                 } else if (state.isHubActive) {
                     state.ledsMode = LEDsMode.HUB_ACTIVE;

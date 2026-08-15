@@ -9,10 +9,11 @@ import frc.robot.config.LauncherConfig;
 
 public final class LaunchCalculator {
     public static Pair<TurretAngle, ShooterTarget> calcShot(
-            Translation2d target, Pose2d robotPose, Pair<LinearVelocity, LinearVelocity> robotVel) {
+            Translation2d target, Pose2d robotPose, LinearVelocity robotCentricVelX, LinearVelocity robotCentricVelY) {
 
         Translation2d launcherLoc = getLauncherLocOnField(robotPose);
-        Translation2d compensatedTarget = target.plus(calcPointCompensation(robotVel, robotPose.getRotation()));
+        Translation2d compensatedTarget =
+                target.plus(calcPointCompensation(robotCentricVelX, robotCentricVelY, robotPose.getRotation()));
 
         Translation2d vecToTarget = compensatedTarget.minus(launcherLoc);
         double fieldCentricDeg = Math.toDegrees(Math.atan2(vecToTarget.getY(), vecToTarget.getX()));
@@ -28,10 +29,10 @@ public final class LaunchCalculator {
     }
 
     private static Translation2d calcPointCompensation(
-            Pair<LinearVelocity, LinearVelocity> robotVel, Rotation2d robotRot) {
+            LinearVelocity robotCentricVelX, LinearVelocity robotCentricVelY, Rotation2d robotRot) {
         Translation2d velCompensation = new Translation2d(
-                        robotVel.getFirst().times(LauncherConfig.ballAirTime),
-                        robotVel.getSecond().times(LauncherConfig.ballAirTime))
+                        robotCentricVelX.times(LauncherConfig.ballAirTime),
+                        robotCentricVelY.times(LauncherConfig.ballAirTime))
                 .rotateBy(robotRot)
                 .unaryMinus();
 

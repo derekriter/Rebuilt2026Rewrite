@@ -18,17 +18,17 @@ public enum TeleopPhase {
         endTime = _endTime;
     }
 
-    public static TeleopPhase fromTeleopTimer(Time teleopTime) {
-        if (teleopTime.lt(TRANSITION_SHIFT.endTime)) return TRANSITION_SHIFT;
-        if (teleopTime.lt(SHIFT1.endTime)) return SHIFT1;
-        if (teleopTime.lt(SHIFT2.endTime)) return SHIFT2;
-        if (teleopTime.lt(SHIFT3.endTime)) return SHIFT3;
-        if (teleopTime.lt(SHIFT4.endTime)) return SHIFT4;
+    public static TeleopPhase fromTeleopTime(double teleopTime_s) {
+        if (teleopTime_s < TRANSITION_SHIFT.endTime.in(Seconds)) return TRANSITION_SHIFT;
+        if (teleopTime_s < SHIFT1.endTime.in(Seconds)) return SHIFT1;
+        if (teleopTime_s < SHIFT2.endTime.in(Seconds)) return SHIFT2;
+        if (teleopTime_s < SHIFT3.endTime.in(Seconds)) return SHIFT3;
+        if (teleopTime_s < SHIFT4.endTime.in(Seconds)) return SHIFT4;
         return ENDGAME;
     }
 
-    public Time getTimeRemaining(Time teleopTime) {
-        return this.endTime.minus(teleopTime);
+    public double getTimeRemaining_s(double teleopTime_s) {
+        return this.endTime.in(Seconds) - teleopTime_s;
     }
 
     public boolean isHubEnabled(boolean didWinAuto) {

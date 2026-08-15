@@ -13,6 +13,7 @@ import com.revrobotics.spark.SparkMax;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotContainer;
+import frc.robot.config.LauncherConfig;
 import frc.robot.config.LauncherConfig.ShooterConfig;
 import frc.robot.config.LauncherConfig.TurretConfig;
 import frc.robot.config.Overrides;
@@ -108,7 +109,7 @@ public final class Launcher extends SubsystemBase {
                     ResetMode.kResetSafeParameters,
                     PersistMode.kPersistParameters);
 
-            String bufferTable = getName() + "/turretBuffer";
+            String bufferTable = LauncherConfig.systemName + "/turretBuffer";
             turretPosWriter = Telemetry.makeDoubleWriter(bufferTable, "pos", TelemetryUnits.rotations);
             turretVelWriter = Telemetry.makeDoubleWriter(bufferTable, "vel", TelemetryUnits.rpm);
             turretTempWriter = Telemetry.makeDoubleWriter(bufferTable, "temp", TelemetryUnits.celsius);
@@ -117,10 +118,11 @@ public final class Launcher extends SubsystemBase {
             turretCurrentOutWriter = Telemetry.makeDoubleWriter(bufferTable, "currentOut", TelemetryUnits.amps);
             turretConnectedWriter = Telemetry.makeBoolWriter(bufferTable, "connected");
 
-            turretThermalShutdownWriter = Telemetry.makeBoolWriter(getName(), "turretThermalShutdown");
-            turretTargetWriter = Telemetry.makeTurretAngleWriterInitialEx(getName(), "turretTarget", null, false, true);
-            turretAtHomingLimitWriter = Telemetry.makeBoolWriter(getName(), "turretAtHomingLimit");
-            turretBreakerWriter = Telemetry.makeBoolWriter(getName(), "turretBreakerTripped");
+            turretThermalShutdownWriter = Telemetry.makeBoolWriter(LauncherConfig.systemName, "turretThermalShutdown");
+            turretTargetWriter = Telemetry.makeTurretAngleWriterInitialEx(
+                    LauncherConfig.systemName, "turretTarget", null, false, true);
+            turretAtHomingLimitWriter = Telemetry.makeBoolWriter(LauncherConfig.systemName, "turretAtHomingLimit");
+            turretBreakerWriter = Telemetry.makeBoolWriter(LauncherConfig.systemName, "turretBreakerTripped");
         }
 
         // ===Shooter===
@@ -145,7 +147,7 @@ public final class Launcher extends SubsystemBase {
                     ResetMode.kResetSafeParameters,
                     PersistMode.kPersistParameters);
 
-            String bufferTable = getName() + "/shooterBuffer";
+            String bufferTable = LauncherConfig.systemName + "/shooterBuffer";
             shooterPosWriter = Telemetry.makeDoubleWriter(bufferTable, "pos", TelemetryUnits.rotations);
             shooterVelWriter = Telemetry.makeDoubleWriter(bufferTable, "vel", TelemetryUnits.rpm);
             shooterTempWriter = Telemetry.makeDoubleWriter(bufferTable, "temp", TelemetryUnits.celsius);
@@ -154,10 +156,11 @@ public final class Launcher extends SubsystemBase {
             shooterCurrentOutWriter = Telemetry.makeDoubleWriter(bufferTable, "currentOut", TelemetryUnits.amps);
             shooterConnectedWriter = Telemetry.makeBoolWriter(bufferTable, "connected");
 
-            shooterThermalShutdownWriter = Telemetry.makeBoolWriter(getName(), "shooterThermalShutdown");
-            shooterTargetWriter =
-                    Telemetry.makeShooterTargetWriterInitialEx(getName(), "shooterTarget", null, false, true);
-            shooterBreakerWriter = Telemetry.makeBoolWriter(getName(), "shooterBreakerTripped");
+            shooterThermalShutdownWriter =
+                    Telemetry.makeBoolWriter(LauncherConfig.systemName, "shooterThermalShutdown");
+            shooterTargetWriter = Telemetry.makeShooterTargetWriterInitialEx(
+                    LauncherConfig.systemName, "shooterTarget", null, false, true);
+            shooterBreakerWriter = Telemetry.makeBoolWriter(LauncherConfig.systemName, "shooterBreakerTripped");
         }
     }
 
