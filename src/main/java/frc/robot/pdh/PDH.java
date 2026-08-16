@@ -19,8 +19,9 @@ public class PDH {
     private final Optional<PowerDistribution> powerDistribution;
 
     private PDHBuffer buffer = new PDHBuffer();
+    private boolean connectedLast = false;
 
-    private final Alert disconnAlert = AlertUtils.makeDisconnectAlert(PDHConfig.systemName, PDHConfig.canID);
+    private final Alert canAlert = AlertUtils.makeCANFailureAlert(PDHConfig.systemName);
 
     private final DoubleWriter voltageWriter;
     private final DoubleWriter totalCurrentWriter;
@@ -72,7 +73,14 @@ public class PDH {
 
         connWriter.set(buffer.connected);
         canWriter.set(buffer.connected);
-        disconnAlert.set(!buffer.connected);
+        canAlert.set(!buffer.connected);
+        if (buffer.connected != connectedLast) {
+            if (buffer.connected) {
+                Telemetry.reportCANConnectNoChannel(PDHConfig.systemName, PDHConfig.canID);
+            } else {
+                Telemetry.reportCANDisconnectNoChannel(PDHConfig.systemName, PDHConfig.canID);
+            }
+        }
         voltageWriter.set(buffer.voltage_V);
         totalCurrentWriter.set(buffer.totalCurrent_A);
         currentsWriter.set(buffer.connected ? buffer.currents_A : null);
@@ -80,7 +88,7 @@ public class PDH {
     }
 
     public boolean isBreakerTripped(int channel) {
-        if (powerDistribution.isEmpty() || !buffer.connected || channel < 0 || channel > buffer.breakersTripped.length)
+        if (powerDistribution.isEmpty() || !buffer.connected || channel < 0 || channel >= buffer.breakersTripped.length)
             return false;
 
         return buffer.breakersTripped[channel];

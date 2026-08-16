@@ -11,21 +11,31 @@ public class MotorUtils {
     /**
      * Safely apply a configuration to spark motor
      * @param motor
-     * @param motorName Used for logging purposes
+     * @param motorName Used for telemetry purposes
+     * @param canID Used for telemetry purposes
+     * @param channelID Used for telemetry purposes
      * @param config
      * @param resetMode
      * @param persistMode
      * @return {@code true} if the configuration was successfully applied, {@code false} otherwise
      */
     public static boolean safeApplyConfig(
-            SparkBase motor, String motorName, SparkBaseConfig config, ResetMode resetMode, PersistMode persistMode) {
-        return safeApplyConfig(motor, motorName, config, resetMode, persistMode, 3);
+            SparkBase motor,
+            String motorName,
+            int canID,
+            int channelID,
+            SparkBaseConfig config,
+            ResetMode resetMode,
+            PersistMode persistMode) {
+        return safeApplyConfig(motor, motorName, canID, channelID, config, resetMode, persistMode, 3);
     }
 
     /**
      * Safely apply a configuration to spark motor
      * @param motor
-     * @param motorName Used for logging purposes
+     * @param motorName Used for telemetry purposes
+     * @param canID Used for telemetry purposes
+     * @param channelID Used for telemetry purposes
      * @param config
      * @param resetMode
      * @param persistMode
@@ -35,6 +45,8 @@ public class MotorUtils {
     public static boolean safeApplyConfig(
             SparkBase motor,
             String motorName,
+            int canID,
+            int channelID,
             SparkBaseConfig config,
             ResetMode resetMode,
             PersistMode persistMode,
@@ -64,12 +76,16 @@ public class MotorUtils {
             }
 
             if (i < maxTries - 1) {
-                Telemetry.reportWarning(String.format("Failed to configure %s, retrying...", motorName), false);
+                Telemetry.reportWarning(
+                        String.format(
+                                "Failed to configure %s (CAN %d, ch %d), retrying...", motorName, canID, channelID),
+                        false);
             }
         }
 
-        Telemetry.reportError(String.format("Failed to configure %s (CAN %d)", motorName, motor.getDeviceId()), true);
-        AlertUtils.makeConfigFailAlert(motorName, motor.getDeviceId()).set(true);
+        Telemetry.reportError(
+                String.format("Failed to configure %s (CAN %d, ch %d)", motorName, canID, channelID), true);
+        AlertUtils.makeConfigFailAlert(motorName).set(true);
         return false;
     }
 }

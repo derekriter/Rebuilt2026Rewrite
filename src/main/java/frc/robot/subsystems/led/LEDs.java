@@ -18,9 +18,11 @@ public class LEDs extends SubsystemBase {
     private final AddressableLED leds;
     private final AddressableLEDBuffer buffer;
 
-    private final Alert breakerAlert = AlertUtils.makeBreakerTripAlert(LEDsConfig.systemName, LEDsConfig.channelID);
+    private final Alert breakerAlert = AlertUtils.makeBreakerTripAlert(LEDsConfig.systemName);
+    private boolean breakerLast = false;
 
-    private final SubsystemWriter<LEDs> subsystemWriter = Telemetry.makeSubsystemWriter(this, "/");
+    private final SubsystemWriter<LEDs> subsystemWriter =
+            Telemetry.makeSubsystemWriter(this, "/", LEDsConfig.systemName);
     private final BoolWriter breakerWriter;
 
     private boolean needsUpdate = false;
@@ -61,8 +63,17 @@ public class LEDs extends SubsystemBase {
 
         boolean breakerTripped = RobotContainer.instance().pdh.isBreakerTripped(LEDsConfig.channelID);
 
-        breakerAlert.set(breakerTripped);
         breakerWriter.set(breakerTripped);
+        breakerAlert.set(breakerTripped);
+        if (breakerTripped != breakerLast) {
+            if (breakerTripped) {
+                Telemetry.reportBreakerTripNoCAN(LEDsConfig.systemName, LEDsConfig.channelID);
+            } else {
+                Telemetry.reportBreakerResetNoCAN(LEDsConfig.systemName, LEDsConfig.channelID);
+            }
+        }
+
+        breakerLast = breakerTripped;
     }
 
     public void applyPattern(LEDPattern pattern) {

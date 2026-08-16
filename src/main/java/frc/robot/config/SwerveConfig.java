@@ -1,6 +1,7 @@
 package frc.robot.config;
 
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.KilogramSquareMeters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
@@ -28,6 +29,7 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
+import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Time;
 import java.util.Optional;
 
@@ -35,6 +37,8 @@ import java.util.Optional;
 // https://v6.docs.ctr-electronics.com/en/stable/docs/tuner/tuner-swerve/index.html
 public final class SwerveConfig {
     public static class ModuleConfig {
+        public final String prefix;
+
         public final Distance xPos, yPos;
         public final String driveMotorName, steerMotorName, encoderName;
         public final int driveCANID, steerCANID, encoderCANID;
@@ -46,6 +50,7 @@ public final class SwerveConfig {
         public final SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration> constants;
 
         public ModuleConfig(
+                String _prefix,
                 Distance _xPos,
                 Distance _yPos,
                 String _driveMotorName,
@@ -61,6 +66,8 @@ public final class SwerveConfig {
                 int _encoderChannelID,
                 boolean _encoderInverted,
                 Angle _encoderOffset) {
+            prefix = _prefix;
+
             xPos = _xPos;
             yPos = _yPos;
 
@@ -150,8 +157,12 @@ public final class SwerveConfig {
             .withPigeon2Id(Pigeon.canID)
             .withPigeon2Configs(pigeonConfigs.orElse(null));
 
+    public static final Temperature tempWarnThreshold = Celsius.of(75);
+    public static final Temperature thermalShutdownThreshold = Celsius.of(80);
+
     public static final ModuleConfig[] modules = {
         new ModuleConfig(
+                "fl",
                 Inches.of(10.875),
                 Inches.of(10.875),
                 "flDriveMotor",
@@ -168,6 +179,7 @@ public final class SwerveConfig {
                 false,
                 Rotations.of(-0.10546875)),
         new ModuleConfig(
+                "fr",
                 Inches.of(10.875),
                 Inches.of(-10.875),
                 "frDriveMotor",
@@ -184,6 +196,7 @@ public final class SwerveConfig {
                 false,
                 Rotations.of(-0.3525390625)),
         new ModuleConfig(
+                "bl",
                 Inches.of(-10.875),
                 Inches.of(10.875),
                 "blDriveMotor",
@@ -200,6 +213,7 @@ public final class SwerveConfig {
                 false,
                 Rotations.of(0.07081)),
         new ModuleConfig(
+                "br",
                 Inches.of(-10.875),
                 Inches.of(-10.875),
                 "brDriveMotor",

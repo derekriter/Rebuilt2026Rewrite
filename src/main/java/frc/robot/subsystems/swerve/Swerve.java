@@ -102,6 +102,9 @@ public class Swerve extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder> impleme
     /* The SysId routine to test */
     private final SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineTranslation;
 
+    private final ModuleHelper[] helpers;
+    private final ModuleReport[] helperReports;
+
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
      * <p>
@@ -122,6 +125,15 @@ public class Swerve extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder> impleme
         if (Utils.isSimulation()) {
             startSimThread();
         }
+
+        helpers = new ModuleHelper[] {
+            new ModuleHelper(0, getModule(0)),
+            new ModuleHelper(1, getModule(1)),
+            new ModuleHelper(2, getModule(2)),
+            new ModuleHelper(3, getModule(3))
+        };
+        helperReports =
+                new ModuleReport[] {new ModuleReport(), new ModuleReport(), new ModuleReport(), new ModuleReport()};
     }
 
     /**
@@ -149,6 +161,15 @@ public class Swerve extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder> impleme
         if (Utils.isSimulation()) {
             startSimThread();
         }
+
+        helpers = new ModuleHelper[] {
+            new ModuleHelper(0, getModule(0)),
+            new ModuleHelper(1, getModule(1)),
+            new ModuleHelper(2, getModule(2)),
+            new ModuleHelper(3, getModule(3))
+        };
+        helperReports =
+                new ModuleReport[] {new ModuleReport(), new ModuleReport(), new ModuleReport(), new ModuleReport()};
     }
 
     /**
@@ -187,6 +208,22 @@ public class Swerve extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder> impleme
         if (Utils.isSimulation()) {
             startSimThread();
         }
+
+        helpers = new ModuleHelper[] {
+            new ModuleHelper(0, getModule(0)),
+            new ModuleHelper(1, getModule(1)),
+            new ModuleHelper(2, getModule(2)),
+            new ModuleHelper(3, getModule(3))
+        };
+        helperReports =
+                new ModuleReport[] {new ModuleReport(), new ModuleReport(), new ModuleReport(), new ModuleReport()};
+    }
+
+    public void report(SwerveReport report) {
+        helpers[0].report(helperReports[0]);
+        helpers[1].report(helperReports[1]);
+        helpers[2].report(helperReports[2]);
+        helpers[3].report(helperReports[3]);
     }
 
     /**

@@ -13,37 +13,26 @@ public final class Overrides {
 
     public static final boolean disableLEDs = false;
 
+    public static final boolean disableSwerveSafety = false;
+
     public static void telemeterizeOverrides() {
-        Telemetry.makeBoolWriterInitialEx(
-                        Overrides.class.getSimpleName(),
-                        "disableShooterSafety",
-                        null,
-                        disableShooterSafety,
-                        false,
-                        true)
+        Telemetry.makeBoolWriterInitialEx("Overrides", "disableShooterSafety", null, disableShooterSafety, false, true)
                 .close();
-        Telemetry.makeBoolWriterInitialEx(
-                        Overrides.class.getSimpleName(), "disableShooter", null, disableShooter, false, true)
+        Telemetry.makeBoolWriterInitialEx("Overrides", "disableShooter", null, disableShooter, false, true)
                 .close();
 
-        Telemetry.makeBoolWriterInitialEx(
-                        Overrides.class.getSimpleName(), "disableTurretSafety", null, disableTurretSafety, false, true)
+        Telemetry.makeBoolWriterInitialEx("Overrides", "disableTurretSafety", null, disableTurretSafety, false, true)
                 .close();
-        Telemetry.makeBoolWriterInitialEx(
-                        Overrides.class.getSimpleName(), "disableTurret", null, disableTurret, false, true)
+        Telemetry.makeBoolWriterInitialEx("Overrides", "disableTurret", null, disableTurret, false, true)
                 .close();
 
-        Telemetry.makeBoolWriterInitialEx(
-                        Overrides.class.getSimpleName(),
-                        "disablePDHMonitoring",
-                        null,
-                        disablePDHMonitoring,
-                        false,
-                        true)
+        Telemetry.makeBoolWriterInitialEx("Overrides", "disablePDHMonitoring", null, disablePDHMonitoring, false, true)
                 .close();
 
-        Telemetry.makeBoolWriterInitialEx(
-                        Overrides.class.getSimpleName(), "disabledLEDs", null, disableLEDs, false, true)
+        Telemetry.makeBoolWriterInitialEx("Overrides", "disabledLEDs", null, disableLEDs, false, true)
+                .close();
+
+        Telemetry.makeBoolWriterInitialEx("Overrides", "disableSwerveSafety", null, disableSwerveSafety, false, true)
                 .close();
     }
 

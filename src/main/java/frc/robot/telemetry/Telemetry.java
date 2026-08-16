@@ -230,6 +230,46 @@ public class Telemetry {
         System.out.println(msg);
     }
 
+    public static void reportCANDisconnect(String name, int canID, int channelID) {
+        reportWarning(String.format("Lost connection to CAN %d (%s, ch %d)", canID, name, channelID), false);
+    }
+
+    public static void reportCANDisconnectNoChannel(String name, int canID) {
+        reportWarning(String.format("Lost connection to CAN %d (%s)", canID, name), false);
+    }
+
+    public static void reportCANConnect(String name, int canID, int channelID) {
+        println(String.format("Connected to CAN %d (%s, ch %d)", canID, name, channelID));
+    }
+
+    public static void reportCANConnectNoChannel(String name, int canID) {
+        println(String.format("Connected to CAN %d (%s)", canID, name));
+    }
+
+    public static void reportBreakerTrip(String name, int canID, int channelID) {
+        reportWarning(String.format("Breaker ch %d (%s, CAN %d) tripped", channelID, name, canID), false);
+    }
+
+    public static void reportBreakerTripNoCAN(String name, int channelID) {
+        reportWarning(String.format("Breaker ch %d (%s) tripped", channelID, name), false);
+    }
+
+    public static void reportBreakerReset(String name, int canID, int channelID) {
+        println(String.format("Breaker ch %d (%s, CAN %d) reset", channelID, name, canID));
+    }
+
+    public static void reportBreakerResetNoCAN(String name, int channelID) {
+        println(String.format("Breaker ch %d (%s, CAN %d) reset", channelID, name));
+    }
+
+    public static void reportThermalShutdownTrigger(String name, int canID, int channelID) {
+        reportWarning(String.format("Thermal shutdown triggered on %s (CAN %d, ch %d)", name, canID, channelID), false);
+    }
+
+    public static void reportThermalShutdownRelease(String name, int canID, int channelID) {
+        println(String.format("Thermal shutdown released on %s (CAN %d, ch %d)", name, canID, channelID));
+    }
+
     /**
      * Report a warning and log it to the console
      */
@@ -1464,8 +1504,9 @@ public class Telemetry {
     /*
     Subsystem
     */
-    public static <T extends Subsystem> SubsystemWriter<T> makeSubsystemWriter(T subsystem, String table) {
-        return new SubsystemWriter<T>(subsystem, NetworkTable.normalizeKey(table + "/" + subsystem.getName()));
+    public static <T extends Subsystem> SubsystemWriter<T> makeSubsystemWriter(
+            T subsystem, String table, String subsystemName) {
+        return new SubsystemWriter<T>(subsystem, NetworkTable.normalizeKey(table + "/" + subsystemName));
     }
 
     /*

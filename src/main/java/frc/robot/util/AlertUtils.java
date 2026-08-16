@@ -4,20 +4,20 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 
 public class AlertUtils {
-    public static Alert makeDisconnectAlert(String deviceName, int can) {
-        return new Alert(String.format("Missing connection to %s (CAN %d)", deviceName, can), AlertType.kError);
+    public static Alert makeCANFailureAlert(String deviceName) {
+        return new Alert(String.format("Missing CAN connection to %s", deviceName), AlertType.kError);
     }
 
-    public static Alert makeTempWarnAlert(String deviceName, int can) {
-        return new Alert(String.format("%s (CAN %d) nearing thermal shutdown", deviceName, can), AlertType.kWarning);
+    public static Alert makeTempWarnAlert(String deviceName) {
+        return new Alert(String.format("%s nearing thermal shutdown", deviceName), AlertType.kWarning);
     }
 
-    public static Alert makeThermalShutdownAlert(String deviceName, int can) {
-        return new Alert(String.format("Thermal shutdown triggered on %s (CAN %d)", deviceName, can), AlertType.kError);
+    public static Alert makeThermalShutdownAlert(String deviceName) {
+        return new Alert(String.format("Thermal shutdown triggered on %s", deviceName), AlertType.kError);
     }
 
-    public static Alert makeConfigFailAlert(String deviceName, int can) {
-        return new Alert(String.format("Failed to update %s (CAN %d) config", deviceName, can), AlertType.kError);
+    public static Alert makeConfigFailAlert(String deviceName) {
+        return new Alert(String.format("Failed to update %s config", deviceName), AlertType.kError);
     }
 
     public static Alert makeSystemDisabledAlert(String systemName) {
@@ -28,7 +28,7 @@ public class AlertUtils {
         return new Alert(String.format("%s safety disabled by override", systemName), AlertType.kWarning);
     }
 
-    public static Alert makeBreakerTripAlert(String deviceName, int channel) {
-        return new Alert(String.format("PDH breaker %d (%s) tripped", channel, deviceName), AlertType.kError);
+    public static Alert makeBreakerTripAlert(String deviceName) {
+        return new Alert(String.format("%s breaker tripped", deviceName), AlertType.kError);
     }
 }
