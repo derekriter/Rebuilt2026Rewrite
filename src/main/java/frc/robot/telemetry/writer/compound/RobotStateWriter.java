@@ -25,6 +25,7 @@ public class RobotStateWriter implements AutoCloseable {
 
     private final LauncherReportWriter launcherReportWriter;
     private final BoolWriter isTurretHomedWriter;
+    private final SwerveReportWriter swerveReportWriter;
 
     private final StringWriter targetingModeWriter;
     private final BoolWriter overrideTurretWriter;
@@ -53,6 +54,7 @@ public class RobotStateWriter implements AutoCloseable {
 
         launcherReportWriter = Telemetry.makeLauncherReportWriter(table, "launcherReport");
         isTurretHomedWriter = Telemetry.makeBoolWriterEx(table, "isTurretHomed", null, true, false);
+        swerveReportWriter = Telemetry.makeSwerveReportWriter(table, "swerveReport");
 
         targetingModeWriter = Telemetry.makeStringWriterEx(table, "targetingMode", null, true, false);
         overrideTurretWriter = Telemetry.makeBoolWriterEx(table, "overrideTurret", null, true, false);
@@ -80,6 +82,7 @@ public class RobotStateWriter implements AutoCloseable {
 
         launcherReportWriter.set(state.launcherReport);
         isTurretHomedWriter.set(state.isTurretHomed);
+        swerveReportWriter.set(state.swerveReport);
 
         targetingModeWriter.set(state.targetingMode.name());
         overrideTurretWriter.set(state.overrideTurret);
@@ -101,6 +104,7 @@ public class RobotStateWriter implements AutoCloseable {
         isHubActiveWriter.close();
         launcherReportWriter.close();
         isTurretHomedWriter.close();
+        swerveReportWriter.close();
         targetingModeWriter.close();
         overrideTurretWriter.close();
         ledsModeWriter.close();

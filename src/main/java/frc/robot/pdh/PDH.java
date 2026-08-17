@@ -85,6 +85,8 @@ public class PDH {
         totalCurrentWriter.set(buffer.totalCurrent_A);
         currentsWriter.set(buffer.connected ? buffer.currents_A : null);
         breakersWriter.set(buffer.connected ? buffer.breakersTripped : null);
+
+        connectedLast = buffer.connected;
     }
 
     public boolean isBreakerTripped(int channel) {

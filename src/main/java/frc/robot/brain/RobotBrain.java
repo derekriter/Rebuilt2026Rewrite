@@ -35,6 +35,7 @@ public class RobotBrain {
 
         RobotContainer.instance().pdh.update();
         RobotContainer.instance().launcher.report(state.launcherReport);
+        RobotContainer.instance().swerve.report(state.swerveReport);
         RobotContainer.instance().leds.update();
 
         state.fieldZone = FieldZone.fromRobotX(
@@ -114,10 +115,13 @@ public class RobotBrain {
     public void determineModes() {
         boolean shooterCanRun = !Overrides.disableShooter && state.launcherReport.shooterOperational;
         boolean shooterError = !state.launcherReport.shooterOperational && !Overrides.disableShooter;
+
         boolean turretCanRun = !Overrides.disableTurret && state.launcherReport.turretOperational;
         boolean turretError = !state.launcherReport.turretOperational && !Overrides.disableTurret;
 
-        boolean hardwareError = shooterError || turretError;
+        boolean swerveError = !state.swerveReport.isOperational;
+
+        boolean hardwareError = shooterError || turretError || swerveError;
 
         switch (state.opMode) {
             case DISABLED -> {

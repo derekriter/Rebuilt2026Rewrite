@@ -39,6 +39,7 @@ import frc.robot.constants.BuildConstants;
 import frc.robot.subsystems.launcher.LauncherReport;
 import frc.robot.subsystems.launcher.ShooterTarget;
 import frc.robot.subsystems.launcher.TurretAngle;
+import frc.robot.subsystems.swerve.SwerveReport;
 import frc.robot.telemetry.writer.BoolArrayWriter;
 import frc.robot.telemetry.writer.BoolWriter;
 import frc.robot.telemetry.writer.DoubleArrayWriter;
@@ -54,6 +55,7 @@ import frc.robot.telemetry.writer.compound.LauncherReportWriter;
 import frc.robot.telemetry.writer.compound.RobotStateWriter;
 import frc.robot.telemetry.writer.compound.ShooterTargetWriter;
 import frc.robot.telemetry.writer.compound.SubsystemWriter;
+import frc.robot.telemetry.writer.compound.SwerveReportWriter;
 import frc.robot.telemetry.writer.compound.TurretAngleWriter;
 import frc.robot.util.CloneOperation;
 import frc.robot.util.EqualityTest;
@@ -84,6 +86,7 @@ public class Telemetry {
     private static final LauncherReport launcherReportNullFallback = new LauncherReport();
     private static final TurretAngle turretAngleNullFallback = TurretAngle.fromMechanismDeg(Double.NaN);
     private static final ShooterTarget shooterTargetAngleNullFallback = ShooterTarget.fromShooterRPM(Double.NaN);
+    private static final SwerveReport swerveReportNullFallback = new SwerveReport();
 
     public static void init(Robot robot) {
         if (hasInited) return;
@@ -1532,6 +1535,20 @@ public class Telemetry {
     public static LauncherReportWriter makeLauncherReportWriterInitial(
             String table, String name, LauncherReport initialValue) {
         var entry = makeLauncherReportWriter(table, name);
+        entry.set(initialValue);
+        return entry;
+    }
+
+    /*
+    SwerveReport
+    */
+    public static SwerveReportWriter makeSwerveReportWriter(String table, String name) {
+        return new SwerveReportWriter(NetworkTable.normalizeKey(table + "/" + name), swerveReportNullFallback);
+    }
+
+    public static SwerveReportWriter makeSwerveReportWriterInitial(
+            String table, String name, SwerveReport initialValue) {
+        var entry = makeSwerveReportWriter(table, name);
         entry.set(initialValue);
         return entry;
     }

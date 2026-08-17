@@ -153,12 +153,36 @@ public final class SwerveConfig {
     public static final Time simLoopPeriod = Milliseconds.of(4);
 
     public static final SwerveDrivetrainConstants drivetrainConstants = new SwerveDrivetrainConstants()
-            .withCANBusName(CANivore.busID)
-            .withPigeon2Id(Pigeon.canID)
+            .withCANBusName(CANivoreConfig.busID)
+            .withPigeon2Id(PigeonConfig.canID)
             .withPigeon2Configs(pigeonConfigs.orElse(null));
 
     public static final Temperature tempWarnThreshold = Celsius.of(75);
     public static final Temperature thermalShutdownThreshold = Celsius.of(80);
+
+    private static final SwerveModuleConstantsFactory<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
+            moduleConstantsFactory = new SwerveModuleConstantsFactory<
+                            TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>()
+                    .withDriveMotorGearRatio(6.746031746031747)
+                    .withSteerMotorGearRatio(21.428571428571427)
+                    .withCouplingGearRatio(3.5714285714285716)
+                    .withWheelRadius(Inches.of(2.005))
+                    .withSteerMotorGains(steerGains)
+                    .withDriveMotorGains(driveGains)
+                    .withSteerMotorClosedLoopOutput(ClosedLoopOutputType.Voltage)
+                    .withDriveMotorClosedLoopOutput(ClosedLoopOutputType.Voltage)
+                    .withSlipCurrent(slipCurrent)
+                    .withSpeedAt12Volts(speedAt12Volts)
+                    .withDriveMotorType(DriveMotorArrangement.TalonFX_Integrated)
+                    .withSteerMotorType(SteerMotorArrangement.TalonFX_Integrated)
+                    .withFeedbackSource(SteerFeedbackType.FusedCANcoder)
+                    .withDriveMotorInitialConfigs(driveInitialConfigs)
+                    .withSteerMotorInitialConfigs(steerInitialConfigs)
+                    .withEncoderInitialConfigs(encoderInitialConfigs)
+                    .withSteerInertia(KilogramSquareMeters.of(0.01)) // used for sim only
+                    .withDriveInertia(KilogramSquareMeters.of(0.01)) // used for sim only
+                    .withSteerFrictionVoltage(Volts.of(0.2)) // used for sim only
+                    .withDriveFrictionVoltage(Volts.of(0.2)); // used for sim only
 
     public static final ModuleConfig[] modules = {
         new ModuleConfig(
@@ -231,43 +255,19 @@ public final class SwerveConfig {
                 Rotations.of(0.016845703125))
     };
 
-    public static final class Pigeon {
+    public static final class PigeonConfig {
         public static final String imuName = "pigeon2";
         public static final int canID = 25;
         public static final int channelID = 0; // TODO: pigeon2 channel id
     }
 
-    public static final class CANivore {
+    public static final class CANivoreConfig {
         public static final String busName = "swerveCANivore";
         public static final String busID = "SwerveBus";
         public static final int channelID = 0; // TODO: canivore channel id
 
         public static final CANBus bus = new CANBus(busID);
     }
-
-    private static final SwerveModuleConstantsFactory<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
-            moduleConstantsFactory = new SwerveModuleConstantsFactory<
-                            TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>()
-                    .withDriveMotorGearRatio(6.746031746031747)
-                    .withSteerMotorGearRatio(21.428571428571427)
-                    .withCouplingGearRatio(3.5714285714285716)
-                    .withWheelRadius(Inches.of(2.005))
-                    .withSteerMotorGains(steerGains)
-                    .withDriveMotorGains(driveGains)
-                    .withSteerMotorClosedLoopOutput(ClosedLoopOutputType.Voltage)
-                    .withDriveMotorClosedLoopOutput(ClosedLoopOutputType.Voltage)
-                    .withSlipCurrent(slipCurrent)
-                    .withSpeedAt12Volts(speedAt12Volts)
-                    .withDriveMotorType(DriveMotorArrangement.TalonFX_Integrated)
-                    .withSteerMotorType(SteerMotorArrangement.TalonFX_Integrated)
-                    .withFeedbackSource(SteerFeedbackType.FusedCANcoder)
-                    .withDriveMotorInitialConfigs(driveInitialConfigs)
-                    .withSteerMotorInitialConfigs(steerInitialConfigs)
-                    .withEncoderInitialConfigs(encoderInitialConfigs)
-                    .withSteerInertia(KilogramSquareMeters.of(0.01)) // used for sim only
-                    .withDriveInertia(KilogramSquareMeters.of(0.01)) // used for sim only
-                    .withSteerFrictionVoltage(Volts.of(0.2)) // used for sim only
-                    .withDriveFrictionVoltage(Volts.of(0.2)); // used for sim only
 
     private SwerveConfig() {}
 }

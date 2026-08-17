@@ -9,6 +9,9 @@ public final class TelemetryUnits {
     public static final String amps = "amp";
     public static final String degrees = "deg";
     public static final String meters = "m";
+    public static final String degPerSec = "dps";
+    public static final String g = "g";
+    public static final String hertz = "hz";
 
     private TelemetryUnits() {}
 }

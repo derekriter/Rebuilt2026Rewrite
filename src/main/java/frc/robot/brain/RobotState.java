@@ -1,6 +1,7 @@
 package frc.robot.brain;
 
 import frc.robot.subsystems.launcher.LauncherReport;
+import frc.robot.subsystems.swerve.SwerveReport;
 
 public final class RobotState {
     public OpMode opMode = OpMode.DISABLED;
@@ -19,6 +20,7 @@ public final class RobotState {
 
     public LauncherReport launcherReport = new LauncherReport();
     public boolean isTurretHomed = false;
+    public SwerveReport swerveReport = new SwerveReport();
 
     public TargetingMode targetingMode = TargetingMode.DISABLED;
     public boolean overrideTurret = false;
@@ -41,6 +43,7 @@ public final class RobotState {
 
         launcherReport.copyFrom(ref.launcherReport);
         isTurretHomed = ref.isTurretHomed;
+        swerveReport.copyFrom(ref.swerveReport);
 
         targetingMode = ref.targetingMode;
         overrideTurret = ref.overrideTurret;

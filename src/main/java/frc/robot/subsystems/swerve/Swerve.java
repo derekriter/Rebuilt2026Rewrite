@@ -4,25 +4,48 @@ import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
+import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.SignalLogger;
+import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.LinearAcceleration;
+import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.RobotContainer;
+import frc.robot.config.Overrides;
 import frc.robot.config.SwerveConfig;
+import frc.robot.config.SwerveConfig.CANivoreConfig;
+import frc.robot.config.SwerveConfig.PigeonConfig;
+import frc.robot.telemetry.Telemetry;
+import frc.robot.telemetry.TelemetryUnits;
+import frc.robot.telemetry.writer.BoolWriter;
+import frc.robot.telemetry.writer.DoubleWriter;
+import frc.robot.telemetry.writer.StringWriter;
+import frc.robot.telemetry.writer.StructArrayWriter;
+import frc.robot.telemetry.writer.StructWriter;
+import frc.robot.telemetry.writer.compound.SubsystemWriter;
+import frc.robot.util.AlertUtils;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -102,8 +125,59 @@ public class Swerve extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder> impleme
     /* The SysId routine to test */
     private final SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineTranslation;
 
+    private final SubsystemWriter<Swerve> subsystemWriter =
+            Telemetry.makeSubsystemWriter(this, "/", SwerveConfig.systemName);
+    private final StringWriter controlWriter =
+            Telemetry.makeStringWriter(SwerveConfig.systemName, "controllingRequest");
+    private final DoubleWriter odometryFrequencyWriter =
+            Telemetry.makeDoubleWriter(SwerveConfig.systemName, "odometryFrequency", TelemetryUnits.hertz);
+    private final StructWriter<Pose2d> robotPoseWriter =
+            Telemetry.makePose2dWriter(SwerveConfig.systemName, "robotPose");
+    private final StructWriter<ChassisSpeeds> chassisSpeedsWriter =
+            Telemetry.makeChassisSpeedsWriter(SwerveConfig.systemName, "chassisSpeeds");
+    private final StructArrayWriter<SwerveModuleState> moduleStatesWriter =
+            Telemetry.makeSwerveModuleStateArrayWriter(SwerveConfig.systemName, "moduleStates");
+    private final StructArrayWriter<SwerveModuleState> moduleTargetsWriter =
+            Telemetry.makeSwerveModuleStateArrayWriter(SwerveConfig.systemName, "moduleTargets");
+
+    private PigeonBuffer pigeonBuffer = new PigeonBuffer();
+    private boolean pigeonConnectedLast = false;
+    private boolean pigeonBreakerLast = false;
+    private final StatusSignal<AngularVelocity> pigeonAngularVelXWorldSignal;
+    private final StatusSignal<AngularVelocity> pigeonAngularVelYWorldSignal;
+    private final StatusSignal<AngularVelocity> pigeonAngularVelZWorldSignal;
+    private final StatusSignal<Angle> pigeonRollSignal;
+    private final StatusSignal<Angle> pigeonPitchSignal;
+    private final StatusSignal<Angle> pigeonYawSignal;
+    private final StatusSignal<LinearAcceleration> pigeonAccelXSignal;
+    private final StatusSignal<LinearAcceleration> pigeonAccelYSignal;
+    private final StatusSignal<LinearAcceleration> pigeonAccelZSignal;
+
+    private final BoolWriter pigeonConnectedWriter;
+    private final BoolWriter pigeonCANWriter;
+    private final Alert pigeonCANAlert;
+    private final BoolWriter pigeonBreakerWriter;
+    private final Alert pigeonBreakerAlert;
+    private final DoubleWriter pigeonAngularVelXWorldWriter;
+    private final DoubleWriter pigeonAngularVelYWorldWriter;
+    private final DoubleWriter pigeonAngularVelZWorldWriter;
+    private final DoubleWriter pigeonRollWriter;
+    private final DoubleWriter pigeonPitchWriter;
+    private final DoubleWriter pigeonYawWriter;
+    private final DoubleWriter pigeonAccelXWriter;
+    private final DoubleWriter pigeonAccelYWriter;
+    private final DoubleWriter pigeonAccelZWriter;
+
+    private boolean canivoreBreakerLast = false;
+
+    private final BoolWriter canivoreBreakerWriter;
+    private final Alert canivoreBreakerAlert;
+
     private final ModuleHelper[] helpers;
-    private final ModuleReport[] helperReports;
+    private final ModuleReport[] moduleReports;
+
+    private boolean thermalShutdown = false;
+    private boolean thermalShutdownLast = false;
 
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
@@ -122,9 +196,6 @@ public class Swerve extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder> impleme
                 SwerveConfig.modules[1].constants,
                 SwerveConfig.modules[2].constants,
                 SwerveConfig.modules[3].constants);
-        if (Utils.isSimulation()) {
-            startSimThread();
-        }
 
         helpers = new ModuleHelper[] {
             new ModuleHelper(0, getModule(0)),
@@ -132,98 +203,231 @@ public class Swerve extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder> impleme
             new ModuleHelper(2, getModule(2)),
             new ModuleHelper(3, getModule(3))
         };
-        helperReports =
+        moduleReports =
                 new ModuleReport[] {new ModuleReport(), new ModuleReport(), new ModuleReport(), new ModuleReport()};
+
+        {
+            String pigeonTable = SwerveConfig.systemName + "/pigeonBuffer";
+
+            Pigeon2 pigeon = getPigeon2();
+            pigeonAngularVelXWorldSignal = pigeon.getAngularVelocityXWorld(false);
+            pigeonAngularVelYWorldSignal = pigeon.getAngularVelocityYWorld(false);
+            pigeonAngularVelZWorldSignal = pigeon.getAngularVelocityZWorld(false);
+            pigeonRollSignal = pigeon.getRoll(false);
+            pigeonPitchSignal = pigeon.getPitch(false);
+            pigeonYawSignal = pigeon.getYaw(false);
+            pigeonAccelXSignal = pigeon.getAccelerationX(false);
+            pigeonAccelYSignal = pigeon.getAccelerationY(false);
+            pigeonAccelZSignal = pigeon.getAccelerationZ(false);
+
+            pigeonConnectedWriter = Telemetry.makeBoolWriter(pigeonTable, "connected");
+            pigeonCANWriter =
+                    Telemetry.makeBoolWriter("CAN", String.format("%s_%s", PigeonConfig.imuName, PigeonConfig.canID));
+            pigeonCANAlert = AlertUtils.makeCANFailureAlert(PigeonConfig.imuName);
+            pigeonBreakerWriter = Telemetry.makeBoolWriter(SwerveConfig.systemName, "pigeonBreakerTripped");
+            pigeonBreakerAlert = AlertUtils.makeBreakerTripAlert(PigeonConfig.imuName);
+            pigeonAngularVelXWorldWriter =
+                    Telemetry.makeDoubleWriter(pigeonTable, "angularVelXWorld", TelemetryUnits.degPerSec);
+            pigeonAngularVelYWorldWriter =
+                    Telemetry.makeDoubleWriter(pigeonTable, "angularVelYWorld", TelemetryUnits.degPerSec);
+            pigeonAngularVelZWorldWriter =
+                    Telemetry.makeDoubleWriter(pigeonTable, "angularVelZWorld", TelemetryUnits.degPerSec);
+            pigeonRollWriter = Telemetry.makeDoubleWriter(pigeonTable, "roll", TelemetryUnits.degrees);
+            pigeonPitchWriter = Telemetry.makeDoubleWriter(pigeonTable, "pitch", TelemetryUnits.degrees);
+            pigeonYawWriter = Telemetry.makeDoubleWriter(pigeonTable, "yaw", TelemetryUnits.degrees);
+            pigeonAccelXWriter = Telemetry.makeDoubleWriter(pigeonTable, "accelX", TelemetryUnits.g);
+            pigeonAccelYWriter = Telemetry.makeDoubleWriter(pigeonTable, "accelY", TelemetryUnits.g);
+            pigeonAccelZWriter = Telemetry.makeDoubleWriter(pigeonTable, "accelZ", TelemetryUnits.g);
+        }
+
+        {
+            canivoreBreakerWriter = Telemetry.makeBoolWriter(SwerveConfig.systemName, "canivoreBreakerTripped");
+            canivoreBreakerAlert = AlertUtils.makeBreakerTripAlert(CANivoreConfig.busName);
+        }
+
+        registerTelemetry(this::swerveTelemetry);
+
+        if (Utils.isSimulation()) {
+            startSimThread();
+        }
+
+        // have to manually register because this subsystem only implements Subsystem rather than extending
+        // SubsystemBase
+        CommandScheduler.getInstance().registerSubsystem(this);
     }
 
-    /**
-     * Constructs a CTRE SwerveDrivetrain using the specified constants.
-     * <p>
-     * This constructs the underlying hardware devices, so users should not construct
-     * the devices themselves. If they need the devices, they can access them through
-     * getters in the classes.
-     *
-     * @param odometryUpdateFrequency The frequency to run the odometry loop. If
-     *                                unspecified or set to 0 Hz, this is 250 Hz on
-     *                                CAN FD, and 100 Hz on CAN 2.0.
-     */
-    public Swerve(double odometryUpdateFrequency) {
-        super(
-                TalonFX::new,
-                TalonFX::new,
-                CANcoder::new,
-                SwerveConfig.drivetrainConstants,
-                odometryUpdateFrequency,
-                SwerveConfig.modules[0].constants,
-                SwerveConfig.modules[1].constants,
-                SwerveConfig.modules[2].constants,
-                SwerveConfig.modules[3].constants);
-        if (Utils.isSimulation()) {
-            startSimThread();
+    @Override
+    public void periodic() {
+        /*
+         * Periodically try to apply the operator perspective.
+         * If we haven't applied the operator perspective before, then we should apply it regardless of DS state.
+         * This allows us to correct the perspective in case the robot code restarts mid-match.
+         * Otherwise, only check and apply the operator perspective if the DS is disabled.
+         * This ensures driving behavior doesn't change until an explicit disable event occurs during testing.
+         */
+        if (!m_hasAppliedOperatorPerspective || DriverStation.isDisabled()) {
+            DriverStation.getAlliance().ifPresent(allianceColor -> {
+                setOperatorPerspectiveForward(
+                        allianceColor == Alliance.Red
+                                ? kRedAlliancePerspectiveRotation
+                                : kBlueAlliancePerspectiveRotation);
+                m_hasAppliedOperatorPerspective = true;
+            });
         }
 
-        helpers = new ModuleHelper[] {
-            new ModuleHelper(0, getModule(0)),
-            new ModuleHelper(1, getModule(1)),
-            new ModuleHelper(2, getModule(2)),
-            new ModuleHelper(3, getModule(3))
-        };
-        helperReports =
-                new ModuleReport[] {new ModuleReport(), new ModuleReport(), new ModuleReport(), new ModuleReport()};
-    }
-
-    /**
-     * Constructs a CTRE SwerveDrivetrain using the specified constants.
-     * <p>
-     * This constructs the underlying hardware devices, so users should not construct
-     * the devices themselves. If they need the devices, they can access them through
-     * getters in the classes.
-     *
-     * @param odometryUpdateFrequency   The frequency to run the odometry loop. If
-     *                                  unspecified or set to 0 Hz, this is 250 Hz on
-     *                                  CAN FD, and 100 Hz on CAN 2.0.
-     * @param odometryStandardDeviation The standard deviation for odometry calculation
-     *                                  in the form [x, y, theta]ᵀ, with units in meters
-     *                                  and radians
-     * @param visionStandardDeviation   The standard deviation for vision calculation
-     *                                  in the form [x, y, theta]ᵀ, with units in meters
-     *                                  and radians
-     */
-    public Swerve(
-            double odometryUpdateFrequency,
-            Matrix<N3, N1> odometryStandardDeviation,
-            Matrix<N3, N1> visionStandardDeviation) {
-        super(
-                TalonFX::new,
-                TalonFX::new,
-                CANcoder::new,
-                SwerveConfig.drivetrainConstants,
-                odometryUpdateFrequency,
-                odometryStandardDeviation,
-                visionStandardDeviation,
-                SwerveConfig.modules[0].constants,
-                SwerveConfig.modules[1].constants,
-                SwerveConfig.modules[2].constants,
-                SwerveConfig.modules[3].constants);
-        if (Utils.isSimulation()) {
-            startSimThread();
-        }
-
-        helpers = new ModuleHelper[] {
-            new ModuleHelper(0, getModule(0)),
-            new ModuleHelper(1, getModule(1)),
-            new ModuleHelper(2, getModule(2)),
-            new ModuleHelper(3, getModule(3))
-        };
-        helperReports =
-                new ModuleReport[] {new ModuleReport(), new ModuleReport(), new ModuleReport(), new ModuleReport()};
+        subsystemWriter.update();
     }
 
     public void report(SwerveReport report) {
-        helpers[0].report(helperReports[0]);
-        helpers[1].report(helperReports[1]);
-        helpers[2].report(helperReports[2]);
-        helpers[3].report(helperReports[3]);
+        helpers[0].report(moduleReports[0]);
+        helpers[1].report(moduleReports[1]);
+        helpers[2].report(moduleReports[2]);
+        helpers[3].report(moduleReports[3]);
+
+        boolean module0Operational = moduleReports[0].driveOperational
+                && moduleReports[0].steerOperational
+                && moduleReports[0].encoderOperational;
+        boolean module1Operational = moduleReports[1].driveOperational
+                && moduleReports[1].steerOperational
+                && moduleReports[1].encoderOperational;
+        boolean module2Operational = moduleReports[2].driveOperational
+                && moduleReports[2].steerOperational
+                && moduleReports[2].encoderOperational;
+        boolean module3Operational = moduleReports[3].driveOperational
+                && moduleReports[3].steerOperational
+                && moduleReports[3].encoderOperational;
+        boolean pigeonOperational = pigeonReport();
+        boolean canivoreOperational = canivoreReport();
+
+        report.isOperational = module0Operational
+                && module1Operational
+                && module2Operational
+                && module3Operational
+                && pigeonOperational
+                && canivoreOperational;
+
+        boolean module0ThermalShutdown = moduleReports[0].driveThermalShutdown || moduleReports[0].steerThermalShutdown;
+        boolean module1ThermalShutdown = moduleReports[1].driveThermalShutdown || moduleReports[1].steerThermalShutdown;
+        boolean module2ThermalShutdown = moduleReports[2].driveThermalShutdown || moduleReports[2].steerThermalShutdown;
+        boolean module3ThermalShutdown = moduleReports[3].driveThermalShutdown || moduleReports[3].steerThermalShutdown;
+
+        thermalShutdown =
+                module0ThermalShutdown || module1ThermalShutdown || module2ThermalShutdown || module3ThermalShutdown;
+
+        if (thermalShutdown && !thermalShutdownLast) {
+            setControl(null);
+        }
+
+        thermalShutdownLast = thermalShutdown;
+    }
+
+    private boolean pigeonReport() {
+        Pigeon2 pigeon = getPigeon2();
+
+        pigeonBuffer.connected = pigeon.isConnected();
+        if (pigeonBuffer.connected) {
+            BaseStatusSignal.refreshAll(
+                    pigeonAngularVelXWorldSignal,
+                    pigeonAngularVelYWorldSignal,
+                    pigeonAngularVelZWorldSignal,
+                    pigeonRollSignal,
+                    pigeonPitchSignal,
+                    pigeonYawSignal,
+                    pigeonAccelXSignal,
+                    pigeonAccelYSignal,
+                    pigeonAccelZSignal);
+
+            pigeonBuffer.angularVelXWorld_DPS = pigeonAngularVelXWorldSignal.getValueAsDouble();
+            pigeonBuffer.angularVelYWorld_DPS = pigeonAngularVelYWorldSignal.getValueAsDouble();
+            pigeonBuffer.angularVelZWorld_DPS = pigeonAngularVelZWorldSignal.getValueAsDouble();
+            pigeonBuffer.roll_deg = pigeonRollSignal.getValueAsDouble();
+            pigeonBuffer.pitch_deg = pigeonPitchSignal.getValueAsDouble();
+            pigeonBuffer.yaw_deg = pigeonYawSignal.getValueAsDouble();
+            pigeonBuffer.accelX_g = pigeonAccelXSignal.getValueAsDouble();
+            pigeonBuffer.accelY_g = pigeonAccelYSignal.getValueAsDouble();
+            pigeonBuffer.accelZ_g = pigeonAccelZSignal.getValueAsDouble();
+        } else {
+            pigeonBuffer.angularVelXWorld_DPS = Double.NaN;
+            pigeonBuffer.angularVelYWorld_DPS = Double.NaN;
+            pigeonBuffer.angularVelZWorld_DPS = Double.NaN;
+            pigeonBuffer.roll_deg = Double.NaN;
+            pigeonBuffer.pitch_deg = Double.NaN;
+            pigeonBuffer.yaw_deg = Double.NaN;
+            pigeonBuffer.accelX_g = Double.NaN;
+            pigeonBuffer.accelY_g = Double.NaN;
+            pigeonBuffer.accelZ_g = Double.NaN;
+        }
+        boolean breakerTripped = RobotContainer.instance().pdh.isBreakerTripped(PigeonConfig.channelID);
+
+        pigeonConnectedWriter.set(pigeonBuffer.connected);
+        pigeonCANWriter.set(pigeonBuffer.connected);
+        pigeonCANAlert.set(!pigeonBuffer.connected && !breakerTripped);
+        if (pigeonBuffer.connected != pigeonConnectedLast) {
+            if (pigeonBuffer.connected) {
+                Telemetry.reportCANConnect(PigeonConfig.imuName, PigeonConfig.canID, PigeonConfig.channelID);
+            } else {
+                Telemetry.reportCANDisconnect(PigeonConfig.imuName, PigeonConfig.canID, PigeonConfig.channelID);
+            }
+        }
+        pigeonBreakerWriter.set(breakerTripped);
+        pigeonBreakerAlert.set(breakerTripped);
+        if (breakerTripped != pigeonBreakerLast) {
+            if (breakerTripped) {
+                Telemetry.reportBreakerTrip(PigeonConfig.imuName, PigeonConfig.canID, PigeonConfig.channelID);
+            } else {
+                Telemetry.reportBreakerReset(PigeonConfig.imuName, PigeonConfig.canID, PigeonConfig.channelID);
+            }
+        }
+        pigeonAngularVelXWorldWriter.set(pigeonBuffer.angularVelXWorld_DPS);
+        pigeonAngularVelYWorldWriter.set(pigeonBuffer.angularVelYWorld_DPS);
+        pigeonAngularVelZWorldWriter.set(pigeonBuffer.angularVelZWorld_DPS);
+        pigeonRollWriter.set(pigeonBuffer.roll_deg);
+        pigeonPitchWriter.set(pigeonBuffer.pitch_deg);
+        pigeonYawWriter.set(pigeonBuffer.yaw_deg);
+        pigeonAccelXWriter.set(pigeonBuffer.accelX_g);
+        pigeonAccelYWriter.set(pigeonBuffer.accelY_g);
+        pigeonAccelZWriter.set(pigeonBuffer.accelZ_g);
+
+        boolean operational;
+        if (Overrides.disableSwerveSafety) {
+            operational = true;
+        } else {
+            operational = pigeonBuffer.connected && !breakerTripped;
+        }
+
+        pigeonConnectedLast = pigeonBuffer.connected;
+        pigeonBreakerLast = breakerTripped;
+
+        return operational;
+    }
+
+    private boolean canivoreReport() {
+        boolean breakerTripped = RobotContainer.instance().pdh.isBreakerTripped(CANivoreConfig.channelID);
+
+        canivoreBreakerWriter.set(breakerTripped);
+        canivoreBreakerAlert.set(breakerTripped);
+        if (breakerTripped != canivoreBreakerLast) {
+            if (breakerTripped) {
+                Telemetry.reportBreakerTripNoCAN(CANivoreConfig.busName, CANivoreConfig.channelID);
+            } else {
+                Telemetry.reportBreakerResetNoCAN(CANivoreConfig.busName, CANivoreConfig.channelID);
+            }
+        }
+
+        boolean operational = !breakerTripped;
+
+        canivoreBreakerLast = breakerTripped;
+
+        return operational;
+    }
+
+    private void swerveTelemetry(SwerveDriveState state) {
+        odometryFrequencyWriter.set(1 / state.OdometryPeriod);
+
+        robotPoseWriter.set(state.Pose);
+        chassisSpeedsWriter.set(state.Speeds);
+        moduleStatesWriter.set(state.ModuleStates);
+        moduleTargetsWriter.set(state.ModuleTargets);
     }
 
     /**
@@ -234,6 +438,14 @@ public class Swerve extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder> impleme
      */
     public Command applyRequest(Supplier<SwerveRequest> request) {
         return run(() -> setControl(request.get()));
+    }
+
+    @Override
+    public void setControl(SwerveRequest request) {
+        if (thermalShutdown && request != null) return;
+
+        super.setControl(request);
+        controlWriter.set(request == null ? null : request.getClass().getSimpleName());
     }
 
     /**
@@ -256,26 +468,6 @@ public class Swerve extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder> impleme
      */
     public Command sysIdDynamic(SysIdRoutine.Direction direction) {
         return m_sysIdRoutineToApply.dynamic(direction);
-    }
-
-    @Override
-    public void periodic() {
-        /*
-         * Periodically try to apply the operator perspective.
-         * If we haven't applied the operator perspective before, then we should apply it regardless of DS state.
-         * This allows us to correct the perspective in case the robot code restarts mid-match.
-         * Otherwise, only check and apply the operator perspective if the DS is disabled.
-         * This ensures driving behavior doesn't change until an explicit disable event occurs during testing.
-         */
-        if (!m_hasAppliedOperatorPerspective || DriverStation.isDisabled()) {
-            DriverStation.getAlliance().ifPresent(allianceColor -> {
-                setOperatorPerspectiveForward(
-                        allianceColor == Alliance.Red
-                                ? kRedAlliancePerspectiveRotation
-                                : kBlueAlliancePerspectiveRotation);
-                m_hasAppliedOperatorPerspective = true;
-            });
-        }
     }
 
     private void startSimThread() {
