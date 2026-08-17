@@ -10,8 +10,8 @@ import frc.robot.config.TelemetryConfig;
 import frc.robot.telemetry.Telemetry;
 
 public class DoubleWriter implements AutoCloseable {
-    private DoublePublisher ntPublisher;
-    private DoubleLogEntry logEntry;
+    private DoublePublisher ntPublisher_nl;
+    private DoubleLogEntry logEntry_nl;
     private final boolean includeNTInChecks;
     private final boolean disableChecks;
 
@@ -21,26 +21,27 @@ public class DoubleWriter implements AutoCloseable {
     /**
      * DO NOT USE OUTSIDE Telemetry.java!!!
      */
-    public DoubleWriter(String key, String unit, boolean _includeNTInChecks, boolean _disableChecks) {
+    public DoubleWriter(String key, String unit_nl, boolean _includeNTInChecks, boolean _disableChecks) {
         if (TelemetryConfig.telemetryLevel.logToNT) {
             DoubleTopic ntTopic = NetworkTableInstance.getDefault().getDoubleTopic(key);
-            ntPublisher = ntTopic.publish();
-            logEntry = null;
+            ntPublisher_nl = ntTopic.publish();
+            logEntry_nl = null;
 
-            if (unit != null) {
+            if (unit_nl != null) {
                 try {
-                    ntTopic.setProperty("unit", '"' + unit + '"');
+                    ntTopic.setProperty("unit", '"' + unit_nl + '"');
                 } catch (IllegalArgumentException e) {
                     Telemetry.reportWarning(e, true);
                 }
             }
         } else {
-            ntPublisher = null;
+            ntPublisher_nl = null;
 
             if (TelemetryConfig.telemetryLevel.logToFile) {
-                logEntry = new DoubleLogEntry(DataLogManager.getLog(), NetworkTable.normalizeKey("NT:/" + key, false));
+                logEntry_nl =
+                        new DoubleLogEntry(DataLogManager.getLog(), NetworkTable.normalizeKey("NT:/" + key, false));
             } else {
-                logEntry = null;
+                logEntry_nl = null;
             }
         }
 
@@ -50,19 +51,19 @@ public class DoubleWriter implements AutoCloseable {
     }
 
     public boolean set(double val) {
-        if (ntPublisher == null && logEntry == null) return false;
+        if (ntPublisher_nl == null && logEntry_nl == null) return false;
 
-        if (!includeNTInChecks && ntPublisher != null) {
-            ntPublisher.set(val);
+        if (!includeNTInChecks && ntPublisher_nl != null) {
+            ntPublisher_nl.set(val);
         }
 
         if (!disableChecks && hasValue && val == currValue) return false;
 
-        if (includeNTInChecks && ntPublisher != null) {
-            ntPublisher.set(val);
+        if (includeNTInChecks && ntPublisher_nl != null) {
+            ntPublisher_nl.set(val);
         }
-        if (logEntry != null) {
-            logEntry.append(val);
+        if (logEntry_nl != null) {
+            logEntry_nl.append(val);
         }
 
         if (!disableChecks) {
@@ -85,6 +86,6 @@ public class DoubleWriter implements AutoCloseable {
         //     logEntry.finish();
         //     logEntry = null;
         // }
-        logEntry = null;
+        logEntry_nl = null;
     }
 }

@@ -11,38 +11,39 @@ import frc.robot.telemetry.Telemetry;
 import java.util.Arrays;
 
 public class RawWriter implements AutoCloseable {
-    private RawPublisher ntPublisher;
-    private RawLogEntry logEntry;
+    private RawPublisher ntPublisher_nl;
+    private RawLogEntry logEntry_nl;
     private final boolean includeNTInChecks;
     private final boolean disableChecks;
 
     private boolean hasValue;
-    private byte[] currValue;
+    private byte[] currValue_nl;
     private final byte[] nullFallback = new byte[] {};
 
     /**
      * DO NOT USE OUTSIDE Telemetry.java!!!
      */
-    public RawWriter(String typeString, String unit, String key, boolean _includeNTInChecks, boolean _disableChecks) {
+    public RawWriter(
+            String typeString, String unit_nl, String key, boolean _includeNTInChecks, boolean _disableChecks) {
         if (TelemetryConfig.telemetryLevel.logToNT) {
             RawTopic ntTopic = NetworkTableInstance.getDefault().getRawTopic(key);
-            ntPublisher = ntTopic.publish(typeString);
-            logEntry = null;
+            ntPublisher_nl = ntTopic.publish(typeString);
+            logEntry_nl = null;
 
-            if (unit != null) {
+            if (unit_nl != null) {
                 try {
-                    ntTopic.setProperty("unit", '"' + unit + '"');
+                    ntTopic.setProperty("unit", '"' + unit_nl + '"');
                 } catch (IllegalArgumentException e) {
                     Telemetry.reportWarning(e, true);
                 }
             }
         } else {
-            ntPublisher = null;
+            ntPublisher_nl = null;
 
             if (TelemetryConfig.telemetryLevel.logToFile) {
-                logEntry = new RawLogEntry(DataLogManager.getLog(), NetworkTable.normalizeKey("NT:/" + key, false));
+                logEntry_nl = new RawLogEntry(DataLogManager.getLog(), NetworkTable.normalizeKey("NT:/" + key, false));
             } else {
-                logEntry = null;
+                logEntry_nl = null;
             }
         }
 
@@ -51,26 +52,26 @@ public class RawWriter implements AutoCloseable {
         disableChecks = _disableChecks;
     }
 
-    public boolean set(byte[] val) {
-        if (ntPublisher == null && logEntry == null) return false;
+    public boolean set(byte[] val_nl) {
+        if (ntPublisher_nl == null && logEntry_nl == null) return false;
 
-        if (val == null) val = nullFallback;
+        if (val_nl == null) val_nl = nullFallback;
 
-        if (!includeNTInChecks && ntPublisher != null) {
-            ntPublisher.set(val);
+        if (!includeNTInChecks && ntPublisher_nl != null) {
+            ntPublisher_nl.set(val_nl);
         }
 
-        if (!disableChecks && hasValue && Arrays.equals(val, currValue)) return false;
+        if (!disableChecks && hasValue && Arrays.equals(val_nl, currValue_nl)) return false;
 
-        if (includeNTInChecks && ntPublisher != null) {
-            ntPublisher.set(val);
+        if (includeNTInChecks && ntPublisher_nl != null) {
+            ntPublisher_nl.set(val_nl);
         }
-        if (logEntry != null) {
-            logEntry.append(val);
+        if (logEntry_nl != null) {
+            logEntry_nl.append(val_nl);
         }
 
         if (!disableChecks) {
-            currValue = val.clone();
+            currValue_nl = val_nl.clone();
             hasValue = true;
         }
 
@@ -89,6 +90,6 @@ public class RawWriter implements AutoCloseable {
         //     logEntry.finish();
         //     logEntry = null;
         // }
-        logEntry = null;
+        logEntry_nl = null;
     }
 }

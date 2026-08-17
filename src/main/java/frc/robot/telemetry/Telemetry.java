@@ -220,7 +220,7 @@ public class Telemetry {
      * Use instead of System.out.println
      * USE LIGHTLY! Do not use this in any periodic calls, as println can be very expensive
      */
-    public static void println(String msg) {
+    public static void println(String msg_nl) {
         // if (msg == null) {
         //     msg = "null";
         // }
@@ -230,7 +230,7 @@ public class Telemetry {
         //     return;
         // }
         // DataLogManager.log(PREFIX + msg);
-        System.out.println(msg);
+        System.out.println(msg_nl);
     }
 
     public static void reportCANDisconnect(String name, int canID, int channelID) {
@@ -276,17 +276,17 @@ public class Telemetry {
     /**
      * Report a warning and log it to the console
      */
-    public static void reportWarning(String msg, boolean printTrace) {
-        if (msg == null) msg = "null";
+    public static void reportWarning(String msg_nl, boolean printTrace) {
+        if (msg_nl == null) msg_nl = "null";
 
         StackTraceElement[] trace = Thread.currentThread().getStackTrace();
         if (printTrace) {
             try {
                 trace = Arrays.copyOfRange(trace, 2, trace.length); // cut off the first two elements
 
-                DriverStation.reportWarning(msg, trace);
+                DriverStation.reportWarning(msg_nl, trace);
             } catch (Exception e) {
-                println("Exception occurred while reporting warning with message: " + msg);
+                println("Exception occurred while reporting warning with message: " + msg_nl);
                 e.printStackTrace();
             }
         } else {
@@ -294,9 +294,9 @@ public class Telemetry {
             try {
                 locString = trace[2].toString();
 
-                DriverStationJNI.sendError(false, 1, false, msg, locString, "", true);
+                DriverStationJNI.sendError(false, 1, false, msg_nl, locString, "", true);
             } catch (Exception e) {
-                println("Exception occurred while reporting warning with message: " + msg);
+                println("Exception occurred while reporting warning with message: " + msg_nl);
                 e.printStackTrace();
             }
         }
@@ -321,17 +321,17 @@ public class Telemetry {
     /**
      * Report an error and log it to the console
      */
-    public static void reportError(String msg, boolean printTrace) {
-        if (msg == null) msg = "null";
+    public static void reportError(String msg_nl, boolean printTrace) {
+        if (msg_nl == null) msg_nl = "null";
 
         StackTraceElement[] trace = Thread.currentThread().getStackTrace();
         if (printTrace) {
             try {
                 trace = Arrays.copyOfRange(trace, 2, trace.length); // cut off the first two elements
 
-                DriverStation.reportError(msg, trace);
+                DriverStation.reportError(msg_nl, trace);
             } catch (Exception e) {
-                println("Exception occurred while reporting warning with message: " + msg);
+                println("Exception occurred while reporting warning with message: " + msg_nl);
                 e.printStackTrace();
             }
         } else {
@@ -339,9 +339,9 @@ public class Telemetry {
             try {
                 locString = trace[2].toString();
 
-                DriverStationJNI.sendError(true, 1, false, msg, locString, "", true);
+                DriverStationJNI.sendError(true, 1, false, msg_nl, locString, "", true);
             } catch (Exception e) {
-                println("Exception occurred while reporting warning with message: " + msg);
+                println("Exception occurred while reporting warning with message: " + msg_nl);
                 e.printStackTrace();
             }
         }
@@ -375,54 +375,54 @@ public class Telemetry {
                 table, name, null, TelemetryConfig.defaultIncludeNTInChecks, TelemetryConfig.defaultDisableChecks);
     }
 
-    public static BoolArrayWriter makeBoolArrayWriter(String table, String name, String unit) {
+    public static BoolArrayWriter makeBoolArrayWriter(String table, String name, String unit_nl) {
         return makeBoolArrayWriterEx(
-                table, name, unit, TelemetryConfig.defaultIncludeNTInChecks, TelemetryConfig.defaultDisableChecks);
+                table, name, unit_nl, TelemetryConfig.defaultIncludeNTInChecks, TelemetryConfig.defaultDisableChecks);
     }
 
-    public static BoolArrayWriter makeBoolArrayWriterInitial(String table, String name, boolean[] initialValue) {
+    public static BoolArrayWriter makeBoolArrayWriterInitial(String table, String name, boolean[] initialValue_nl) {
         return makeBoolArrayWriterInitialEx(
                 table,
                 name,
                 null,
-                initialValue,
+                initialValue_nl,
                 TelemetryConfig.defaultIncludeNTInChecks,
                 TelemetryConfig.defaultDisableChecks);
     }
 
     public static BoolArrayWriter makeBoolArrayWriterInitial(
-            String table, String name, String unit, boolean[] initialValue) {
+            String table, String name, String unit_nl, boolean[] initialValue_nl) {
         return makeBoolArrayWriterInitialEx(
                 table,
                 name,
-                unit,
-                initialValue,
+                unit_nl,
+                initialValue_nl,
                 TelemetryConfig.defaultIncludeNTInChecks,
                 TelemetryConfig.defaultDisableChecks);
     }
 
     public static BoolArrayWriter makeBoolArrayWriterEx(
-            String table, String name, String unit, boolean includeNTInChecks, boolean disableChecks) {
+            String table, String name, String unit_nl, boolean includeNTInChecks, boolean disableChecks) {
         return new BoolArrayWriter(
-                NetworkTable.normalizeKey(table + "/" + name), unit, includeNTInChecks, disableChecks);
+                NetworkTable.normalizeKey(table + "/" + name), unit_nl, includeNTInChecks, disableChecks);
     }
 
     public static BoolArrayWriter makeBoolArrayWriterInitialEx(
             String table,
             String name,
-            String unit,
-            boolean[] initialValue,
+            String unit_nl,
+            boolean[] initialValue_nl,
             boolean includeNTInChecks,
             boolean disableChecks) {
-        var entry = makeBoolArrayWriterEx(table, name, unit, includeNTInChecks, disableChecks);
-        entry.set(initialValue);
+        var entry = makeBoolArrayWriterEx(table, name, unit_nl, includeNTInChecks, disableChecks);
+        entry.set(initialValue_nl);
         return entry;
     }
 
-    public static BooleanArraySubscriber makeBoolArrayReader(String table, String name, boolean[] defaultValue) {
+    public static BooleanArraySubscriber makeBoolArrayReader(String table, String name, boolean[] defaultValue_nl) {
         return NetworkTableInstance.getDefault()
                 .getBooleanArrayTopic(NetworkTable.normalizeKey(table + "/" + name))
-                .subscribe(defaultValue);
+                .subscribe(defaultValue_nl);
     }
 
     /*
@@ -433,9 +433,9 @@ public class Telemetry {
                 table, name, null, TelemetryConfig.defaultIncludeNTInChecks, TelemetryConfig.defaultDisableChecks);
     }
 
-    public static BoolWriter makeBoolWriter(String table, String name, String unit) {
+    public static BoolWriter makeBoolWriter(String table, String name, String unit_nl) {
         return makeBoolWriterEx(
-                table, name, unit, TelemetryConfig.defaultIncludeNTInChecks, TelemetryConfig.defaultDisableChecks);
+                table, name, unit_nl, TelemetryConfig.defaultIncludeNTInChecks, TelemetryConfig.defaultDisableChecks);
     }
 
     public static BoolWriter makeBoolWriterInitial(String table, String name, boolean initialValue) {
@@ -448,29 +448,29 @@ public class Telemetry {
                 TelemetryConfig.defaultDisableChecks);
     }
 
-    public static BoolWriter makeBoolWriterInitial(String table, String name, String unit, boolean initialValue) {
+    public static BoolWriter makeBoolWriterInitial(String table, String name, String unit_nl, boolean initialValue) {
         return makeBoolWriterInitialEx(
                 table,
                 name,
-                unit,
+                unit_nl,
                 initialValue,
                 TelemetryConfig.defaultIncludeNTInChecks,
                 TelemetryConfig.defaultDisableChecks);
     }
 
     public static BoolWriter makeBoolWriterEx(
-            String table, String name, String unit, boolean includeNTInChecks, boolean disableChecks) {
-        return new BoolWriter(NetworkTable.normalizeKey(table + "/" + name), unit, includeNTInChecks, disableChecks);
+            String table, String name, String unit_nl, boolean includeNTInChecks, boolean disableChecks) {
+        return new BoolWriter(NetworkTable.normalizeKey(table + "/" + name), unit_nl, includeNTInChecks, disableChecks);
     }
 
     public static BoolWriter makeBoolWriterInitialEx(
             String table,
             String name,
-            String unit,
+            String unit_nl,
             boolean initialValue,
             boolean includeNTInChecks,
             boolean disableChecks) {
-        var entry = makeBoolWriterEx(table, name, unit, includeNTInChecks, disableChecks);
+        var entry = makeBoolWriterEx(table, name, unit_nl, includeNTInChecks, disableChecks);
         entry.set(initialValue);
         return entry;
     }
@@ -489,54 +489,54 @@ public class Telemetry {
                 table, name, null, TelemetryConfig.defaultIncludeNTInChecks, TelemetryConfig.defaultDisableChecks);
     }
 
-    public static DoubleArrayWriter makeDoubleArrayWriter(String table, String name, String unit) {
+    public static DoubleArrayWriter makeDoubleArrayWriter(String table, String name, String unit_nl) {
         return makeDoubleArrayWriterEx(
-                table, name, unit, TelemetryConfig.defaultIncludeNTInChecks, TelemetryConfig.defaultDisableChecks);
+                table, name, unit_nl, TelemetryConfig.defaultIncludeNTInChecks, TelemetryConfig.defaultDisableChecks);
     }
 
-    public static DoubleArrayWriter makeDoubleArrayWriterInitial(String table, String name, double[] initialValue) {
+    public static DoubleArrayWriter makeDoubleArrayWriterInitial(String table, String name, double[] initialValue_nl) {
         return makeDoubleArrayWriterInitialEx(
                 table,
                 name,
                 null,
-                initialValue,
+                initialValue_nl,
                 TelemetryConfig.defaultIncludeNTInChecks,
                 TelemetryConfig.defaultDisableChecks);
     }
 
     public static DoubleArrayWriter makeDoubleArrayWriterInitial(
-            String table, String name, String unit, double[] initialValue) {
+            String table, String name, String unit_nl, double[] initialValue_nl) {
         return makeDoubleArrayWriterInitialEx(
                 table,
                 name,
-                unit,
-                initialValue,
+                unit_nl,
+                initialValue_nl,
                 TelemetryConfig.defaultIncludeNTInChecks,
                 TelemetryConfig.defaultDisableChecks);
     }
 
     public static DoubleArrayWriter makeDoubleArrayWriterEx(
-            String table, String name, String unit, boolean includeNTInChecks, boolean disableChecks) {
+            String table, String name, String unit_nl, boolean includeNTInChecks, boolean disableChecks) {
         return new DoubleArrayWriter(
-                NetworkTable.normalizeKey(table + "/" + name), unit, includeNTInChecks, disableChecks);
+                NetworkTable.normalizeKey(table + "/" + name), unit_nl, includeNTInChecks, disableChecks);
     }
 
     public static DoubleArrayWriter makeDoubleArrayWriterInitialEx(
             String table,
             String name,
-            String unit,
-            double[] initialValue,
+            String unit_nl,
+            double[] initialValue_nl,
             boolean includeNTInChecks,
             boolean disableChecks) {
-        var entry = makeDoubleArrayWriterEx(table, name, unit, includeNTInChecks, disableChecks);
-        entry.set(initialValue);
+        var entry = makeDoubleArrayWriterEx(table, name, unit_nl, includeNTInChecks, disableChecks);
+        entry.set(initialValue_nl);
         return entry;
     }
 
-    public static DoubleArraySubscriber makeDoubleArrayReader(String table, String name, double[] defaultValue) {
+    public static DoubleArraySubscriber makeDoubleArrayReader(String table, String name, double[] defaultValue_nl) {
         return NetworkTableInstance.getDefault()
                 .getDoubleArrayTopic(NetworkTable.normalizeKey(table + "/" + name))
-                .subscribe(defaultValue);
+                .subscribe(defaultValue_nl);
     }
 
     /*
@@ -547,9 +547,9 @@ public class Telemetry {
                 table, name, null, TelemetryConfig.defaultIncludeNTInChecks, TelemetryConfig.defaultDisableChecks);
     }
 
-    public static DoubleWriter makeDoubleWriter(String table, String name, String unit) {
+    public static DoubleWriter makeDoubleWriter(String table, String name, String unit_nl) {
         return makeDoubleWriterEx(
-                table, name, unit, TelemetryConfig.defaultIncludeNTInChecks, TelemetryConfig.defaultDisableChecks);
+                table, name, unit_nl, TelemetryConfig.defaultIncludeNTInChecks, TelemetryConfig.defaultDisableChecks);
     }
 
     public static DoubleWriter makeDoubleWriterInitial(String table, String name, double initialValue) {
@@ -562,29 +562,30 @@ public class Telemetry {
                 TelemetryConfig.defaultDisableChecks);
     }
 
-    public static DoubleWriter makeDoubleWriterInitial(String table, String name, String unit, double initialValue) {
+    public static DoubleWriter makeDoubleWriterInitial(String table, String name, String unit_nl, double initialValue) {
         return makeDoubleWriterInitialEx(
                 table,
                 name,
-                unit,
+                unit_nl,
                 initialValue,
                 TelemetryConfig.defaultIncludeNTInChecks,
                 TelemetryConfig.defaultDisableChecks);
     }
 
     public static DoubleWriter makeDoubleWriterEx(
-            String table, String name, String unit, boolean includeNTInChecks, boolean disableChecks) {
-        return new DoubleWriter(NetworkTable.normalizeKey(table + "/" + name), unit, includeNTInChecks, disableChecks);
+            String table, String name, String unit_nl, boolean includeNTInChecks, boolean disableChecks) {
+        return new DoubleWriter(
+                NetworkTable.normalizeKey(table + "/" + name), unit_nl, includeNTInChecks, disableChecks);
     }
 
     public static DoubleWriter makeDoubleWriterInitialEx(
             String table,
             String name,
-            String unit,
+            String unit_nl,
             double initialValue,
             boolean includeNTInChecks,
             boolean disableChecks) {
-        var entry = makeDoubleWriterEx(table, name, unit, includeNTInChecks, disableChecks);
+        var entry = makeDoubleWriterEx(table, name, unit_nl, includeNTInChecks, disableChecks);
         entry.set(initialValue);
         return entry;
     }
@@ -603,54 +604,54 @@ public class Telemetry {
                 table, name, null, TelemetryConfig.defaultIncludeNTInChecks, TelemetryConfig.defaultDisableChecks);
     }
 
-    public static LongArrayWriter makeLongArrayWriter(String table, String name, String unit) {
+    public static LongArrayWriter makeLongArrayWriter(String table, String name, String unit_nl) {
         return makeLongArrayWriterEx(
-                table, name, unit, TelemetryConfig.defaultIncludeNTInChecks, TelemetryConfig.defaultDisableChecks);
+                table, name, unit_nl, TelemetryConfig.defaultIncludeNTInChecks, TelemetryConfig.defaultDisableChecks);
     }
 
-    public static LongArrayWriter makeLongArrayWriterInitial(String table, String name, long[] initialValue) {
+    public static LongArrayWriter makeLongArrayWriterInitial(String table, String name, long[] initialValue_nl) {
         return makeLongArrayWriterInitialEx(
                 table,
                 name,
                 null,
-                initialValue,
+                initialValue_nl,
                 TelemetryConfig.defaultIncludeNTInChecks,
                 TelemetryConfig.defaultDisableChecks);
     }
 
     public static LongArrayWriter makeLongArrayWriterInitial(
-            String table, String name, String unit, long[] initialValue) {
+            String table, String name, String unit_nl, long[] initialValue_nl) {
         return makeLongArrayWriterInitialEx(
                 table,
                 name,
-                unit,
-                initialValue,
+                unit_nl,
+                initialValue_nl,
                 TelemetryConfig.defaultIncludeNTInChecks,
                 TelemetryConfig.defaultDisableChecks);
     }
 
     public static LongArrayWriter makeLongArrayWriterEx(
-            String table, String name, String unit, boolean includeNTInChecks, boolean disableChecks) {
+            String table, String name, String unit_nl, boolean includeNTInChecks, boolean disableChecks) {
         return new LongArrayWriter(
-                NetworkTable.normalizeKey(table + "/" + name), unit, includeNTInChecks, disableChecks);
+                NetworkTable.normalizeKey(table + "/" + name), unit_nl, includeNTInChecks, disableChecks);
     }
 
     public static LongArrayWriter makeLongArrayWriterInitialEx(
             String table,
             String name,
-            String unit,
-            long[] initialValue,
+            String unit_nl,
+            long[] initialValue_nl,
             boolean includeNTInChecks,
             boolean disableChecks) {
-        var entry = makeLongArrayWriterEx(table, name, unit, includeNTInChecks, disableChecks);
-        entry.set(initialValue);
+        var entry = makeLongArrayWriterEx(table, name, unit_nl, includeNTInChecks, disableChecks);
+        entry.set(initialValue_nl);
         return entry;
     }
 
-    public static IntegerArraySubscriber makeLongArrayReader(String table, String name, long[] defaultValue) {
+    public static IntegerArraySubscriber makeLongArrayReader(String table, String name, long[] defaultValue_nl) {
         return NetworkTableInstance.getDefault()
                 .getIntegerArrayTopic(NetworkTable.normalizeKey(table + "/" + name))
-                .subscribe(defaultValue);
+                .subscribe(defaultValue_nl);
     }
 
     /*
@@ -661,9 +662,9 @@ public class Telemetry {
                 table, name, null, TelemetryConfig.defaultIncludeNTInChecks, TelemetryConfig.defaultDisableChecks);
     }
 
-    public static LongWriter makeLongWriter(String table, String name, String unit) {
+    public static LongWriter makeLongWriter(String table, String name, String unit_nl) {
         return makeLongWriterEx(
-                table, name, unit, TelemetryConfig.defaultIncludeNTInChecks, TelemetryConfig.defaultDisableChecks);
+                table, name, unit_nl, TelemetryConfig.defaultIncludeNTInChecks, TelemetryConfig.defaultDisableChecks);
     }
 
     public static LongWriter makeLongWriterInitial(String table, String name, long initialValue) {
@@ -676,29 +677,29 @@ public class Telemetry {
                 TelemetryConfig.defaultDisableChecks);
     }
 
-    public static LongWriter makeLongWriterInitial(String table, String name, String unit, long initialValue) {
+    public static LongWriter makeLongWriterInitial(String table, String name, String unit_nl, long initialValue) {
         return makeLongWriterInitialEx(
                 table,
                 name,
-                unit,
+                unit_nl,
                 initialValue,
                 TelemetryConfig.defaultIncludeNTInChecks,
                 TelemetryConfig.defaultDisableChecks);
     }
 
     public static LongWriter makeLongWriterEx(
-            String table, String name, String unit, boolean includeNTInChecks, boolean disableChecks) {
-        return new LongWriter(NetworkTable.normalizeKey(table + "/" + name), unit, includeNTInChecks, disableChecks);
+            String table, String name, String unit_nl, boolean includeNTInChecks, boolean disableChecks) {
+        return new LongWriter(NetworkTable.normalizeKey(table + "/" + name), unit_nl, includeNTInChecks, disableChecks);
     }
 
     public static LongWriter makeLongWriterInitialEx(
             String table,
             String name,
-            String unit,
+            String unit_nl,
             long initialValue,
             boolean includeNTInChecks,
             boolean disableChecks) {
-        var entry = makeLongWriterEx(table, name, unit, includeNTInChecks, disableChecks);
+        var entry = makeLongWriterEx(table, name, unit_nl, includeNTInChecks, disableChecks);
         entry.set(initialValue);
         return entry;
     }
@@ -722,35 +723,35 @@ public class Telemetry {
                 TelemetryConfig.defaultDisableChecks);
     }
 
-    public static RawWriter makeRawWriter(String typeString, String table, String name, String unit) {
+    public static RawWriter makeRawWriter(String typeString, String table, String name, String unit_nl) {
         return makeRawWriterEx(
                 typeString,
                 table,
                 name,
-                unit,
+                unit_nl,
                 TelemetryConfig.defaultIncludeNTInChecks,
                 TelemetryConfig.defaultDisableChecks);
     }
 
-    public static RawWriter makeRawWriterInitial(String typeString, String table, String name, byte[] initialValue) {
+    public static RawWriter makeRawWriterInitial(String typeString, String table, String name, byte[] initialValue_nl) {
         return makeRawWriterInitialEx(
                 typeString,
                 table,
                 name,
                 null,
-                initialValue,
+                initialValue_nl,
                 TelemetryConfig.defaultIncludeNTInChecks,
                 TelemetryConfig.defaultDisableChecks);
     }
 
     public static RawWriter makeRawWriterInitial(
-            String typeString, String table, String name, String unit, byte[] initialValue) {
+            String typeString, String table, String name, String unit_nl, byte[] initialValue_nl) {
         return makeRawWriterInitialEx(
                 typeString,
                 table,
                 name,
-                unit,
-                initialValue,
+                unit_nl,
+                initialValue_nl,
                 TelemetryConfig.defaultIncludeNTInChecks,
                 TelemetryConfig.defaultDisableChecks);
     }
@@ -759,30 +760,30 @@ public class Telemetry {
             String typeString,
             String table,
             String name,
-            String unit,
+            String unit_nl,
             boolean includeNTInChecks,
             boolean disableChecks) {
         return new RawWriter(
-                typeString, NetworkTable.normalizeKey(table + "/" + name), unit, includeNTInChecks, disableChecks);
+                typeString, NetworkTable.normalizeKey(table + "/" + name), unit_nl, includeNTInChecks, disableChecks);
     }
 
     public static RawWriter makeRawWriterInitialEx(
             String typeString,
             String table,
             String name,
-            String unit,
-            byte[] initialValue,
+            String unit_nl,
+            byte[] initialValue_nl,
             boolean includeNTInChecks,
             boolean disableChecks) {
-        var entry = makeRawWriterEx(typeString, table, name, unit, includeNTInChecks, disableChecks);
-        entry.set(initialValue);
+        var entry = makeRawWriterEx(typeString, table, name, unit_nl, includeNTInChecks, disableChecks);
+        entry.set(initialValue_nl);
         return entry;
     }
 
-    public static RawSubscriber makeRawReader(String typeString, String table, String name, byte[] defaultValue) {
+    public static RawSubscriber makeRawReader(String typeString, String table, String name, byte[] defaultValue_nl) {
         return NetworkTableInstance.getDefault()
                 .getRawTopic(NetworkTable.normalizeKey(table + "/" + name))
-                .subscribe(typeString, defaultValue);
+                .subscribe(typeString, defaultValue_nl);
     }
 
     /*
@@ -793,54 +794,54 @@ public class Telemetry {
                 table, name, null, TelemetryConfig.defaultIncludeNTInChecks, TelemetryConfig.defaultDisableChecks);
     }
 
-    public static StringArrayWriter makeStringArrayWriter(String table, String name, String unit) {
+    public static StringArrayWriter makeStringArrayWriter(String table, String name, String unit_nl) {
         return makeStringArrayWriterEx(
-                table, name, unit, TelemetryConfig.defaultIncludeNTInChecks, TelemetryConfig.defaultDisableChecks);
+                table, name, unit_nl, TelemetryConfig.defaultIncludeNTInChecks, TelemetryConfig.defaultDisableChecks);
     }
 
-    public static StringArrayWriter makeStringArrayWriterInitial(String table, String name, String[] initialValue) {
+    public static StringArrayWriter makeStringArrayWriterInitial(String table, String name, String[] initialValue_nl) {
         return makeStringArrayWriterInitialEx(
                 table,
                 name,
                 null,
-                initialValue,
+                initialValue_nl,
                 TelemetryConfig.defaultIncludeNTInChecks,
                 TelemetryConfig.defaultDisableChecks);
     }
 
     public static StringArrayWriter makeStringArrayWriterInitial(
-            String table, String name, String unit, String[] initialValue) {
+            String table, String name, String unit_nl, String[] initialValue_nl) {
         return makeStringArrayWriterInitialEx(
                 table,
                 name,
-                unit,
-                initialValue,
+                unit_nl,
+                initialValue_nl,
                 TelemetryConfig.defaultIncludeNTInChecks,
                 TelemetryConfig.defaultDisableChecks);
     }
 
     public static StringArrayWriter makeStringArrayWriterEx(
-            String table, String name, String unit, boolean includeNTInChecks, boolean disableChecks) {
+            String table, String name, String unit_nl, boolean includeNTInChecks, boolean disableChecks) {
         return new StringArrayWriter(
-                NetworkTable.normalizeKey(table + "/" + name), unit, includeNTInChecks, disableChecks);
+                NetworkTable.normalizeKey(table + "/" + name), unit_nl, includeNTInChecks, disableChecks);
     }
 
     public static StringArrayWriter makeStringArrayWriterInitialEx(
             String table,
             String name,
-            String unit,
-            String[] initialValue,
+            String unit_nl,
+            String[] initialValue_nl,
             boolean includeNTInChecks,
             boolean disableChecks) {
-        var entry = makeStringArrayWriterEx(table, name, unit, includeNTInChecks, disableChecks);
-        entry.set(initialValue);
+        var entry = makeStringArrayWriterEx(table, name, unit_nl, includeNTInChecks, disableChecks);
+        entry.set(initialValue_nl);
         return entry;
     }
 
-    public static StringArraySubscriber makeStringArrayReader(String table, String name, String[] defaultValue) {
+    public static StringArraySubscriber makeStringArrayReader(String table, String name, String[] defaultValue_nl) {
         return NetworkTableInstance.getDefault()
                 .getStringArrayTopic(NetworkTable.normalizeKey(table + "/" + name))
-                .subscribe(defaultValue);
+                .subscribe(defaultValue_nl);
     }
 
     /*
@@ -851,52 +852,54 @@ public class Telemetry {
                 table, name, null, TelemetryConfig.defaultIncludeNTInChecks, TelemetryConfig.defaultDisableChecks);
     }
 
-    public static StringWriter makeStringWriter(String table, String name, String unit) {
+    public static StringWriter makeStringWriter(String table, String name, String unit_nl) {
         return makeStringWriterEx(
-                table, name, unit, TelemetryConfig.defaultIncludeNTInChecks, TelemetryConfig.defaultDisableChecks);
+                table, name, unit_nl, TelemetryConfig.defaultIncludeNTInChecks, TelemetryConfig.defaultDisableChecks);
     }
 
-    public static StringWriter makeStringWriterInitial(String table, String name, String initialValue) {
+    public static StringWriter makeStringWriterInitial(String table, String name, String initialValue_nl) {
         return makeStringWriterInitialEx(
                 table,
                 name,
                 null,
-                initialValue,
+                initialValue_nl,
                 TelemetryConfig.defaultIncludeNTInChecks,
                 TelemetryConfig.defaultDisableChecks);
     }
 
-    public static StringWriter makeStringWriterInitial(String table, String name, String unit, String initialValue) {
+    public static StringWriter makeStringWriterInitial(
+            String table, String name, String unit_nl, String initialValue_nl) {
         return makeStringWriterInitialEx(
                 table,
                 name,
-                unit,
-                initialValue,
+                unit_nl,
+                initialValue_nl,
                 TelemetryConfig.defaultIncludeNTInChecks,
                 TelemetryConfig.defaultDisableChecks);
     }
 
     public static StringWriter makeStringWriterEx(
-            String table, String name, String unit, boolean includeNTInChecks, boolean disableChecks) {
-        return new StringWriter(NetworkTable.normalizeKey(table + "/" + name), unit, includeNTInChecks, disableChecks);
+            String table, String name, String unit_nl, boolean includeNTInChecks, boolean disableChecks) {
+        return new StringWriter(
+                NetworkTable.normalizeKey(table + "/" + name), unit_nl, includeNTInChecks, disableChecks);
     }
 
     public static StringWriter makeStringWriterInitialEx(
             String table,
             String name,
-            String unit,
-            String initialValue,
+            String unit_nl,
+            String initialValue_nl,
             boolean includeNTInChecks,
             boolean disableChecks) {
-        var entry = makeStringWriterEx(table, name, unit, includeNTInChecks, disableChecks);
-        entry.set(initialValue);
+        var entry = makeStringWriterEx(table, name, unit_nl, includeNTInChecks, disableChecks);
+        entry.set(initialValue_nl);
         return entry;
     }
 
-    public static StringSubscriber makeStringReader(String table, String name, String defaultValue) {
+    public static StringSubscriber makeStringReader(String table, String name, String defaultValue_nl) {
         return NetworkTableInstance.getDefault()
                 .getStringTopic(NetworkTable.normalizeKey(table + "/" + name))
-                .subscribe(defaultValue);
+                .subscribe(defaultValue_nl);
     }
 
     /*
@@ -925,7 +928,7 @@ public class Telemetry {
                     S struct,
                     String table,
                     String name,
-                    T[] initialValue,
+                    T[] initialValue_nl,
                     EqualityTest<T[]> isEqual,
                     CloneOperation<T[]> clone,
                     T[] nullFallback) {
@@ -933,7 +936,7 @@ public class Telemetry {
                 struct,
                 table,
                 name,
-                initialValue,
+                initialValue_nl,
                 isEqual,
                 clone,
                 TelemetryConfig.defaultIncludeNTInChecks,
@@ -965,7 +968,7 @@ public class Telemetry {
                     S struct,
                     String table,
                     String name,
-                    T[] initialValue,
+                    T[] initialValue_nl,
                     EqualityTest<T[]> isEqual,
                     CloneOperation<T[]> clone,
                     boolean includeNTInChecks,
@@ -973,7 +976,7 @@ public class Telemetry {
                     T[] nullFallback) {
         StructArrayWriter<T> entry = makeStructArrayWriterEx(
                 struct, table, name, isEqual, clone, includeNTInChecks, disableChecks, nullFallback);
-        entry.set(initialValue);
+        entry.set(initialValue_nl);
         return entry;
     }
 
@@ -988,12 +991,12 @@ public class Telemetry {
     }
 
     public static StructArrayWriter<Pose2d> makePose2dArrayWriterInitial(
-            String table, String name, Pose2d[] initialValue) {
+            String table, String name, Pose2d[] initialValue_nl) {
         return makeStructArrayWriterInitial(
                 Pose2d.struct,
                 table,
                 name,
-                initialValue,
+                initialValue_nl,
                 EqualityTest.pose2dArrayEqualityTest,
                 CloneOperation.pose2dArrayCloneOperation,
                 pose2dArrayNullFallback);
@@ -1013,12 +1016,12 @@ public class Telemetry {
     }
 
     public static StructArrayWriter<Pose2d> makePose2dArrayWriterInitialEx(
-            String table, String name, Pose2d[] initialValue, boolean includeNTInChecks, boolean disableChecks) {
+            String table, String name, Pose2d[] initialValue_nl, boolean includeNTInChecks, boolean disableChecks) {
         return makeStructArrayWriterInitialEx(
                 Pose2d.struct,
                 table,
                 name,
-                initialValue,
+                initialValue_nl,
                 EqualityTest.pose2dArrayEqualityTest,
                 CloneOperation.pose2dArrayCloneOperation,
                 includeNTInChecks,
@@ -1037,12 +1040,12 @@ public class Telemetry {
     }
 
     public static StructArrayWriter<Pose3d> makePose3dArrayWriterInitial(
-            String table, String name, Pose3d[] initialValue) {
+            String table, String name, Pose3d[] initialValue_nl) {
         return makeStructArrayWriterInitial(
                 Pose3d.struct,
                 table,
                 name,
-                initialValue,
+                initialValue_nl,
                 EqualityTest.pose3dArrayEqualityTest,
                 CloneOperation.pose3dArrayCloneOperation,
                 pose3dArrayNullFallback);
@@ -1062,12 +1065,12 @@ public class Telemetry {
     }
 
     public static StructArrayWriter<Pose3d> makePose3dArrayWriterInitialEx(
-            String table, String name, Pose3d[] initialValue, boolean includeNTInChecks, boolean disableChecks) {
+            String table, String name, Pose3d[] initialValue_nl, boolean includeNTInChecks, boolean disableChecks) {
         return makeStructArrayWriterInitialEx(
                 Pose3d.struct,
                 table,
                 name,
-                initialValue,
+                initialValue_nl,
                 EqualityTest.pose3dArrayEqualityTest,
                 CloneOperation.pose3dArrayCloneOperation,
                 includeNTInChecks,
@@ -1086,12 +1089,12 @@ public class Telemetry {
     }
 
     public static StructArrayWriter<SwerveModuleState> makeSwerveModuleStateArrayWriterInitial(
-            String table, String name, SwerveModuleState[] initialValue) {
+            String table, String name, SwerveModuleState[] initialValue_nl) {
         return makeStructArrayWriterInitial(
                 SwerveModuleState.struct,
                 table,
                 name,
-                initialValue,
+                initialValue_nl,
                 EqualityTest.swerveModuleStateArrayEqualityTest,
                 CloneOperation.swerveModuleStateArrayCloneOperation,
                 swerveModuleStateArrayNullFallback);
@@ -1113,14 +1116,14 @@ public class Telemetry {
     public static StructArrayWriter<SwerveModuleState> makeSwerveModuleStateArrayWriterInitialEx(
             String table,
             String name,
-            SwerveModuleState[] initialValue,
+            SwerveModuleState[] initialValue_nl,
             boolean includeNTInChecks,
             boolean disableChecks) {
         return makeStructArrayWriterInitialEx(
                 SwerveModuleState.struct,
                 table,
                 name,
-                initialValue,
+                initialValue_nl,
                 EqualityTest.swerveModuleStateArrayEqualityTest,
                 CloneOperation.swerveModuleStateArrayCloneOperation,
                 includeNTInChecks,
@@ -1140,12 +1143,12 @@ public class Telemetry {
     }
 
     public static StructArrayWriter<SwerveModulePosition> makeSwerveModulePositionArrayWriterInitial(
-            String table, String name, SwerveModulePosition[] initialValue) {
+            String table, String name, SwerveModulePosition[] initialValue_nl) {
         return makeStructArrayWriterInitial(
                 SwerveModulePosition.struct,
                 table,
                 name,
-                initialValue,
+                initialValue_nl,
                 EqualityTest.swerveModulePositionArrayEqualityTest,
                 CloneOperation.swerveModulePositionArrayCloneOperation,
                 swerveModulePositionArrayNullFallback);
@@ -1167,14 +1170,14 @@ public class Telemetry {
     public static StructArrayWriter<SwerveModulePosition> makeSwerveModulePositionArrayWriterInitialEx(
             String table,
             String name,
-            SwerveModulePosition[] initialValue,
+            SwerveModulePosition[] initialValue_nl,
             boolean includeNTInChecks,
             boolean disableChecks) {
         return makeStructArrayWriterInitialEx(
                 SwerveModulePosition.struct,
                 table,
                 name,
-                initialValue,
+                initialValue_nl,
                 EqualityTest.swerveModulePositionArrayEqualityTest,
                 CloneOperation.swerveModulePositionArrayCloneOperation,
                 includeNTInChecks,
@@ -1202,7 +1205,7 @@ public class Telemetry {
             S struct,
             String table,
             String name,
-            T initialValue,
+            T initialValue_nl,
             EqualityTest<T> isEqual,
             CloneOperation<T> clone,
             T nullFallback) {
@@ -1210,7 +1213,7 @@ public class Telemetry {
                 struct,
                 table,
                 name,
-                initialValue,
+                initialValue_nl,
                 isEqual,
                 clone,
                 TelemetryConfig.defaultIncludeNTInChecks,
@@ -1241,7 +1244,7 @@ public class Telemetry {
             S struct,
             String table,
             String name,
-            T initialValue,
+            T initialValue_nl,
             EqualityTest<T> isEqual,
             CloneOperation<T> clone,
             boolean includeNTInChecks,
@@ -1249,7 +1252,7 @@ public class Telemetry {
             T nullFallback) {
         StructWriter<T> entry =
                 makeStructWriterEx(struct, table, name, isEqual, clone, includeNTInChecks, disableChecks, nullFallback);
-        entry.set(initialValue);
+        entry.set(initialValue_nl);
         return entry;
     }
 
@@ -1263,12 +1266,12 @@ public class Telemetry {
                 Pose2d.kZero);
     }
 
-    public static StructWriter<Pose2d> makePose2dWriterInitial(String table, String name, Pose2d initialValue) {
+    public static StructWriter<Pose2d> makePose2dWriterInitial(String table, String name, Pose2d initialValue_nl) {
         return makeStructWriterInitial(
                 Pose2d.struct,
                 table,
                 name,
-                initialValue,
+                initialValue_nl,
                 EqualityTest.pose2dEqualityTest,
                 CloneOperation.pose2dCloneOperation,
                 Pose2d.kZero);
@@ -1288,12 +1291,12 @@ public class Telemetry {
     }
 
     public static StructWriter<Pose2d> makePose2dWriterInitialEx(
-            String table, String name, Pose2d initialValue, boolean includeNTInChecks, boolean disableChecks) {
+            String table, String name, Pose2d initialValue_nl, boolean includeNTInChecks, boolean disableChecks) {
         return makeStructWriterInitialEx(
                 Pose2d.struct,
                 table,
                 name,
-                initialValue,
+                initialValue_nl,
                 EqualityTest.pose2dEqualityTest,
                 CloneOperation.pose2dCloneOperation,
                 includeNTInChecks,
@@ -1311,12 +1314,12 @@ public class Telemetry {
                 Pose3d.kZero);
     }
 
-    public static StructWriter<Pose3d> makePose3dWriterInitial(String table, String name, Pose3d initialValue) {
+    public static StructWriter<Pose3d> makePose3dWriterInitial(String table, String name, Pose3d initialValue_nl) {
         return makeStructWriterInitial(
                 Pose3d.struct,
                 table,
                 name,
-                initialValue,
+                initialValue_nl,
                 EqualityTest.pose3dEqualityTest,
                 CloneOperation.pose3dCloneOperation,
                 Pose3d.kZero);
@@ -1336,12 +1339,12 @@ public class Telemetry {
     }
 
     public static StructWriter<Pose3d> makePose3dWriterInitialEx(
-            String table, String name, Pose3d initialValue, boolean includeNTInChecks, boolean disableChecks) {
+            String table, String name, Pose3d initialValue_nl, boolean includeNTInChecks, boolean disableChecks) {
         return makeStructWriterInitialEx(
                 Pose3d.struct,
                 table,
                 name,
-                initialValue,
+                initialValue_nl,
                 EqualityTest.pose3dEqualityTest,
                 CloneOperation.pose3dCloneOperation,
                 includeNTInChecks,
@@ -1360,12 +1363,12 @@ public class Telemetry {
     }
 
     public static StructWriter<ChassisSpeeds> makeChassisSpeedsWriterInitial(
-            String table, String name, ChassisSpeeds initialValue) {
+            String table, String name, ChassisSpeeds initialValue_nl) {
         return makeStructWriterInitial(
                 ChassisSpeeds.struct,
                 table,
                 name,
-                initialValue,
+                initialValue_nl,
                 EqualityTest.chassisSpeedsEqualityTest,
                 CloneOperation.chassisSpeedsCloneOperation,
                 chassisSpeedsNullFallback);
@@ -1385,12 +1388,16 @@ public class Telemetry {
     }
 
     public static StructWriter<ChassisSpeeds> makeChassisSpeedsWriterInitialEx(
-            String table, String name, ChassisSpeeds initialValue, boolean includeNTInChecks, boolean disableChecks) {
+            String table,
+            String name,
+            ChassisSpeeds initialValue_nl,
+            boolean includeNTInChecks,
+            boolean disableChecks) {
         return makeStructWriterInitialEx(
                 ChassisSpeeds.struct,
                 table,
                 name,
-                initialValue,
+                initialValue_nl,
                 EqualityTest.chassisSpeedsEqualityTest,
                 CloneOperation.chassisSpeedsCloneOperation,
                 includeNTInChecks,
@@ -1409,12 +1416,12 @@ public class Telemetry {
     }
 
     public static StructWriter<SwerveModuleState> makeSwerveModuleStateWriterInitial(
-            String table, String name, SwerveModuleState initialValue) {
+            String table, String name, SwerveModuleState initialValue_nl) {
         return makeStructWriterInitial(
                 SwerveModuleState.struct,
                 table,
                 name,
-                initialValue,
+                initialValue_nl,
                 EqualityTest.swerveModuleStateEqualityTest,
                 CloneOperation.swerveModuleStateCloneOperation,
                 swerveModuleStateNullFallback);
@@ -1436,14 +1443,14 @@ public class Telemetry {
     public static StructWriter<SwerveModuleState> makeSwerveModuleStateWriterInitialEx(
             String table,
             String name,
-            SwerveModuleState initialValue,
+            SwerveModuleState initialValue_nl,
             boolean includeNTInChecks,
             boolean disableChecks) {
         return makeStructWriterInitialEx(
                 SwerveModuleState.struct,
                 table,
                 name,
-                initialValue,
+                initialValue_nl,
                 EqualityTest.swerveModuleStateEqualityTest,
                 CloneOperation.swerveModuleStateCloneOperation,
                 includeNTInChecks,
@@ -1462,12 +1469,12 @@ public class Telemetry {
     }
 
     public static StructWriter<SwerveModulePosition> makeSwerveModulePositionWriterInitial(
-            String table, String name, SwerveModulePosition initialValue) {
+            String table, String name, SwerveModulePosition initialValue_nl) {
         return makeStructWriterInitial(
                 SwerveModulePosition.struct,
                 table,
                 name,
-                initialValue,
+                initialValue_nl,
                 EqualityTest.swerveModulePositionEqualityTest,
                 CloneOperation.swerveModulePositionCloneOperation,
                 swerveModulePositionNullFallback);
@@ -1489,14 +1496,14 @@ public class Telemetry {
     public static StructWriter<SwerveModulePosition> makeSwerveModulePositionWriterInitialEx(
             String table,
             String name,
-            SwerveModulePosition initialValue,
+            SwerveModulePosition initialValue_nl,
             boolean includeNTInChecks,
             boolean disableChecks) {
         return makeStructWriterInitialEx(
                 SwerveModulePosition.struct,
                 table,
                 name,
-                initialValue,
+                initialValue_nl,
                 EqualityTest.swerveModulePositionEqualityTest,
                 CloneOperation.swerveModulePositionCloneOperation,
                 includeNTInChecks,
@@ -1519,9 +1526,9 @@ public class Telemetry {
         return new RobotStateWriter(NetworkTable.normalizeKey(table + "/" + name), robotStateNullFallback);
     }
 
-    public static RobotStateWriter makeRobotStateWriterInitial(String table, String name, RobotState initialValue) {
+    public static RobotStateWriter makeRobotStateWriterInitial(String table, String name, RobotState initialValue_nl) {
         var entry = makeRobotStateWriter(table, name);
-        entry.set(initialValue);
+        entry.set(initialValue_nl);
         return entry;
     }
 
@@ -1533,9 +1540,9 @@ public class Telemetry {
     }
 
     public static LauncherReportWriter makeLauncherReportWriterInitial(
-            String table, String name, LauncherReport initialValue) {
+            String table, String name, LauncherReport initialValue_nl) {
         var entry = makeLauncherReportWriter(table, name);
-        entry.set(initialValue);
+        entry.set(initialValue_nl);
         return entry;
     }
 
@@ -1547,9 +1554,9 @@ public class Telemetry {
     }
 
     public static SwerveReportWriter makeSwerveReportWriterInitial(
-            String table, String name, SwerveReport initialValue) {
+            String table, String name, SwerveReport initialValue_nl) {
         var entry = makeSwerveReportWriter(table, name);
-        entry.set(initialValue);
+        entry.set(initialValue_nl);
         return entry;
     }
 
@@ -1561,11 +1568,12 @@ public class Telemetry {
                 table, name, TelemetryConfig.defaultIncludeNTInChecks, TelemetryConfig.defaultDisableChecks);
     }
 
-    public static TurretAngleWriter makeTurretAngleWriterInitial(String table, String name, TurretAngle initialValue) {
+    public static TurretAngleWriter makeTurretAngleWriterInitial(
+            String table, String name, TurretAngle initialValue_nl) {
         return makeTurretAngleWriterInitialEx(
                 table,
                 name,
-                initialValue,
+                initialValue_nl,
                 TelemetryConfig.defaultIncludeNTInChecks,
                 TelemetryConfig.defaultDisableChecks);
     }
@@ -1580,9 +1588,9 @@ public class Telemetry {
     }
 
     public static TurretAngleWriter makeTurretAngleWriterInitialEx(
-            String table, String name, TurretAngle initialValue, boolean includeNTInChecks, boolean disableChecks) {
+            String table, String name, TurretAngle initialValue_nl, boolean includeNTInChecks, boolean disableChecks) {
         var entry = makeTurretAngleWriterEx(table, name, includeNTInChecks, disableChecks);
-        entry.set(initialValue);
+        entry.set(initialValue_nl);
         return entry;
     }
 
@@ -1595,11 +1603,11 @@ public class Telemetry {
     }
 
     public static ShooterTargetWriter makeShooterTargetWriterInitial(
-            String table, String name, ShooterTarget initialValue) {
+            String table, String name, ShooterTarget initialValue_nl) {
         return makeShooterTargetWriterInitialEx(
                 table,
                 name,
-                initialValue,
+                initialValue_nl,
                 TelemetryConfig.defaultIncludeNTInChecks,
                 TelemetryConfig.defaultDisableChecks);
     }
@@ -1614,9 +1622,13 @@ public class Telemetry {
     }
 
     public static ShooterTargetWriter makeShooterTargetWriterInitialEx(
-            String table, String name, ShooterTarget initialValue, boolean includeNTInChecks, boolean disableChecks) {
+            String table,
+            String name,
+            ShooterTarget initialValue_nl,
+            boolean includeNTInChecks,
+            boolean disableChecks) {
         var entry = makeShooterTargetWriterEx(table, name, includeNTInChecks, disableChecks);
-        entry.set(initialValue);
+        entry.set(initialValue_nl);
         return entry;
     }
 

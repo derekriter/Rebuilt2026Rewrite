@@ -28,12 +28,12 @@ public class ShooterTargetWriter implements AutoCloseable {
         nullFallback = _nullFallback;
     }
 
-    public void set(ShooterTarget target) {
-        if (target == null) target = nullFallback;
+    public void set(ShooterTarget target_nl) {
+        if (target_nl == null) target_nl = nullFallback;
 
-        velocityWriter.set(target.asShooterRPM());
-        distanceWriter.set(target.asMetersToTarget());
-        isLegalWriter.set(target.isLegal());
+        velocityWriter.set(target_nl.asShooterRPM());
+        distanceWriter.set(target_nl.asMetersToTarget());
+        isLegalWriter.set(target_nl.isLegal());
     }
 
     @Override

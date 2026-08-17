@@ -30,13 +30,13 @@ public class TurretAngleWriter implements AutoCloseable {
         nullFallback = _nullFallback;
     }
 
-    public void set(TurretAngle angle) {
-        if (angle == null) angle = nullFallback;
+    public void set(TurretAngle angle_nl) {
+        if (angle_nl == null) angle_nl = nullFallback;
 
-        motorRotsWriter.set(angle.asMotorRotations());
-        mechDegWriter.set(angle.asMechanismDegrees());
-        isWrappedWriter.set(angle.isWrapped());
-        isLegalWriter.set(angle.isLegal());
+        motorRotsWriter.set(angle_nl.asMotorRotations());
+        mechDegWriter.set(angle_nl.asMechanismDegrees());
+        isWrappedWriter.set(angle_nl.isWrapped());
+        isLegalWriter.set(angle_nl.isLegal());
     }
 
     @Override

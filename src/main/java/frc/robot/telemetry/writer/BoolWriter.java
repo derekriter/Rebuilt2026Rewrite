@@ -10,8 +10,8 @@ import frc.robot.config.TelemetryConfig;
 import frc.robot.telemetry.Telemetry;
 
 public class BoolWriter implements AutoCloseable {
-    private BooleanPublisher ntPublisher;
-    private BooleanLogEntry logEntry;
+    private BooleanPublisher ntPublisher_nl;
+    private BooleanLogEntry logEntry_nl;
     private final boolean includeNTInChecks;
     private final boolean disableChecks;
 
@@ -21,26 +21,27 @@ public class BoolWriter implements AutoCloseable {
     /**
      * DO NOT USE OUTSIDE Telemetry.java!!!
      */
-    public BoolWriter(String key, String unit, boolean _includeNTInChecks, boolean _disableChecks) {
+    public BoolWriter(String key, String unit_nl, boolean _includeNTInChecks, boolean _disableChecks) {
         if (TelemetryConfig.telemetryLevel.logToNT) {
             BooleanTopic ntTopic = NetworkTableInstance.getDefault().getBooleanTopic(key);
-            ntPublisher = ntTopic.publish();
-            logEntry = null;
+            ntPublisher_nl = ntTopic.publish();
+            logEntry_nl = null;
 
-            if (unit != null) {
+            if (unit_nl != null) {
                 try {
-                    ntTopic.setProperty("unit", '"' + unit + '"');
+                    ntTopic.setProperty("unit", '"' + unit_nl + '"');
                 } catch (IllegalArgumentException e) {
                     Telemetry.reportWarning(e, true);
                 }
             }
         } else {
-            ntPublisher = null;
+            ntPublisher_nl = null;
 
             if (TelemetryConfig.telemetryLevel.logToFile) {
-                logEntry = new BooleanLogEntry(DataLogManager.getLog(), NetworkTable.normalizeKey("NT:/" + key, false));
+                logEntry_nl =
+                        new BooleanLogEntry(DataLogManager.getLog(), NetworkTable.normalizeKey("NT:/" + key, false));
             } else {
-                logEntry = null;
+                logEntry_nl = null;
             }
         }
 
@@ -50,19 +51,19 @@ public class BoolWriter implements AutoCloseable {
     }
 
     public boolean set(boolean val) {
-        if (ntPublisher == null && logEntry == null) return false;
+        if (ntPublisher_nl == null && logEntry_nl == null) return false;
 
-        if (!includeNTInChecks && ntPublisher != null) {
-            ntPublisher.set(val);
+        if (!includeNTInChecks && ntPublisher_nl != null) {
+            ntPublisher_nl.set(val);
         }
 
         if (!disableChecks && hasValue && val == currValue) return false;
 
-        if (includeNTInChecks && ntPublisher != null) {
-            ntPublisher.set(val);
+        if (includeNTInChecks && ntPublisher_nl != null) {
+            ntPublisher_nl.set(val);
         }
-        if (logEntry != null) {
-            logEntry.append(val);
+        if (logEntry_nl != null) {
+            logEntry_nl.append(val);
         }
 
         if (!disableChecks) {
@@ -85,6 +86,6 @@ public class BoolWriter implements AutoCloseable {
         //     logEntry.finish();
         //     logEntry = null;
         // }
-        logEntry = null;
+        logEntry_nl = null;
     }
 }

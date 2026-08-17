@@ -25,13 +25,13 @@ public class LauncherReportWriter implements AutoCloseable {
         nullFallback = _nullFallback;
     }
 
-    public void set(LauncherReport report) {
-        if (report == null) report = nullFallback;
+    public void set(LauncherReport report_nl) {
+        if (report_nl == null) report_nl = nullFallback;
 
-        turretOperationalWriter.set(report.turretOperational);
+        turretOperationalWriter.set(report_nl.turretOperational);
 
-        shooterOperationWriter.set(report.shooterOperational);
-        shooterIsAtTargetWriter.set(report.shooterIsAtTarget);
+        shooterOperationWriter.set(report_nl.shooterOperational);
+        shooterIsAtTargetWriter.set(report_nl.shooterIsAtTarget);
     }
 
     @Override

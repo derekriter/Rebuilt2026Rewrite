@@ -63,30 +63,30 @@ public class RobotStateWriter implements AutoCloseable {
         nullFallback = _nullFallback;
     }
 
-    public void set(RobotState state) {
-        if (state == null) state = nullFallback;
+    public void set(RobotState state_nl) {
+        if (state_nl == null) state_nl = nullFallback;
 
-        opModeWriter.set(state.opMode.name());
-        isRealWriter.set(state.isReal);
-        isDSAttachedWriter.set(state.isDSAttached);
+        opModeWriter.set(state_nl.opMode.name());
+        isRealWriter.set(state_nl.isReal);
+        isDSAttachedWriter.set(state_nl.isDSAttached);
 
-        isRedWriter.set(state.isRed);
-        autoWinnerIsKnownWriter.set(state.autoWinnerIsKnown);
-        didWinAutoWriter.set(state.didWinAuto);
+        isRedWriter.set(state_nl.isRed);
+        autoWinnerIsKnownWriter.set(state_nl.autoWinnerIsKnown);
+        didWinAutoWriter.set(state_nl.didWinAuto);
 
-        modeTimeWriter.set(state.modeTime_s);
-        phaseWriter.set(state.phase.name());
-        timeLeftInPhaseWriter.set(state.timeLeftInPhase_s);
-        fieldZoneWriter.set(state.fieldZone.name());
-        isHubActiveWriter.set(state.isHubActive);
+        modeTimeWriter.set(state_nl.modeTime_s);
+        phaseWriter.set(state_nl.phase.name());
+        timeLeftInPhaseWriter.set(state_nl.timeLeftInPhase_s);
+        fieldZoneWriter.set(state_nl.fieldZone.name());
+        isHubActiveWriter.set(state_nl.isHubActive);
 
-        launcherReportWriter.set(state.launcherReport);
-        isTurretHomedWriter.set(state.isTurretHomed);
-        swerveReportWriter.set(state.swerveReport);
+        launcherReportWriter.set(state_nl.launcherReport);
+        isTurretHomedWriter.set(state_nl.isTurretHomed);
+        swerveReportWriter.set(state_nl.swerveReport);
 
-        targetingModeWriter.set(state.targetingMode.name());
-        overrideTurretWriter.set(state.overrideTurret);
-        ledsModeWriter.set(state.ledsMode.name());
+        targetingModeWriter.set(state_nl.targetingMode.name());
+        overrideTurretWriter.set(state_nl.overrideTurret);
+        ledsModeWriter.set(state_nl.ledsMode.name());
     }
 
     @Override

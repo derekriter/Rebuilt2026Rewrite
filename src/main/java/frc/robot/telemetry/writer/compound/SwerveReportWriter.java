@@ -19,10 +19,10 @@ public class SwerveReportWriter implements AutoCloseable {
         nullFallback = _nullFallback;
     }
 
-    public void set(SwerveReport report) {
-        if (report == null) report = nullFallback;
+    public void set(SwerveReport report_nl) {
+        if (report_nl == null) report_nl = nullFallback;
 
-        isOperationalWriter.set(report.isOperational);
+        isOperationalWriter.set(report_nl.isOperational);
     }
 
     @Override

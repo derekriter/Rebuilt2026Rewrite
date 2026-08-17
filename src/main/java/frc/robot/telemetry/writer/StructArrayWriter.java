@@ -12,8 +12,8 @@ import frc.robot.util.CloneOperation;
 import frc.robot.util.EqualityTest;
 
 public class StructArrayWriter<T extends StructSerializable> implements AutoCloseable {
-    private StructArrayPublisher<T> ntPublisher;
-    private StructArrayLogEntry<T> logEntry;
+    private StructArrayPublisher<T> ntPublisher_nl;
+    private StructArrayLogEntry<T> logEntry_nl;
     private final EqualityTest<T[]> isEqual;
     private final CloneOperation<T[]> clone;
     private final boolean includeNTInChecks;
@@ -21,7 +21,7 @@ public class StructArrayWriter<T extends StructSerializable> implements AutoClos
     private final T[] nullFallback;
 
     private boolean hasValue;
-    private T[] currValue;
+    private T[] currValue_nl;
 
     /**
      * DO NOT USE OUTSIDE Telemetry.java!!!
@@ -36,15 +36,15 @@ public class StructArrayWriter<T extends StructSerializable> implements AutoClos
             T[] _nullFallback) {
         if (TelemetryConfig.telemetryLevel.logToNT) {
             StructArrayTopic<T> ntTopic = NetworkTableInstance.getDefault().getStructArrayTopic(key, struct);
-            ntPublisher = ntTopic.publish();
-            logEntry = null;
+            ntPublisher_nl = ntTopic.publish();
+            logEntry_nl = null;
         } else {
-            ntPublisher = null;
+            ntPublisher_nl = null;
 
             if (TelemetryConfig.telemetryLevel.logToFile) {
-                logEntry = StructArrayLogEntry.create(DataLogManager.getLog(), key, struct);
+                logEntry_nl = StructArrayLogEntry.create(DataLogManager.getLog(), key, struct);
             } else {
-                logEntry = null;
+                logEntry_nl = null;
             }
         }
 
@@ -65,26 +65,26 @@ public class StructArrayWriter<T extends StructSerializable> implements AutoClos
         nullFallback = _nullFallback;
     }
 
-    public boolean set(T[] val) {
-        if (ntPublisher == null && logEntry == null) return false;
+    public boolean set(T[] val_nl) {
+        if (ntPublisher_nl == null && logEntry_nl == null) return false;
 
-        if (val == null) val = nullFallback;
+        if (val_nl == null) val_nl = nullFallback;
 
-        if (!includeNTInChecks && ntPublisher != null) {
-            ntPublisher.set(val);
+        if (!includeNTInChecks && ntPublisher_nl != null) {
+            ntPublisher_nl.set(val_nl);
         }
 
-        if (!disableChecks && hasValue && isEqual != null && isEqual.test(val, currValue)) return false;
+        if (!disableChecks && hasValue && isEqual != null && isEqual.test(val_nl, currValue_nl)) return false;
 
-        if (includeNTInChecks && ntPublisher != null) {
-            ntPublisher.set(val);
+        if (includeNTInChecks && ntPublisher_nl != null) {
+            ntPublisher_nl.set(val_nl);
         }
-        if (logEntry != null) {
-            logEntry.append(val);
+        if (logEntry_nl != null) {
+            logEntry_nl.append(val_nl);
         }
 
         if (!disableChecks && clone != null) {
-            currValue = clone.clone(val);
+            currValue_nl = clone.clone(val_nl);
             hasValue = true;
         }
 
@@ -103,6 +103,6 @@ public class StructArrayWriter<T extends StructSerializable> implements AutoClos
         //     logEntry.finish();
         //     logEntry = null;
         // }
-        logEntry = null;
+        logEntry_nl = null;
     }
 }

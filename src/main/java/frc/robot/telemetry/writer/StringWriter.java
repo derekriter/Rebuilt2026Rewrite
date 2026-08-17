@@ -10,37 +10,38 @@ import frc.robot.config.TelemetryConfig;
 import frc.robot.telemetry.Telemetry;
 
 public class StringWriter implements AutoCloseable {
-    private StringPublisher ntPublisher;
-    private StringLogEntry logEntry;
+    private StringPublisher ntPublisher_nl;
+    private StringLogEntry logEntry_nl;
     private final boolean includeNTInChecks;
     private final boolean disableChecks;
 
     private boolean hasValue;
-    private String currValue;
+    private String currValue_nl;
 
     /**
      * DO NOT USE OUTSIDE Telemetry.java!!!
      */
-    public StringWriter(String key, String unit, boolean _includeNTInChecks, boolean _disableChecks) {
+    public StringWriter(String key, String unit_nl, boolean _includeNTInChecks, boolean _disableChecks) {
         if (TelemetryConfig.telemetryLevel.logToNT) {
             StringTopic ntTopic = NetworkTableInstance.getDefault().getStringTopic(key);
-            ntPublisher = ntTopic.publish();
-            logEntry = null;
+            ntPublisher_nl = ntTopic.publish();
+            logEntry_nl = null;
 
-            if (unit != null) {
+            if (unit_nl != null) {
                 try {
-                    ntTopic.setProperty("unit", '"' + unit + '"');
+                    ntTopic.setProperty("unit", '"' + unit_nl + '"');
                 } catch (IllegalArgumentException e) {
                     Telemetry.reportWarning(e, true);
                 }
             }
         } else {
-            ntPublisher = null;
+            ntPublisher_nl = null;
 
             if (TelemetryConfig.telemetryLevel.logToFile) {
-                logEntry = new StringLogEntry(DataLogManager.getLog(), NetworkTable.normalizeKey("NT:/" + key, false));
+                logEntry_nl =
+                        new StringLogEntry(DataLogManager.getLog(), NetworkTable.normalizeKey("NT:/" + key, false));
             } else {
-                logEntry = null;
+                logEntry_nl = null;
             }
         }
 
@@ -49,26 +50,26 @@ public class StringWriter implements AutoCloseable {
         disableChecks = _disableChecks;
     }
 
-    public boolean set(String val) {
-        if (ntPublisher == null && logEntry == null) return false;
+    public boolean set(String val_nl) {
+        if (ntPublisher_nl == null && logEntry_nl == null) return false;
 
-        if (val == null) val = "null";
+        if (val_nl == null) val_nl = "null";
 
-        if (!includeNTInChecks && ntPublisher != null) {
-            ntPublisher.set(val);
+        if (!includeNTInChecks && ntPublisher_nl != null) {
+            ntPublisher_nl.set(val_nl);
         }
 
-        if (!disableChecks && hasValue && val.equals(currValue)) return false;
+        if (!disableChecks && hasValue && val_nl.equals(currValue_nl)) return false;
 
-        if (includeNTInChecks && ntPublisher != null) {
-            ntPublisher.set(val);
+        if (includeNTInChecks && ntPublisher_nl != null) {
+            ntPublisher_nl.set(val_nl);
         }
-        if (logEntry != null) {
-            logEntry.append(val);
+        if (logEntry_nl != null) {
+            logEntry_nl.append(val_nl);
         }
 
         if (!disableChecks) {
-            currValue = val;
+            currValue_nl = val_nl;
             hasValue = true;
         }
 
@@ -87,6 +88,6 @@ public class StringWriter implements AutoCloseable {
         //     logEntry.finish();
         //     logEntry = null;
         // }
-        logEntry = null;
+        logEntry_nl = null;
     }
 }
