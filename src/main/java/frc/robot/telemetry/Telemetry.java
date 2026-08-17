@@ -128,7 +128,7 @@ public class Telemetry {
                 boolean loggingToFlash =
                         logDir == null ? false : logDir.toLowerCase().startsWith("/u");
                 recognizedWriter.set(loggingToFlash);
-                flashdriveNotRecognizedAlert.set(!loggingToFlash);
+                flashdriveNotRecognizedAlert.set(!loggingToFlash && Robot.isReal());
             }
         }
 

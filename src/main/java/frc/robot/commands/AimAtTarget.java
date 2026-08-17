@@ -59,8 +59,7 @@ public class AimAtTarget extends Command {
                 launcher,
                 swerve_noDep,
                 () -> {
-                    boolean inTop =
-                            swerve_noDep.getStateCopy().Pose.getMeasureY().gt(FieldConstants.fieldYCenter);
+                    boolean inTop = swerve_noDep.getState().Pose.getMeasureY().gt(FieldConstants.fieldYCenter);
                     if (isRed) {
                         return inTop ? FieldConstants.redZoneTopTargetLoc : FieldConstants.redZoneBottomTargetLoc;
                     } else {
@@ -72,7 +71,7 @@ public class AimAtTarget extends Command {
 
     @Override
     public void execute() {
-        SwerveDriveState swerveState = swerve_noDep.getStateCopy();
+        SwerveDriveState swerveState = swerve_noDep.getState();
 
         Pair<TurretAngle, ShooterTarget> target = LaunchCalculator.calcShot(
                 targetSupplier.get(),

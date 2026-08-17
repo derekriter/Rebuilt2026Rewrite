@@ -8,7 +8,6 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
 
 import edu.wpi.first.wpilibj.LEDPattern;
-import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -25,17 +24,17 @@ import frc.robot.subsystems.swerve.Swerve;
 public final class RobotContainer {
 
     private static boolean _hasCreatedInstance = false;
-    private static RobotContainer _inst = null;
+    private static RobotContainer _inst_nl = null;
 
     public static RobotContainer instance() {
         if (!_hasCreatedInstance) {
             _hasCreatedInstance = true;
-            _inst = new RobotContainer();
-        } else if (_inst == null) {
+            _inst_nl = new RobotContainer();
+        } else if (_inst_nl == null) {
             throw new Error("Cannot access RobotContainer instance within its own constructor!");
         }
 
-        return _inst;
+        return _inst_nl;
     }
 
     public final PDH pdh = new PDH();
@@ -81,9 +80,7 @@ public final class RobotContainer {
     }
 
     public Command autonLEDsCmd() {
-        LEDPattern blink = LEDPattern.solid(LEDsConfig.orange)
-                .synchronizedBlink(RobotController::getRSLState); // doesnt work in sim, need to test on real robot
-        return Commands.runEnd(() -> leds.applyPattern(blink), leds::clear, leds)
+        return Commands.startEnd(() -> leds.applyPattern(LEDPattern.solid(LEDsConfig.chargeGold)), leds::clear, leds)
                 .ignoringDisable(true)
                 .withName("autonLEDsCmd");
     }

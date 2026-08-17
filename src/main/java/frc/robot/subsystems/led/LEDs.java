@@ -15,15 +15,15 @@ import frc.robot.util.AlertUtils;
 
 public class LEDs extends SubsystemBase {
 
-    private final AddressableLED leds;
-    private final AddressableLEDBuffer buffer;
+    private final AddressableLED leds_nl;
+    private final AddressableLEDBuffer buffer_nl;
 
     private final Alert breakerAlert = AlertUtils.makeBreakerTripAlert(LEDsConfig.systemName);
     private boolean breakerLast = false;
 
     private final SubsystemWriter<LEDs> subsystemWriter =
             Telemetry.makeSubsystemWriter(this, "/", LEDsConfig.systemName);
-    private final BoolWriter breakerWriter;
+    private final BoolWriter breakerWriter_nl;
 
     private boolean needsUpdate = false;
 
@@ -31,20 +31,20 @@ public class LEDs extends SubsystemBase {
         if (Overrides.disableLEDs) {
             AlertUtils.makeSystemDisabledAlert(LEDsConfig.systemName).set(true);
 
-            leds = null;
-            buffer = null;
-            breakerWriter = null;
+            leds_nl = null;
+            buffer_nl = null;
+            breakerWriter_nl = null;
         } else {
-            leds = new AddressableLED(LEDsConfig.dataPort);
-            buffer = new AddressableLEDBuffer(LEDsConfig.ledCount);
+            leds_nl = new AddressableLED(LEDsConfig.dataPort);
+            buffer_nl = new AddressableLEDBuffer(LEDsConfig.ledCount);
 
-            leds.setLength(buffer.getLength());
-            leds.setColorOrder(LEDsConfig.colorOrder);
+            leds_nl.setLength(buffer_nl.getLength());
+            leds_nl.setColorOrder(LEDsConfig.colorOrder);
 
-            leds.setData(buffer);
-            leds.start();
+            leds_nl.setData(buffer_nl);
+            leds_nl.start();
 
-            breakerWriter = Telemetry.makeBoolWriter(LEDsConfig.systemName, "breakerTripped");
+            breakerWriter_nl = Telemetry.makeBoolWriter(LEDsConfig.systemName, "breakerTripped");
         }
     }
 
@@ -52,18 +52,18 @@ public class LEDs extends SubsystemBase {
     public void periodic() {
         subsystemWriter.update();
 
-        if (needsUpdate && leds != null) {
-            leds.setData(buffer);
+        if (needsUpdate && leds_nl != null) {
+            leds_nl.setData(buffer_nl);
             needsUpdate = false;
         }
     }
 
     public void update() {
-        if (leds == null) return;
+        if (leds_nl == null) return;
 
         boolean breakerTripped = RobotContainer.instance().pdh.isBreakerTripped(LEDsConfig.channelID);
 
-        breakerWriter.set(breakerTripped);
+        breakerWriter_nl.set(breakerTripped);
         breakerAlert.set(breakerTripped);
         if (breakerTripped != breakerLast) {
             if (breakerTripped) {
@@ -77,9 +77,9 @@ public class LEDs extends SubsystemBase {
     }
 
     public void applyPattern(LEDPattern pattern) {
-        if (leds == null) return;
+        if (leds_nl == null) return;
 
-        pattern.applyTo(buffer);
+        pattern.applyTo(buffer_nl);
         needsUpdate = true;
     }
 

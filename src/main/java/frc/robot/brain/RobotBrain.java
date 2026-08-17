@@ -39,7 +39,7 @@ public class RobotBrain {
         RobotContainer.instance().leds.update();
 
         state.fieldZone = FieldZone.fromRobotX(
-                RobotContainer.instance().swerve.getStateCopy().Pose.getX());
+                RobotContainer.instance().swerve.getState().Pose.getX());
 
         if (state.opMode == OpMode.TELEOP) {
             pollTeleopData();

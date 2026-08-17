@@ -32,6 +32,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.Robot;
 import frc.robot.RobotContainer;
 import frc.robot.config.Overrides;
 import frc.robot.config.SwerveConfig;
@@ -425,6 +426,8 @@ public class Swerve extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder> impleme
         odometryFrequencyWriter.set(1 / state.OdometryPeriod);
 
         robotPoseWriter.set(state.Pose);
+        Robot.instance().field.setRobotPose(state.Pose);
+
         chassisSpeedsWriter.set(state.Speeds);
         moduleStatesWriter.set(state.ModuleStates);
         moduleTargetsWriter.set(state.ModuleTargets);
@@ -441,11 +444,11 @@ public class Swerve extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder> impleme
     }
 
     @Override
-    public void setControl(SwerveRequest request) {
-        if (thermalShutdown && request != null) return;
+    public void setControl(SwerveRequest request_nl) {
+        if (thermalShutdown && request_nl != null) return;
 
-        super.setControl(request);
-        controlWriter.set(request == null ? null : request.getClass().getSimpleName());
+        super.setControl(request_nl);
+        controlWriter.set(request_nl == null ? null : request_nl.getClass().getSimpleName());
     }
 
     /**
