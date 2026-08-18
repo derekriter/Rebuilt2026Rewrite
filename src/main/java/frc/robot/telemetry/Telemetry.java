@@ -8,6 +8,9 @@ import edu.wpi.first.hal.DriverStationJNI;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
@@ -72,16 +75,37 @@ public class Telemetry {
 
     private static boolean hasInited = false;
 
+    private static final Rotation2d rotation2dNullFallback = new Rotation2d(Double.NaN);
+    private static final Rotation2d[] rotation2dArrayNullFallback = new Rotation2d[0];
+
+    private static final Translation2d translation2dNullFallback = new Translation2d(Double.NaN, Double.NaN);
+    private static final Translation2d[] translation2dArrayNullFallback = new Translation2d[0];
+
+    private static final Pose2d pose2dNullFallback = new Pose2d(Double.NaN, Double.NaN, rotation2dNullFallback);
     private static final Pose2d[] pose2dArrayNullFallback = new Pose2d[0];
+
+    private static final Rotation3d rotation3dNullFallback = new Rotation3d(Double.NaN, Double.NaN, Double.NaN);
+    private static final Rotation3d[] rotation3dArrayNullFallback = new Rotation3d[0];
+
+    private static final Translation3d translation3dNullFallback =
+            new Translation3d(Double.NaN, Double.NaN, Double.NaN);
+    private static final Translation3d[] translation3dArrayNullFallback = new Translation3d[0];
+
+    private static final Pose3d pose3dNullFallback =
+            new Pose3d(Double.NaN, Double.NaN, Double.NaN, rotation3dNullFallback);
     private static final Pose3d[] pose3dArrayNullFallback = new Pose3d[0];
+
     private static final ChassisSpeeds chassisSpeedsNullFallback =
             new ChassisSpeeds(Double.NaN, Double.NaN, Double.NaN);
+
     private static final SwerveModuleState swerveModuleStateNullFallback =
-            new SwerveModuleState(Double.NaN, new Rotation2d(Double.NaN));
+            new SwerveModuleState(Double.NaN, rotation2dNullFallback);
     private static final SwerveModuleState[] swerveModuleStateArrayNullFallback = new SwerveModuleState[0];
+
     private static final SwerveModulePosition swerveModulePositionNullFallback =
-            new SwerveModulePosition(Double.NaN, new Rotation2d(Double.NaN));
+            new SwerveModulePosition(Double.NaN, rotation2dNullFallback);
     private static final SwerveModulePosition[] swerveModulePositionArrayNullFallback = new SwerveModulePosition[0];
+
     private static final RobotState robotStateNullFallback = new RobotState();
     private static final LauncherReport launcherReportNullFallback = new LauncherReport();
     private static final TurretAngle turretAngleNullFallback = TurretAngle.fromMechanismDeg(Double.NaN);
@@ -980,13 +1004,115 @@ public class Telemetry {
         return entry;
     }
 
+    public static StructArrayWriter<Rotation2d> makeRotation2dArrayWriter(String table, String name) {
+        return makeStructArrayWriter(
+                Rotation2d.struct,
+                table,
+                name,
+                EqualityTest.rotation2dArray,
+                CloneOperation.rotation2dArray,
+                rotation2dArrayNullFallback);
+    }
+
+    public static StructArrayWriter<Rotation2d> makeRotation2dArrayWriterInitial(
+            String table, String name, Rotation2d[] initialValue_nl) {
+        return makeStructArrayWriterInitial(
+                Rotation2d.struct,
+                table,
+                name,
+                initialValue_nl,
+                EqualityTest.rotation2dArray,
+                CloneOperation.rotation2dArray,
+                rotation2dArrayNullFallback);
+    }
+
+    public static StructArrayWriter<Rotation2d> makeRotation2dArrayWriterEx(
+            String table, String name, boolean includeNTInChecks, boolean disableChecks) {
+        return makeStructArrayWriterEx(
+                Rotation2d.struct,
+                table,
+                name,
+                EqualityTest.rotation2dArray,
+                CloneOperation.rotation2dArray,
+                includeNTInChecks,
+                disableChecks,
+                rotation2dArrayNullFallback);
+    }
+
+    public static StructArrayWriter<Rotation2d> makeRotation2dArrayWriterInitialEx(
+            String table, String name, Rotation2d[] initialValue_nl, boolean includeNTInChecks, boolean disableChecks) {
+        return makeStructArrayWriterInitialEx(
+                Rotation2d.struct,
+                table,
+                name,
+                initialValue_nl,
+                EqualityTest.rotation2dArray,
+                CloneOperation.rotation2dArray,
+                includeNTInChecks,
+                disableChecks,
+                rotation2dArrayNullFallback);
+    }
+
+    public static StructArrayWriter<Translation2d> makeTranslation2dArrayWriter(String table, String name) {
+        return makeStructArrayWriter(
+                Translation2d.struct,
+                table,
+                name,
+                EqualityTest.translation2dArray,
+                CloneOperation.translation2dArray,
+                translation2dArrayNullFallback);
+    }
+
+    public static StructArrayWriter<Translation2d> makeTranslation2dArrayWriterInitial(
+            String table, String name, Translation2d[] initialValue_nl) {
+        return makeStructArrayWriterInitial(
+                Translation2d.struct,
+                table,
+                name,
+                initialValue_nl,
+                EqualityTest.translation2dArray,
+                CloneOperation.translation2dArray,
+                translation2dArrayNullFallback);
+    }
+
+    public static StructArrayWriter<Translation2d> makeTranslation2dArrayWriterEx(
+            String table, String name, boolean includeNTInChecks, boolean disableChecks) {
+        return makeStructArrayWriterEx(
+                Translation2d.struct,
+                table,
+                name,
+                EqualityTest.translation2dArray,
+                CloneOperation.translation2dArray,
+                includeNTInChecks,
+                disableChecks,
+                translation2dArrayNullFallback);
+    }
+
+    public static StructArrayWriter<Translation2d> makeTranslation2dArrayWriterInitialEx(
+            String table,
+            String name,
+            Translation2d[] initialValue_nl,
+            boolean includeNTInChecks,
+            boolean disableChecks) {
+        return makeStructArrayWriterInitialEx(
+                Translation2d.struct,
+                table,
+                name,
+                initialValue_nl,
+                EqualityTest.translation2dArray,
+                CloneOperation.translation2dArray,
+                includeNTInChecks,
+                disableChecks,
+                translation2dArrayNullFallback);
+    }
+
     public static StructArrayWriter<Pose2d> makePose2dArrayWriter(String table, String name) {
         return makeStructArrayWriter(
                 Pose2d.struct,
                 table,
                 name,
-                EqualityTest.pose2dArrayEqualityTest,
-                CloneOperation.pose2dArrayCloneOperation,
+                EqualityTest.pose2dArray,
+                CloneOperation.pose2dArray,
                 pose2dArrayNullFallback);
     }
 
@@ -997,8 +1123,8 @@ public class Telemetry {
                 table,
                 name,
                 initialValue_nl,
-                EqualityTest.pose2dArrayEqualityTest,
-                CloneOperation.pose2dArrayCloneOperation,
+                EqualityTest.pose2dArray,
+                CloneOperation.pose2dArray,
                 pose2dArrayNullFallback);
     }
 
@@ -1008,8 +1134,8 @@ public class Telemetry {
                 Pose2d.struct,
                 table,
                 name,
-                EqualityTest.pose2dArrayEqualityTest,
-                CloneOperation.pose2dArrayCloneOperation,
+                EqualityTest.pose2dArray,
+                CloneOperation.pose2dArray,
                 includeNTInChecks,
                 disableChecks,
                 pose2dArrayNullFallback);
@@ -1022,11 +1148,113 @@ public class Telemetry {
                 table,
                 name,
                 initialValue_nl,
-                EqualityTest.pose2dArrayEqualityTest,
-                CloneOperation.pose2dArrayCloneOperation,
+                EqualityTest.pose2dArray,
+                CloneOperation.pose2dArray,
                 includeNTInChecks,
                 disableChecks,
                 pose2dArrayNullFallback);
+    }
+
+    public static StructArrayWriter<Rotation3d> makeRotation3dArrayWriter(String table, String name) {
+        return makeStructArrayWriter(
+                Rotation3d.struct,
+                table,
+                name,
+                EqualityTest.rotation3dArray,
+                CloneOperation.rotation3dArray,
+                rotation3dArrayNullFallback);
+    }
+
+    public static StructArrayWriter<Rotation3d> makeRotation3dArrayWriterInitial(
+            String table, String name, Rotation3d[] initialValue_nl) {
+        return makeStructArrayWriterInitial(
+                Rotation3d.struct,
+                table,
+                name,
+                initialValue_nl,
+                EqualityTest.rotation3dArray,
+                CloneOperation.rotation3dArray,
+                rotation3dArrayNullFallback);
+    }
+
+    public static StructArrayWriter<Rotation3d> makeRotation3dArrayWriterEx(
+            String table, String name, boolean includeNTInChecks, boolean disableChecks) {
+        return makeStructArrayWriterEx(
+                Rotation3d.struct,
+                table,
+                name,
+                EqualityTest.rotation3dArray,
+                CloneOperation.rotation3dArray,
+                includeNTInChecks,
+                disableChecks,
+                rotation3dArrayNullFallback);
+    }
+
+    public static StructArrayWriter<Rotation3d> makeRotation3dArrayWriterInitialEx(
+            String table, String name, Rotation3d[] initialValue_nl, boolean includeNTInChecks, boolean disableChecks) {
+        return makeStructArrayWriterInitialEx(
+                Rotation3d.struct,
+                table,
+                name,
+                initialValue_nl,
+                EqualityTest.rotation3dArray,
+                CloneOperation.rotation3dArray,
+                includeNTInChecks,
+                disableChecks,
+                rotation3dArrayNullFallback);
+    }
+
+    public static StructArrayWriter<Translation3d> makeTranslation3dArrayWriter(String table, String name) {
+        return makeStructArrayWriter(
+                Translation3d.struct,
+                table,
+                name,
+                EqualityTest.translation3dArray,
+                CloneOperation.translation3dArray,
+                translation3dArrayNullFallback);
+    }
+
+    public static StructArrayWriter<Translation3d> makeTranslation3dArrayWriterInitial(
+            String table, String name, Translation3d[] initialValue_nl) {
+        return makeStructArrayWriterInitial(
+                Translation3d.struct,
+                table,
+                name,
+                initialValue_nl,
+                EqualityTest.translation3dArray,
+                CloneOperation.translation3dArray,
+                translation3dArrayNullFallback);
+    }
+
+    public static StructArrayWriter<Translation3d> makeTranslation3dArrayWriterEx(
+            String table, String name, boolean includeNTInChecks, boolean disableChecks) {
+        return makeStructArrayWriterEx(
+                Translation3d.struct,
+                table,
+                name,
+                EqualityTest.translation3dArray,
+                CloneOperation.translation3dArray,
+                includeNTInChecks,
+                disableChecks,
+                translation3dArrayNullFallback);
+    }
+
+    public static StructArrayWriter<Translation3d> makeTranslation3dArrayWriterInitialEx(
+            String table,
+            String name,
+            Translation3d[] initialValue_nl,
+            boolean includeNTInChecks,
+            boolean disableChecks) {
+        return makeStructArrayWriterInitialEx(
+                Translation3d.struct,
+                table,
+                name,
+                initialValue_nl,
+                EqualityTest.translation3dArray,
+                CloneOperation.translation3dArray,
+                includeNTInChecks,
+                disableChecks,
+                translation3dArrayNullFallback);
     }
 
     public static StructArrayWriter<Pose3d> makePose3dArrayWriter(String table, String name) {
@@ -1034,8 +1262,8 @@ public class Telemetry {
                 Pose3d.struct,
                 table,
                 name,
-                EqualityTest.pose3dArrayEqualityTest,
-                CloneOperation.pose3dArrayCloneOperation,
+                EqualityTest.pose3dArray,
+                CloneOperation.pose3dArray,
                 pose3dArrayNullFallback);
     }
 
@@ -1046,8 +1274,8 @@ public class Telemetry {
                 table,
                 name,
                 initialValue_nl,
-                EqualityTest.pose3dArrayEqualityTest,
-                CloneOperation.pose3dArrayCloneOperation,
+                EqualityTest.pose3dArray,
+                CloneOperation.pose3dArray,
                 pose3dArrayNullFallback);
     }
 
@@ -1057,8 +1285,8 @@ public class Telemetry {
                 Pose3d.struct,
                 table,
                 name,
-                EqualityTest.pose3dArrayEqualityTest,
-                CloneOperation.pose3dArrayCloneOperation,
+                EqualityTest.pose3dArray,
+                CloneOperation.pose3dArray,
                 includeNTInChecks,
                 disableChecks,
                 pose3dArrayNullFallback);
@@ -1071,8 +1299,8 @@ public class Telemetry {
                 table,
                 name,
                 initialValue_nl,
-                EqualityTest.pose3dArrayEqualityTest,
-                CloneOperation.pose3dArrayCloneOperation,
+                EqualityTest.pose3dArray,
+                CloneOperation.pose3dArray,
                 includeNTInChecks,
                 disableChecks,
                 pose3dArrayNullFallback);
@@ -1083,8 +1311,8 @@ public class Telemetry {
                 SwerveModuleState.struct,
                 table,
                 name,
-                EqualityTest.swerveModuleStateArrayEqualityTest,
-                CloneOperation.swerveModuleStateArrayCloneOperation,
+                EqualityTest.swerveModuleStateArray,
+                CloneOperation.swerveModuleStateArray,
                 swerveModuleStateArrayNullFallback);
     }
 
@@ -1095,8 +1323,8 @@ public class Telemetry {
                 table,
                 name,
                 initialValue_nl,
-                EqualityTest.swerveModuleStateArrayEqualityTest,
-                CloneOperation.swerveModuleStateArrayCloneOperation,
+                EqualityTest.swerveModuleStateArray,
+                CloneOperation.swerveModuleStateArray,
                 swerveModuleStateArrayNullFallback);
     }
 
@@ -1106,8 +1334,8 @@ public class Telemetry {
                 SwerveModuleState.struct,
                 table,
                 name,
-                EqualityTest.swerveModuleStateArrayEqualityTest,
-                CloneOperation.swerveModuleStateArrayCloneOperation,
+                EqualityTest.swerveModuleStateArray,
+                CloneOperation.swerveModuleStateArray,
                 includeNTInChecks,
                 disableChecks,
                 swerveModuleStateArrayNullFallback);
@@ -1124,8 +1352,8 @@ public class Telemetry {
                 table,
                 name,
                 initialValue_nl,
-                EqualityTest.swerveModuleStateArrayEqualityTest,
-                CloneOperation.swerveModuleStateArrayCloneOperation,
+                EqualityTest.swerveModuleStateArray,
+                CloneOperation.swerveModuleStateArray,
                 includeNTInChecks,
                 disableChecks,
                 swerveModuleStateArrayNullFallback);
@@ -1137,8 +1365,8 @@ public class Telemetry {
                 SwerveModulePosition.struct,
                 table,
                 name,
-                EqualityTest.swerveModulePositionArrayEqualityTest,
-                CloneOperation.swerveModulePositionArrayCloneOperation,
+                EqualityTest.swerveModulePositionArray,
+                CloneOperation.swerveModulePositionArray,
                 swerveModulePositionArrayNullFallback);
     }
 
@@ -1149,8 +1377,8 @@ public class Telemetry {
                 table,
                 name,
                 initialValue_nl,
-                EqualityTest.swerveModulePositionArrayEqualityTest,
-                CloneOperation.swerveModulePositionArrayCloneOperation,
+                EqualityTest.swerveModulePositionArray,
+                CloneOperation.swerveModulePositionArray,
                 swerveModulePositionArrayNullFallback);
     }
 
@@ -1160,8 +1388,8 @@ public class Telemetry {
                 SwerveModulePosition.struct,
                 table,
                 name,
-                EqualityTest.swerveModulePositionArrayEqualityTest,
-                CloneOperation.swerveModulePositionArrayCloneOperation,
+                EqualityTest.swerveModulePositionArray,
+                CloneOperation.swerveModulePositionArray,
                 includeNTInChecks,
                 disableChecks,
                 swerveModulePositionArrayNullFallback);
@@ -1178,8 +1406,8 @@ public class Telemetry {
                 table,
                 name,
                 initialValue_nl,
-                EqualityTest.swerveModulePositionArrayEqualityTest,
-                CloneOperation.swerveModulePositionArrayCloneOperation,
+                EqualityTest.swerveModulePositionArray,
+                CloneOperation.swerveModulePositionArray,
                 includeNTInChecks,
                 disableChecks,
                 swerveModulePositionArrayNullFallback);
@@ -1256,14 +1484,111 @@ public class Telemetry {
         return entry;
     }
 
-    public static StructWriter<Pose2d> makePose2dWriter(String table, String name) {
+    public static StructWriter<Rotation2d> makeRotation2dWriter(String table, String name) {
         return makeStructWriter(
-                Pose2d.struct,
+                Rotation2d.struct,
                 table,
                 name,
-                EqualityTest.pose2dEqualityTest,
-                CloneOperation.pose2dCloneOperation,
-                Pose2d.kZero);
+                EqualityTest.rotation2d,
+                CloneOperation.rotation2d,
+                rotation2dNullFallback);
+    }
+
+    public static StructWriter<Rotation2d> makeRotation2dWriterInitial(
+            String table, String name, Rotation2d initialValue_nl) {
+        return makeStructWriterInitial(
+                Rotation2d.struct,
+                table,
+                name,
+                initialValue_nl,
+                EqualityTest.rotation2d,
+                CloneOperation.rotation2d,
+                rotation2dNullFallback);
+    }
+
+    public static StructWriter<Rotation2d> makeRotation2dWriterEx(
+            String table, String name, boolean includeNTInChecks, boolean disableChecks) {
+        return makeStructWriterEx(
+                Rotation2d.struct,
+                table,
+                name,
+                EqualityTest.rotation2d,
+                CloneOperation.rotation2d,
+                includeNTInChecks,
+                disableChecks,
+                rotation2dNullFallback);
+    }
+
+    public static StructWriter<Rotation2d> makeRotation2dWriterInitialEx(
+            String table, String name, Rotation2d initialValue_nl, boolean includeNTInChecks, boolean disableChecks) {
+        return makeStructWriterInitialEx(
+                Rotation2d.struct,
+                table,
+                name,
+                initialValue_nl,
+                EqualityTest.rotation2d,
+                CloneOperation.rotation2d,
+                includeNTInChecks,
+                disableChecks,
+                rotation2dNullFallback);
+    }
+
+    public static StructWriter<Translation2d> makeTranslation2dWriter(String table, String name) {
+        return makeStructWriter(
+                Translation2d.struct,
+                table,
+                name,
+                EqualityTest.translation2d,
+                CloneOperation.translation2d,
+                translation2dNullFallback);
+    }
+
+    public static StructWriter<Translation2d> makeTranslation2dWriterInitial(
+            String table, String name, Translation2d initialValue_nl) {
+        return makeStructWriterInitial(
+                Translation2d.struct,
+                table,
+                name,
+                initialValue_nl,
+                EqualityTest.translation2d,
+                CloneOperation.translation2d,
+                translation2dNullFallback);
+    }
+
+    public static StructWriter<Translation2d> makeTranslation2dWriterEx(
+            String table, String name, boolean includeNTInChecks, boolean disableChecks) {
+        return makeStructWriterEx(
+                Translation2d.struct,
+                table,
+                name,
+                EqualityTest.translation2d,
+                CloneOperation.translation2d,
+                includeNTInChecks,
+                disableChecks,
+                translation2dNullFallback);
+    }
+
+    public static StructWriter<Translation2d> makeTranslation2dWriterInitialEx(
+            String table,
+            String name,
+            Translation2d initialValue_nl,
+            boolean includeNTInChecks,
+            boolean disableChecks) {
+        return makeStructWriterInitialEx(
+                Translation2d.struct,
+                table,
+                name,
+                initialValue_nl,
+                EqualityTest.translation2d,
+                CloneOperation.translation2d,
+                includeNTInChecks,
+                disableChecks,
+                translation2dNullFallback);
+    }
+
+    public static StructWriter<Pose2d> makePose2dWriter(String table, String name) {
+        return makeStructWriter(
+                Pose2d.struct, table, name, EqualityTest.pose2d, CloneOperation.pose2d, pose2dNullFallback);
     }
 
     public static StructWriter<Pose2d> makePose2dWriterInitial(String table, String name, Pose2d initialValue_nl) {
@@ -1272,9 +1597,9 @@ public class Telemetry {
                 table,
                 name,
                 initialValue_nl,
-                EqualityTest.pose2dEqualityTest,
-                CloneOperation.pose2dCloneOperation,
-                Pose2d.kZero);
+                EqualityTest.pose2d,
+                CloneOperation.pose2d,
+                pose2dNullFallback);
     }
 
     public static StructWriter<Pose2d> makePose2dWriterEx(
@@ -1283,11 +1608,11 @@ public class Telemetry {
                 Pose2d.struct,
                 table,
                 name,
-                EqualityTest.pose2dEqualityTest,
-                CloneOperation.pose2dCloneOperation,
+                EqualityTest.pose2d,
+                CloneOperation.pose2d,
                 includeNTInChecks,
                 disableChecks,
-                Pose2d.kZero);
+                pose2dNullFallback);
     }
 
     public static StructWriter<Pose2d> makePose2dWriterInitialEx(
@@ -1297,21 +1622,118 @@ public class Telemetry {
                 table,
                 name,
                 initialValue_nl,
-                EqualityTest.pose2dEqualityTest,
-                CloneOperation.pose2dCloneOperation,
+                EqualityTest.pose2d,
+                CloneOperation.pose2d,
                 includeNTInChecks,
                 disableChecks,
-                Pose2d.kZero);
+                pose2dNullFallback);
+    }
+
+    public static StructWriter<Rotation3d> makeRotation3dWriter(String table, String name) {
+        return makeStructWriter(
+                Rotation3d.struct,
+                table,
+                name,
+                EqualityTest.rotation3d,
+                CloneOperation.rotation3d,
+                rotation3dNullFallback);
+    }
+
+    public static StructWriter<Rotation3d> makeRotation3dWriterInitial(
+            String table, String name, Rotation3d initialValue_nl) {
+        return makeStructWriterInitial(
+                Rotation3d.struct,
+                table,
+                name,
+                initialValue_nl,
+                EqualityTest.rotation3d,
+                CloneOperation.rotation3d,
+                rotation3dNullFallback);
+    }
+
+    public static StructWriter<Rotation3d> makeRotation3dWriterEx(
+            String table, String name, boolean includeNTInChecks, boolean disableChecks) {
+        return makeStructWriterEx(
+                Rotation3d.struct,
+                table,
+                name,
+                EqualityTest.rotation3d,
+                CloneOperation.rotation3d,
+                includeNTInChecks,
+                disableChecks,
+                rotation3dNullFallback);
+    }
+
+    public static StructWriter<Rotation3d> makeRotation3dWriterInitialEx(
+            String table, String name, Rotation3d initialValue_nl, boolean includeNTInChecks, boolean disableChecks) {
+        return makeStructWriterInitialEx(
+                Rotation3d.struct,
+                table,
+                name,
+                initialValue_nl,
+                EqualityTest.rotation3d,
+                CloneOperation.rotation3d,
+                includeNTInChecks,
+                disableChecks,
+                rotation3dNullFallback);
+    }
+
+    public static StructWriter<Translation3d> makeTranslation3dWriter(String table, String name) {
+        return makeStructWriter(
+                Translation3d.struct,
+                table,
+                name,
+                EqualityTest.translation3d,
+                CloneOperation.translation3d,
+                translation3dNullFallback);
+    }
+
+    public static StructWriter<Translation3d> makeTranslation3dWriterInitial(
+            String table, String name, Translation3d initialValue_nl) {
+        return makeStructWriterInitial(
+                Translation3d.struct,
+                table,
+                name,
+                initialValue_nl,
+                EqualityTest.translation3d,
+                CloneOperation.translation3d,
+                translation3dNullFallback);
+    }
+
+    public static StructWriter<Translation3d> makeTranslation3dWriterEx(
+            String table, String name, boolean includeNTInChecks, boolean disableChecks) {
+        return makeStructWriterEx(
+                Translation3d.struct,
+                table,
+                name,
+                EqualityTest.translation3d,
+                CloneOperation.translation3d,
+                includeNTInChecks,
+                disableChecks,
+                translation3dNullFallback);
+    }
+
+    public static StructWriter<Translation3d> makeTranslation3dWriterInitialEx(
+            String table,
+            String name,
+            Translation3d initialValue_nl,
+            boolean includeNTInChecks,
+            boolean disableChecks) {
+        return makeStructWriterInitialEx(
+                Translation3d.struct,
+                table,
+                name,
+                initialValue_nl,
+                EqualityTest.translation3d,
+                CloneOperation.translation3d,
+                includeNTInChecks,
+                disableChecks,
+                translation3dNullFallback);
     }
 
     public static StructWriter<Pose3d> makePose3dWriter(String table, String name) {
         return makeStructWriter(
-                Pose3d.struct,
-                table,
-                name,
-                EqualityTest.pose3dEqualityTest,
-                CloneOperation.pose3dCloneOperation,
-                Pose3d.kZero);
+                Pose3d.struct, table, name, EqualityTest.pose3d, CloneOperation.pose3d, pose3dNullFallback);
     }
 
     public static StructWriter<Pose3d> makePose3dWriterInitial(String table, String name, Pose3d initialValue_nl) {
@@ -1320,9 +1742,9 @@ public class Telemetry {
                 table,
                 name,
                 initialValue_nl,
-                EqualityTest.pose3dEqualityTest,
-                CloneOperation.pose3dCloneOperation,
-                Pose3d.kZero);
+                EqualityTest.pose3d,
+                CloneOperation.pose3d,
+                pose3dNullFallback);
     }
 
     public static StructWriter<Pose3d> makePose3dWriterEx(
@@ -1331,11 +1753,11 @@ public class Telemetry {
                 Pose3d.struct,
                 table,
                 name,
-                EqualityTest.pose3dEqualityTest,
-                CloneOperation.pose3dCloneOperation,
+                EqualityTest.pose3d,
+                CloneOperation.pose3d,
                 includeNTInChecks,
                 disableChecks,
-                Pose3d.kZero);
+                pose3dNullFallback);
     }
 
     public static StructWriter<Pose3d> makePose3dWriterInitialEx(
@@ -1345,11 +1767,11 @@ public class Telemetry {
                 table,
                 name,
                 initialValue_nl,
-                EqualityTest.pose3dEqualityTest,
-                CloneOperation.pose3dCloneOperation,
+                EqualityTest.pose3d,
+                CloneOperation.pose3d,
                 includeNTInChecks,
                 disableChecks,
-                Pose3d.kZero);
+                pose3dNullFallback);
     }
 
     public static StructWriter<ChassisSpeeds> makeChassisSpeedsWriter(String table, String name) {
@@ -1357,8 +1779,8 @@ public class Telemetry {
                 ChassisSpeeds.struct,
                 table,
                 name,
-                EqualityTest.chassisSpeedsEqualityTest,
-                CloneOperation.chassisSpeedsCloneOperation,
+                EqualityTest.chassisSpeeds,
+                CloneOperation.chassisSpeeds,
                 chassisSpeedsNullFallback);
     }
 
@@ -1369,8 +1791,8 @@ public class Telemetry {
                 table,
                 name,
                 initialValue_nl,
-                EqualityTest.chassisSpeedsEqualityTest,
-                CloneOperation.chassisSpeedsCloneOperation,
+                EqualityTest.chassisSpeeds,
+                CloneOperation.chassisSpeeds,
                 chassisSpeedsNullFallback);
     }
 
@@ -1380,8 +1802,8 @@ public class Telemetry {
                 ChassisSpeeds.struct,
                 table,
                 name,
-                EqualityTest.chassisSpeedsEqualityTest,
-                CloneOperation.chassisSpeedsCloneOperation,
+                EqualityTest.chassisSpeeds,
+                CloneOperation.chassisSpeeds,
                 includeNTInChecks,
                 disableChecks,
                 chassisSpeedsNullFallback);
@@ -1398,8 +1820,8 @@ public class Telemetry {
                 table,
                 name,
                 initialValue_nl,
-                EqualityTest.chassisSpeedsEqualityTest,
-                CloneOperation.chassisSpeedsCloneOperation,
+                EqualityTest.chassisSpeeds,
+                CloneOperation.chassisSpeeds,
                 includeNTInChecks,
                 disableChecks,
                 chassisSpeedsNullFallback);
@@ -1410,8 +1832,8 @@ public class Telemetry {
                 SwerveModuleState.struct,
                 table,
                 name,
-                EqualityTest.swerveModuleStateEqualityTest,
-                CloneOperation.swerveModuleStateCloneOperation,
+                EqualityTest.swerveModuleState,
+                CloneOperation.swerveModuleState,
                 swerveModuleStateNullFallback);
     }
 
@@ -1422,8 +1844,8 @@ public class Telemetry {
                 table,
                 name,
                 initialValue_nl,
-                EqualityTest.swerveModuleStateEqualityTest,
-                CloneOperation.swerveModuleStateCloneOperation,
+                EqualityTest.swerveModuleState,
+                CloneOperation.swerveModuleState,
                 swerveModuleStateNullFallback);
     }
 
@@ -1433,8 +1855,8 @@ public class Telemetry {
                 SwerveModuleState.struct,
                 table,
                 name,
-                EqualityTest.swerveModuleStateEqualityTest,
-                CloneOperation.swerveModuleStateCloneOperation,
+                EqualityTest.swerveModuleState,
+                CloneOperation.swerveModuleState,
                 includeNTInChecks,
                 disableChecks,
                 swerveModuleStateNullFallback);
@@ -1451,8 +1873,8 @@ public class Telemetry {
                 table,
                 name,
                 initialValue_nl,
-                EqualityTest.swerveModuleStateEqualityTest,
-                CloneOperation.swerveModuleStateCloneOperation,
+                EqualityTest.swerveModuleState,
+                CloneOperation.swerveModuleState,
                 includeNTInChecks,
                 disableChecks,
                 swerveModuleStateNullFallback);
@@ -1463,8 +1885,8 @@ public class Telemetry {
                 SwerveModulePosition.struct,
                 table,
                 name,
-                EqualityTest.swerveModulePositionEqualityTest,
-                CloneOperation.swerveModulePositionCloneOperation,
+                EqualityTest.swerveModulePosition,
+                CloneOperation.swerveModulePosition,
                 swerveModulePositionNullFallback);
     }
 
@@ -1475,8 +1897,8 @@ public class Telemetry {
                 table,
                 name,
                 initialValue_nl,
-                EqualityTest.swerveModulePositionEqualityTest,
-                CloneOperation.swerveModulePositionCloneOperation,
+                EqualityTest.swerveModulePosition,
+                CloneOperation.swerveModulePosition,
                 swerveModulePositionNullFallback);
     }
 
@@ -1486,8 +1908,8 @@ public class Telemetry {
                 SwerveModulePosition.struct,
                 table,
                 name,
-                EqualityTest.swerveModulePositionEqualityTest,
-                CloneOperation.swerveModulePositionCloneOperation,
+                EqualityTest.swerveModulePosition,
+                CloneOperation.swerveModulePosition,
                 includeNTInChecks,
                 disableChecks,
                 swerveModulePositionNullFallback);
@@ -1504,8 +1926,8 @@ public class Telemetry {
                 table,
                 name,
                 initialValue_nl,
-                EqualityTest.swerveModulePositionEqualityTest,
-                CloneOperation.swerveModulePositionCloneOperation,
+                EqualityTest.swerveModulePosition,
+                CloneOperation.swerveModulePosition,
                 includeNTInChecks,
                 disableChecks,
                 swerveModulePositionNullFallback);
