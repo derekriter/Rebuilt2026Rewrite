@@ -221,8 +221,8 @@ public class ModuleHelper {
             report.driveThermalShutdown = false;
         } else {
             if (driveBuffer.connected) {
-                boolean gettingToasty = driveBuffer.temp_C >= SwerveConfig.tempWarnThreshold.in(Celsius);
-                boolean overheating = driveBuffer.temp_C >= SwerveConfig.thermalShutdownThreshold.in(Celsius);
+                boolean gettingToasty = driveBuffer.temp_C >= SwerveConfig.driveTempWarnThreshold.in(Celsius);
+                boolean overheating = driveBuffer.temp_C >= SwerveConfig.driveThermalShutdownThreshold.in(Celsius);
                 report.driveThermalShutdown = (overheating || report.driveThermalShutdown) && gettingToasty;
 
                 driveTempWarnAlert.set(gettingToasty && !report.driveThermalShutdown);
@@ -298,8 +298,8 @@ public class ModuleHelper {
             report.steerThermalShutdown = false;
         } else {
             if (steerBuffer.connected) {
-                boolean gettingToasty = steerBuffer.temp_C >= SwerveConfig.tempWarnThreshold.in(Celsius);
-                boolean overheating = steerBuffer.temp_C >= SwerveConfig.thermalShutdownThreshold.in(Celsius);
+                boolean gettingToasty = steerBuffer.temp_C >= SwerveConfig.steerTempWarnThreshold.in(Celsius);
+                boolean overheating = steerBuffer.temp_C >= SwerveConfig.steerThermalShutdownThreshold.in(Celsius);
                 report.steerThermalShutdown = (overheating || report.steerThermalShutdown) && gettingToasty;
 
                 steerTempWarnAlert.set(gettingToasty && !report.steerThermalShutdown);

@@ -1,7 +1,6 @@
 package frc.robot.config;
 
 import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.KilogramSquareMeters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
@@ -160,8 +159,10 @@ public final class SwerveConfig {
             .withPigeon2Id(PigeonConfig.canID)
             .withPigeon2Configs(pigeonConfigs.orElse(null));
 
-    public static final Temperature tempWarnThreshold = Celsius.of(75);
-    public static final Temperature thermalShutdownThreshold = Celsius.of(80);
+    public static final Temperature driveTempWarnThreshold = MotorConfig.krakenX60TempWarnThreshold;
+    public static final Temperature driveThermalShutdownThreshold = MotorConfig.krakenX60ThermalShutdownThreshold;
+    public static final Temperature steerTempWarnThreshold = MotorConfig.falcon500TempWarnThreshold;
+    public static final Temperature steerThermalShutdownThreshold = MotorConfig.falcon500ThermalShutdownThreshold;
 
     private static final SwerveModuleConstantsFactory<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
             moduleConstantsFactory = new SwerveModuleConstantsFactory<

@@ -36,14 +36,14 @@ public final class Launcher extends SubsystemBase {
     private final SparkMax turret_nl;
 
     private final Alert turretCANAlert = AlertUtils.makeCANFailureAlert(TurretConfig.motorName),
-            turretTempWarnAlert = AlertUtils.makeTempWarnAlert(TurretConfig.motorName),
-            turretThermalShutdownAlert = AlertUtils.makeThermalShutdownAlert(TurretConfig.motorName),
+            // turretTempWarnAlert = AlertUtils.makeTempWarnAlert(TurretConfig.motorName),
+            // turretThermalShutdownAlert = AlertUtils.makeThermalShutdownAlert(TurretConfig.motorName),
             turretBreakerAlert = AlertUtils.makeBreakerTripAlert(TurretConfig.motorName);
 
     private TurretBuffer turretBuffer = new TurretBuffer();
     private boolean turretConnectedLast = false;
-    private boolean turretThermalShutdown = false;
-    private boolean turretThermalShutdownLast = false;
+    // private boolean turretThermalShutdown = false;
+    // private boolean turretThermalShutdownLast = false;
     private boolean turretBreakerLast = false;
 
     private final DoubleWriter turretPosWriter_nl;
@@ -53,7 +53,7 @@ public final class Launcher extends SubsystemBase {
     private final DoubleWriter turretVoltageOutWriter_nl;
     private final DoubleWriter turretCurrentOutWriter_nl;
     private final BoolWriter turretConnectedWriter_nl, turretCANWriter;
-    private final BoolWriter turretThermalShutdownWriter_nl;
+    // private final BoolWriter turretThermalShutdownWriter_nl;
     private final TurretAngleWriter turretTargetWriter_nl;
     private final BoolWriter turretAtHomingLimitWriter_nl;
     private final BoolWriter turretBreakerWriter_nl;
@@ -97,7 +97,7 @@ public final class Launcher extends SubsystemBase {
             turretVoltageOutWriter_nl = null;
             turretCurrentOutWriter_nl = null;
             turretConnectedWriter_nl = null;
-            turretThermalShutdownWriter_nl = null;
+            // turretThermalShutdownWriter_nl = null;
             turretTargetWriter_nl = null;
             turretAtHomingLimitWriter_nl = null;
             turretBreakerWriter_nl = null;
@@ -129,8 +129,8 @@ public final class Launcher extends SubsystemBase {
             turretCurrentOutWriter_nl = Telemetry.makeDoubleWriter(bufferTable, "currentOut", TelemetryUnits.amps);
             turretConnectedWriter_nl = Telemetry.makeBoolWriter(bufferTable, "connected");
 
-            turretThermalShutdownWriter_nl =
-                    Telemetry.makeBoolWriter(LauncherConfig.systemName, "turretThermalShutdown");
+            // turretThermalShutdownWriter_nl =
+            //         Telemetry.makeBoolWriter(LauncherConfig.systemName, "turretThermalShutdown");
             turretTargetWriter_nl = Telemetry.makeTurretAngleWriterInitialEx(
                     LauncherConfig.systemName, "turretTarget", null, false, true);
             turretAtHomingLimitWriter_nl = Telemetry.makeBoolWriter(LauncherConfig.systemName, "turretAtHomingLimit");
@@ -250,31 +250,31 @@ public final class Launcher extends SubsystemBase {
             if (Overrides.disableTurretSafety) {
                 report.turretOperational = true;
             } else {
-                if (turretBuffer.connected) {
-                    boolean gettingToasty = turretBuffer.temp_C >= TurretConfig.tempWarnThreshold.in(Celsius);
-                    boolean overheating = turretBuffer.temp_C >= TurretConfig.thermalShutdownThreshold.in(Celsius);
-                    turretThermalShutdown = (overheating || turretThermalShutdown) && gettingToasty;
+                // if (turretBuffer.connected) {
+                //     boolean gettingToasty = turretBuffer.temp_C >= TurretConfig.tempWarnThreshold.in(Celsius);
+                //     boolean overheating = turretBuffer.temp_C >= TurretConfig.thermalShutdownThreshold.in(Celsius);
+                //     turretThermalShutdown = (overheating || turretThermalShutdown) && gettingToasty;
 
-                    turretTempWarnAlert.set(gettingToasty && !turretThermalShutdown);
-                    turretThermalShutdownWriter_nl.set(turretThermalShutdown);
-                    turretThermalShutdownAlert.set(turretThermalShutdown);
-                }
+                //     turretTempWarnAlert.set(gettingToasty && !turretThermalShutdown);
+                //     turretThermalShutdownWriter_nl.set(turretThermalShutdown);
+                //     turretThermalShutdownAlert.set(turretThermalShutdown);
+                // }
 
-                if (turretThermalShutdown != turretThermalShutdownLast) {
-                    if (turretThermalShutdown) {
-                        Telemetry.reportThermalShutdownTrigger(
-                                TurretConfig.motorName, TurretConfig.canID, TurretConfig.channelID);
+                // if (turretThermalShutdown != turretThermalShutdownLast) {
+                //     if (turretThermalShutdown) {
+                //         Telemetry.reportThermalShutdownTrigger(
+                //                 TurretConfig.motorName, TurretConfig.canID, TurretConfig.channelID);
 
-                        stopTurret();
-                    } else {
-                        Telemetry.reportThermalShutdownRelease(
-                                TurretConfig.motorName, TurretConfig.canID, TurretConfig.channelID);
-                    }
-                }
+                //         stopTurret();
+                //     } else {
+                //         Telemetry.reportThermalShutdownRelease(
+                //                 TurretConfig.motorName, TurretConfig.canID, TurretConfig.channelID);
+                //     }
+                // }
 
-                report.turretOperational = turretBuffer.connected && !turretThermalShutdown && !breakerTripped;
+                report.turretOperational = turretBuffer.connected /*&& !turretThermalShutdown*/ && !breakerTripped;
 
-                turretThermalShutdownLast = turretThermalShutdown;
+                // turretThermalShutdownLast = turretThermalShutdown;
             }
 
             turretConnectedLast = turretBuffer.connected;
@@ -369,7 +369,7 @@ public final class Launcher extends SubsystemBase {
     }
 
     public void setTurretAngle(TurretAngle ang) {
-        if (turret_nl == null || turretThermalShutdown || !turretBuffer.connected) return;
+        if (turret_nl == null /*|| turretThermalShutdown*/ || !turretBuffer.connected) return;
 
         ang.wrap();
         if (!ang.isLegal()) return;
@@ -381,7 +381,7 @@ public final class Launcher extends SubsystemBase {
     public void setTurretDuty(double duty) {
         if (turret_nl == null) return;
         // allow duty to be set to 0 even when disconnected for safety reasons
-        if ((turretThermalShutdown || !turretBuffer.connected) && duty != 0) return;
+        if ((/*turretThermalShutdown ||*/ !turretBuffer.connected) && duty != 0) return;
 
         turret_nl.set(duty);
         turretTargetWriter_nl.set(null);

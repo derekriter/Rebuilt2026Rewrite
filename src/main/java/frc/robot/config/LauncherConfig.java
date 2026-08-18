@@ -1,7 +1,6 @@
 package frc.robot.config;
 
 import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
@@ -32,8 +31,8 @@ public final class LauncherConfig {
         public static final String motorName = "turretMotor";
 
         public static final SparkMaxConfig motorConfig;
-        public static final Temperature tempWarnThreshold = Celsius.of(75);
-        public static final Temperature thermalShutdownThreshold = Celsius.of(80);
+        // public static final Temperature tempWarnThreshold = Celsius.of(75);
+        // public static final Temperature thermalShutdownThreshold = Celsius.of(80);
 
         public static final double motorRotsPerMechRots = (46.713913 - -19.690401) / 0.5;
 
@@ -71,8 +70,8 @@ public final class LauncherConfig {
         public static final String motorName = "shooterMotor";
 
         public static final SparkFlexConfig motorConfig;
-        public static final Temperature tempWarnThreshold = Celsius.of(70);
-        public static final Temperature thermalShutdownThreshold = Celsius.of(80);
+        public static final Temperature tempWarnThreshold = MotorConfig.neoVortexTempWarnThreshold;
+        public static final Temperature thermalShutdownThreshold = MotorConfig.neoVortexThermalShutdownThreshold;
 
         public static final ShooterTarget targetOffset = ShooterTarget.fromShooterVelocity(RPM.of(100));
         public static final ShooterTarget maxRealTarget = ShooterTarget.fromShooterVelocity(RPM.of(5300));
