@@ -59,7 +59,7 @@ public class AimAtTarget extends Command {
                 launcher,
                 swerve_noDep,
                 () -> {
-                    boolean inTop = swerve_noDep.getState().Pose.getMeasureY().gt(FieldConstants.fieldYCenter);
+                    boolean inTop = swerve_noDep.getState().Pose.getY() > FieldConstants.fieldCenter.getY();
                     if (isRed) {
                         return inTop ? FieldConstants.redZoneTopTargetLoc : FieldConstants.redZoneBottomTargetLoc;
                     } else {

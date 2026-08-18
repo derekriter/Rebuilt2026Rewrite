@@ -24,8 +24,6 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.LinearAcceleration;
 import edu.wpi.first.wpilibj.Alert;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -38,6 +36,7 @@ import frc.robot.config.Overrides;
 import frc.robot.config.SwerveConfig;
 import frc.robot.config.SwerveConfig.CANivoreConfig;
 import frc.robot.config.SwerveConfig.PigeonConfig;
+import frc.robot.constants.FieldConstants;
 import frc.robot.telemetry.Telemetry;
 import frc.robot.telemetry.TelemetryUnits;
 import frc.robot.telemetry.writer.BoolWriter;
@@ -61,12 +60,8 @@ public class Swerve extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder> impleme
     private Notifier m_simNotifier = null;
     private double m_lastSimTime;
 
-    /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
-    private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;
-    /* Red alliance sees forward as 180 degrees (toward blue alliance wall) */
-    private static final Rotation2d kRedAlliancePerspectiveRotation = Rotation2d.k180deg;
-    /* Keep track if we've ever applied the operator perspective before or not */
-    private boolean m_hasAppliedOperatorPerspective = false;
+    private boolean hasAppliedPerspective = false;
+    private boolean lastAppliedPerspectiveIsRed = false;
 
     /* Swerve requests to apply during SysId characterization */
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization =
@@ -259,21 +254,17 @@ public class Swerve extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder> impleme
 
     @Override
     public void periodic() {
-        /*
-         * Periodically try to apply the operator perspective.
-         * If we haven't applied the operator perspective before, then we should apply it regardless of DS state.
-         * This allows us to correct the perspective in case the robot code restarts mid-match.
-         * Otherwise, only check and apply the operator perspective if the DS is disabled.
-         * This ensures driving behavior doesn't change until an explicit disable event occurs during testing.
-         */
-        if (!m_hasAppliedOperatorPerspective || DriverStation.isDisabled()) {
-            DriverStation.getAlliance().ifPresent(allianceColor -> {
-                setOperatorPerspectiveForward(
-                        allianceColor == Alliance.Red
-                                ? kRedAlliancePerspectiveRotation
-                                : kBlueAlliancePerspectiveRotation);
-                m_hasAppliedOperatorPerspective = true;
-            });
+        boolean isRed = Robot.instance().brain.state.isRed;
+        if (!hasAppliedPerspective || lastAppliedPerspectiveIsRed != isRed) {
+            if (lastAppliedPerspectiveIsRed != isRed) {
+                // automatically flip pose when changing alliance
+                // shouldn't ever happen in a match but is useful for testing
+                resetPose(getState().Pose.rotateAround(FieldConstants.fieldCenter, Rotation2d.k180deg));
+            }
+
+            lastAppliedPerspectiveIsRed = isRed;
+            hasAppliedPerspective = true;
+            setOperatorPerspectiveForward(isRed ? Rotation2d.k180deg : Rotation2d.kZero);
         }
 
         subsystemWriter.update();

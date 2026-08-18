@@ -6,4 +6,5 @@ public final class SwerveTalonFXBuffer {
     public double appliedOut_perc = Double.NaN;
     public double voltageOut_V = Double.NaN;
     public double currentOut_A = Double.NaN;
+    public double currentIn_A = Double.NaN;
 }

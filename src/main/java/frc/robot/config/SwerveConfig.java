@@ -4,9 +4,11 @@ import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.KilogramSquareMeters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Milliseconds;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
 import com.ctre.phoenix6.CANBus;
@@ -24,9 +26,11 @@ import com.ctre.phoenix6.swerve.SwerveModuleConstants.SteerFeedbackType;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.SteerMotorArrangement;
 import com.ctre.phoenix6.swerve.SwerveModuleConstantsFactory;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.LinearAcceleration;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Time;
@@ -123,11 +127,18 @@ public final class SwerveConfig {
     // TODO: tune slip current
     // The stator current at which the wheels start to slip;
     // This needs to be tuned to your individual robot
-    private static final Current slipCurrent = Amps.of(40);
+    private static final Current slipCurrent = Amps.of(120);
 
     // Initial configs for the drive and steer motors and the azimuth encoder; these cannot be null.
     // Some configs will be overwritten; check the `with*InitialConfigs()` API documentation.
-    private static final TalonFXConfiguration driveInitialConfigs = new TalonFXConfiguration();
+    private static final TalonFXConfiguration driveInitialConfigs = new TalonFXConfiguration()
+            .withCurrentLimits(new CurrentLimitsConfigs()
+                    // .withStatorCurrentLimit(120)
+                    // .withStatorCurrentLimitEnable(true)
+                    .withSupplyCurrentLimit(70)
+                    .withSupplyCurrentLimitEnable(true)
+                    .withSupplyCurrentLowerLimit(60)
+                    .withSupplyCurrentLowerTime(1));
     // .withOpenLoopRamps(new OpenLoopRampsConfigs().withVoltageOpenLoopRampPeriod(Seconds.of(0.25)));
     private static final TalonFXConfiguration steerInitialConfigs = new TalonFXConfiguration()
             .withCurrentLimits(new CurrentLimitsConfigs()
@@ -141,9 +152,9 @@ public final class SwerveConfig {
 
     // Theoretical free speed (m/s) at 12 V applied output;
     // This needs to be tuned to your individual robot
-    public static final LinearVelocity speedAt12Volts = MetersPerSecond.of(9.17);
+    public static final LinearVelocity speedAt12Volts = MetersPerSecond.of(4.87);
     // TODO: tune max translation and angular vel
-    public static final LinearVelocity maxTranslationVel = MetersPerSecond.of(9);
+    public static final LinearVelocity maxTranslationVel = MetersPerSecond.of(4.5);
     public static final AngularVelocity maxAngularVel = RotationsPerSecond.of(1.5);
     public static final LinearVelocity deadbandTranslationVel = MetersPerSecond.of(0.01);
     public static final AngularVelocity deadbandAngularVel = RotationsPerSecond.of(0.01);
@@ -151,6 +162,9 @@ public final class SwerveConfig {
     public static final double headingP = 10;
     public static final double headingI = 0;
     public static final double headingD = 0;
+
+    public static final LinearAcceleration teleopTranslationAcceleration = MetersPerSecondPerSecond.of(24);
+    public static final AngularAcceleration teleopAngularAcceleration = RotationsPerSecondPerSecond.of(12);
 
     public static final Time simLoopPeriod = Milliseconds.of(4);
 

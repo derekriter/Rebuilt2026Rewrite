@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.AimAtTarget;
 import frc.robot.commands.HomeLauncher;
 import frc.robot.commands.TeleopDrive;
@@ -44,10 +45,14 @@ public final class RobotContainer {
     public final Launcher launcher = new Launcher();
     public final LEDs leds = new LEDs();
 
-    public final XboxController driver1 = new XboxController(ControllerConfig.driver1Port);
-    public final XboxController driver2 = new XboxController(ControllerConfig.driver2Port);
+    public final CommandXboxController driver1Cmd = new CommandXboxController(ControllerConfig.driver1Port);
+    public final XboxController driver1 = driver1Cmd.getHID();
+    public final CommandXboxController driver2Cmd = new CommandXboxController(ControllerConfig.driver2Port);
+    public final XboxController driver2 = driver2Cmd.getHID();
 
-    private RobotContainer() {}
+    private RobotContainer() {
+        driver1Cmd.b().onTrue(seedSwerveOrientationCmd());
+    }
 
     public HomeLauncher homeLauncherCmd() {
         return new HomeLauncher(launcher);
@@ -128,5 +133,9 @@ public final class RobotContainer {
 
     public Command teleopDriveCmd() {
         return new TeleopDrive(swerve);
+    }
+
+    public Command seedSwerveOrientationCmd() {
+        return Commands.runOnce(swerve::seedFieldCentric).withName("seedSwerveOrientationCmd");
     }
 }

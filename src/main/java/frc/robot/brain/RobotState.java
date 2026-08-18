@@ -7,6 +7,7 @@ public final class RobotState {
     public OpMode opMode = OpMode.DISABLED;
     public boolean isReal = true;
     public boolean isDSAttached = false;
+    public boolean isBrownedOut = false;
 
     public boolean isRed = false;
     public boolean autoWinnerIsKnown = false;
@@ -31,6 +32,7 @@ public final class RobotState {
         opMode = ref.opMode;
         isReal = ref.isReal;
         isDSAttached = ref.isDSAttached;
+        isBrownedOut = ref.isBrownedOut;
 
         isRed = ref.isRed;
         autoWinnerIsKnown = ref.autoWinnerIsKnown;

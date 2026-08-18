@@ -9,6 +9,7 @@ public final class FieldConstants {
     // https://firstfrc.blob.core.windows.net/frc2026/FieldAssets/2026-field-dimension-dwgs.pdf
     public static final Translation2d redHubLoc = new Translation2d(Inches.of(651.22 - 182.11), Inches.of(158.84));
     public static final Translation2d blueHubLoc = new Translation2d(Inches.of(182.11), Inches.of(158.84));
+    public static final Translation2d fieldCenter = new Translation2d(Inches.of(325.61), Inches.of(158.84));
 
     public static final Translation2d blueZoneTopTargetLoc =
             new Translation2d(Inches.of(156.61 / 2), Inches.of(317.69 * 3 / 4));
@@ -23,7 +24,6 @@ public final class FieldConstants {
     public static final Distance blueZoneEdge = Inches.of(182.11);
     public static final Distance redZoneEdge = Inches.of(182.11 + 143.5 * 2);
 
-    public static final Distance fieldYCenter = Inches.of(158.84);
     public static final Distance fieldYBound = Inches.of(317.69);
 
     private FieldConstants() {}

@@ -35,6 +35,7 @@ public class ModuleHelper {
     private final StatusSignal<Double> driveAppliedOutSignal;
     private final StatusSignal<Voltage> driveVoltageOutSignal;
     private final StatusSignal<Current> driveCurrentOutSignal;
+    private final StatusSignal<Current> driveCurrentInSignal;
 
     private final BoolWriter driveConnectedWriter;
     private final BoolWriter driveCANWriter;
@@ -48,6 +49,7 @@ public class ModuleHelper {
     private final DoubleWriter driveAppliedOutWriter;
     private final DoubleWriter driveVoltageOutWriter;
     private final DoubleWriter driveCurrentOutWriter;
+    private final DoubleWriter driveCurrentInWriter;
 
     private SwerveTalonFXBuffer steerBuffer = new SwerveTalonFXBuffer();
     private boolean steerConnectedLast = false;
@@ -57,6 +59,7 @@ public class ModuleHelper {
     private final StatusSignal<Double> steerAppliedOutSignal;
     private final StatusSignal<Voltage> steerVoltageOutSignal;
     private final StatusSignal<Current> steerCurrentOutSignal;
+    private final StatusSignal<Current> steerCurrentInSignal;
 
     private final BoolWriter steerConnectedWriter;
     private final BoolWriter steerCANWriter;
@@ -70,6 +73,7 @@ public class ModuleHelper {
     private final DoubleWriter steerAppliedOutWriter;
     private final DoubleWriter steerVoltageOutWriter;
     private final DoubleWriter steerCurrentOutWriter;
+    private final DoubleWriter steerCurrentInWriter;
 
     private CANcoderBuffer encoderBuffer = new CANcoderBuffer();
     private boolean encoderConnectedLast = false;
@@ -100,6 +104,7 @@ public class ModuleHelper {
             driveAppliedOutSignal = drive.getDutyCycle(false);
             driveVoltageOutSignal = drive.getMotorVoltage(false);
             driveCurrentOutSignal = drive.getStatorCurrent(false);
+            driveCurrentInSignal = drive.getSupplyCurrent(false);
 
             driveConnectedWriter = Telemetry.makeBoolWriter(driveBufferTable, "connected");
             driveCANWriter =
@@ -116,6 +121,7 @@ public class ModuleHelper {
             driveAppliedOutWriter = Telemetry.makeDoubleWriter(driveBufferTable, "appliedOut");
             driveVoltageOutWriter = Telemetry.makeDoubleWriter(driveBufferTable, "voltageOut", TelemetryUnits.volts);
             driveCurrentOutWriter = Telemetry.makeDoubleWriter(driveBufferTable, "currentOut", TelemetryUnits.amps);
+            driveCurrentInWriter = Telemetry.makeDoubleWriter(driveBufferTable, "currentIn", TelemetryUnits.amps);
         }
 
         {
@@ -126,6 +132,7 @@ public class ModuleHelper {
             steerAppliedOutSignal = steer.getDutyCycle(false);
             steerVoltageOutSignal = steer.getMotorVoltage(false);
             steerCurrentOutSignal = steer.getStatorCurrent(false);
+            steerCurrentInSignal = steer.getSupplyCurrent(false);
 
             steerConnectedWriter = Telemetry.makeBoolWriter(steerBufferTable, "connected");
             steerCANWriter =
@@ -142,6 +149,7 @@ public class ModuleHelper {
             steerAppliedOutWriter = Telemetry.makeDoubleWriter(steerBufferTable, "appliedOut");
             steerVoltageOutWriter = Telemetry.makeDoubleWriter(steerBufferTable, "voltageOut", TelemetryUnits.volts);
             steerCurrentOutWriter = Telemetry.makeDoubleWriter(steerBufferTable, "currentOut", TelemetryUnits.amps);
+            steerCurrentInWriter = Telemetry.makeDoubleWriter(steerBufferTable, "currentIn", TelemetryUnits.amps);
         }
 
         {
@@ -178,17 +186,23 @@ public class ModuleHelper {
         driveBuffer.connected = drive.isConnected();
         if (driveBuffer.connected) {
             BaseStatusSignal.refreshAll(
-                    driveTempSignal, driveAppliedOutSignal, driveVoltageOutSignal, driveCurrentOutSignal);
+                    driveTempSignal,
+                    driveAppliedOutSignal,
+                    driveVoltageOutSignal,
+                    driveCurrentOutSignal,
+                    driveCurrentInSignal);
 
             driveBuffer.temp_C = driveTempSignal.getValueAsDouble();
             driveBuffer.appliedOut_perc = driveAppliedOutSignal.getValueAsDouble();
             driveBuffer.voltageOut_V = driveVoltageOutSignal.getValueAsDouble();
             driveBuffer.currentOut_A = driveVoltageOutSignal.getValueAsDouble();
+            driveBuffer.currentIn_A = driveCurrentInSignal.getValueAsDouble();
         } else {
             driveBuffer.temp_C = Double.NaN;
             driveBuffer.appliedOut_perc = Double.NaN;
             driveBuffer.voltageOut_V = Double.NaN;
             driveBuffer.currentOut_A = Double.NaN;
+            driveBuffer.currentIn_A = Double.NaN;
         }
         boolean breakerTripped = RobotContainer.instance().pdh.isBreakerTripped(config.driveChannelID);
 
@@ -215,6 +229,7 @@ public class ModuleHelper {
         driveAppliedOutWriter.set(driveBuffer.appliedOut_perc);
         driveVoltageOutWriter.set(driveBuffer.voltageOut_V);
         driveCurrentOutWriter.set(driveBuffer.currentOut_A);
+        driveCurrentInWriter.set(driveBuffer.currentIn_A);
 
         if (Overrides.disableSwerveSafety) {
             report.driveOperational = true;
@@ -255,17 +270,23 @@ public class ModuleHelper {
         steerBuffer.connected = steer.isConnected();
         if (steerBuffer.connected) {
             BaseStatusSignal.refreshAll(
-                    steerTempSignal, steerAppliedOutSignal, steerVoltageOutSignal, steerCurrentOutSignal);
+                    steerTempSignal,
+                    steerAppliedOutSignal,
+                    steerVoltageOutSignal,
+                    steerCurrentOutSignal,
+                    steerCurrentInSignal);
 
             steerBuffer.temp_C = steerTempSignal.getValueAsDouble();
             steerBuffer.appliedOut_perc = steerAppliedOutSignal.getValueAsDouble();
             steerBuffer.voltageOut_V = steerVoltageOutSignal.getValueAsDouble();
             steerBuffer.currentOut_A = steerVoltageOutSignal.getValueAsDouble();
+            steerBuffer.currentIn_A = steerCurrentInSignal.getValueAsDouble();
         } else {
             steerBuffer.temp_C = Double.NaN;
             steerBuffer.appliedOut_perc = Double.NaN;
             steerBuffer.voltageOut_V = Double.NaN;
             steerBuffer.currentOut_A = Double.NaN;
+            steerBuffer.currentIn_A = Double.NaN;
         }
         boolean breakerTripped = RobotContainer.instance().pdh.isBreakerTripped(config.steerChannelID);
 
@@ -292,6 +313,7 @@ public class ModuleHelper {
         steerAppliedOutWriter.set(steerBuffer.appliedOut_perc);
         steerVoltageOutWriter.set(steerBuffer.voltageOut_V);
         steerCurrentOutWriter.set(steerBuffer.currentOut_A);
+        steerCurrentInWriter.set(steerBuffer.currentIn_A);
 
         if (Overrides.disableSwerveSafety) {
             report.steerOperational = true;

@@ -1,7 +1,10 @@
 package frc.robot.brain;
 
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -16,7 +19,13 @@ import java.util.Optional;
 
 public class RobotBrain {
 
-    public static final RobotStateWriter robotStateWriter = Telemetry.makeRobotStateWriter("RobotBrain", "robotState");
+    private static final RobotStateWriter robotStateWriter = Telemetry.makeRobotStateWriter("RobotBrain", "robotState");
+    private static final Alert driver1MissingAlert = new Alert(
+            String.format("Driver 1 controller not connected to port %d", ControllerConfig.driver1Port),
+            AlertType.kWarning);
+    private static final Alert driver2MissingAlert = new Alert(
+            String.format("Driver 2 controller not connected to port %d", ControllerConfig.driver2Port),
+            AlertType.kWarning);
 
     public RobotState state;
     public Optional<RobotState> lastState;
@@ -31,7 +40,7 @@ public class RobotBrain {
     }
 
     public void pollState() {
-        pollOpModeAndAlliance();
+        pollBasicInfo();
 
         RobotContainer.instance().pdh.update();
         RobotContainer.instance().launcher.report(state.launcherReport);
@@ -59,8 +68,11 @@ public class RobotBrain {
         }
     }
 
-    private void pollOpModeAndAlliance() {
+    private void pollBasicInfo() {
         state.isDSAttached = DriverStation.isDSAttached();
+        if (lastState.isEmpty() || state.isDSAttached != lastState.get().isDSAttached) {
+            state.isRed = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red;
+        }
 
         if (DriverStation.isTeleopEnabled()) {
             state.opMode = OpMode.TELEOP;
@@ -85,6 +97,7 @@ public class RobotBrain {
         }
 
         state.modeTime_s = modeTimer.get();
+        state.isBrownedOut = RobotController.isBrownedOut();
     }
 
     private void pollTeleopData() {
@@ -179,6 +192,17 @@ public class RobotBrain {
                 state.ledsMode = hardwareError ? LEDsMode.ERROR : LEDsMode.AUTON;
                 state.driveMode = DriveMode.AUTON; // or DISABLED if no auto was selected
             }
+        }
+    }
+
+    public void telemeterize() {
+        robotStateWriter.set(state);
+
+        driver1MissingAlert.set(!RobotContainer.instance().driver1.isConnected());
+        driver2MissingAlert.set(!RobotContainer.instance().driver2.isConnected());
+
+        if (state.isBrownedOut && !lastState.map(s -> s.isBrownedOut).orElse(false)) {
+            Telemetry.reportWarning("Brown out detected", false);
         }
     }
 

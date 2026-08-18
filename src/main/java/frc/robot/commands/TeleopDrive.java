@@ -1,7 +1,9 @@
 package frc.robot.commands;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 
 import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric;
 import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle;
@@ -9,6 +11,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest.RobotCentric;
 import com.ctre.phoenix6.swerve.SwerveRequest.RobotCentricFacingAngle;
 import com.ctre.phoenix6.swerve.SwerveRequest.SwerveDriveBrake;
 import edu.wpi.first.math.Pair;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -60,6 +63,13 @@ public class TeleopDrive extends Command {
             // .withRotationalDeadband(SwerveConfig.deadbandAngularVel)
             .withHeadingPID(SwerveConfig.headingP, SwerveConfig.headingI, SwerveConfig.headingD);
 
+    private final SlewRateLimiter xSlew =
+            new SlewRateLimiter(SwerveConfig.teleopTranslationAcceleration.in(MetersPerSecondPerSecond));
+    private final SlewRateLimiter ySlew =
+            new SlewRateLimiter(SwerveConfig.teleopTranslationAcceleration.in(MetersPerSecondPerSecond));
+    private final SlewRateLimiter omegaSlew =
+            new SlewRateLimiter(SwerveConfig.teleopAngularAcceleration.in(RadiansPerSecondPerSecond));
+
     public TeleopDrive(Swerve _swerve) {
         swerve = _swerve;
 
@@ -106,15 +116,15 @@ public class TeleopDrive extends Command {
             omegaDirection = 1;
         }
 
-        double commonXVel_mps =
-                SwerveConfig.maxTranslationVel.in(MetersPerSecond) * -cubicLeft.getSecond() * speedShifter * slowDown;
+        double commonXVel_mps = xSlew.calculate(
+                SwerveConfig.maxTranslationVel.in(MetersPerSecond) * -cubicLeft.getSecond() * speedShifter * slowDown);
         commonXVelWriter.set(commonXVel_mps);
-        double commonYVel_mps =
-                SwerveConfig.maxTranslationVel.in(MetersPerSecond) * -cubicLeft.getFirst() * speedShifter * slowDown;
+        double commonYVel_mps = ySlew.calculate(
+                SwerveConfig.maxTranslationVel.in(MetersPerSecond) * -cubicLeft.getFirst() * speedShifter * slowDown);
         commonYVelWriter.set(commonYVel_mps);
         double commmonMaxAngularRate_radps = SwerveConfig.maxAngularVel.in(RadiansPerSecond) * speedShifter;
         commonMaxAngularRateWriter.set(commmonMaxAngularRate_radps);
-        double commonOmega_radps = commmonMaxAngularRate_radps * omegaDirection;
+        double commonOmega_radps = omegaSlew.calculate(commmonMaxAngularRate_radps * omegaDirection);
         commonOmegaWriter.set(commonOmega_radps);
 
         Rotation2d povDirection_nl = null;
@@ -126,8 +136,10 @@ public class TeleopDrive extends Command {
         povDirectionWriter.set(povDirection_nl == null ? Double.NaN : povDirection_nl.getDegrees());
 
         Rotation2d snakeDirection_nl = null;
-        if (commonXVel_mps != 0 || commonYVel_mps != 0) {
-            snakeDirection_nl = new Rotation2d(Math.atan2(commonYVel_mps, commonXVel_mps));
+        if (ControllerUtil.isPastDeadband(
+                driver1.getLeftX(), driver1.getLeftY(), ControllerConfig.driveJoystickDeadband)) {
+            snakeDirection_nl = new Rotation2d(
+                    ControllerUtil.getFieldSpaceJoystickAngle_rad(driver1.getLeftX(), driver1.getLeftY()));
         }
         snakeDirectionWriter.set(snakeDirection_nl == null ? Double.NaN : snakeDirection_nl.getDegrees());
 

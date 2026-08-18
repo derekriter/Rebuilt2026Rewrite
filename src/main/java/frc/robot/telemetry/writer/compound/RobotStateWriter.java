@@ -12,6 +12,7 @@ public class RobotStateWriter implements AutoCloseable {
     private final StringWriter opModeWriter;
     private final BoolWriter isRealWriter;
     private final BoolWriter isDSAttachedWriter;
+    private final BoolWriter isBrownedOutWriter;
 
     private final BoolWriter isRedWriter;
     private final BoolWriter autoWinnerIsKnownWriter;
@@ -41,6 +42,7 @@ public class RobotStateWriter implements AutoCloseable {
         opModeWriter = Telemetry.makeStringWriterEx(table, "opMode", null, true, false);
         isRealWriter = Telemetry.makeBoolWriterEx(table, "isReal", null, true, false);
         isDSAttachedWriter = Telemetry.makeBoolWriterEx(table, "isDSAttached", null, true, false);
+        isBrownedOutWriter = Telemetry.makeBoolWriterEx(table, "isBrowedOut", null, true, false);
 
         isRedWriter = Telemetry.makeBoolWriterEx(table, "isRed", null, true, false);
         autoWinnerIsKnownWriter = Telemetry.makeBoolWriterEx(table, "autoWinnerIsKnown", null, true, false);
@@ -71,6 +73,7 @@ public class RobotStateWriter implements AutoCloseable {
         opModeWriter.set(state_nl.opMode.name());
         isRealWriter.set(state_nl.isReal);
         isDSAttachedWriter.set(state_nl.isDSAttached);
+        isBrownedOutWriter.set(state_nl.isBrownedOut);
 
         isRedWriter.set(state_nl.isRed);
         autoWinnerIsKnownWriter.set(state_nl.autoWinnerIsKnown);
@@ -97,6 +100,7 @@ public class RobotStateWriter implements AutoCloseable {
         opModeWriter.close();
         isRealWriter.close();
         isDSAttachedWriter.close();
+        isBrownedOutWriter.close();
         isRedWriter.close();
         autoWinnerIsKnownWriter.close();
         didWinAutoWriter.close();

@@ -63,9 +63,7 @@ public final class Robot extends TimedRobot {
 
         brain.pollState();
         brain.determineModes();
-
-        RobotBrain.robotStateWriter.set(brain.state);
-
+        brain.telemeterize();
         brain.scheduleCommands();
 
         /*
