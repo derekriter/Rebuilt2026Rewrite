@@ -11,6 +11,7 @@ public final class ControllerConfig {
     public static final double driveJoystickDeadband = 0.1;
     public static final double turnJoystickDeadband = 0.1;
     public static final int joystickExponent = 3;
+    public static final double triggerThreshold = 0.5;
 
     private ControllerConfig() {}
 }

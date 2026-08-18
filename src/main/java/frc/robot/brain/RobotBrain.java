@@ -126,6 +126,7 @@ public class RobotBrain {
         switch (state.opMode) {
             case DISABLED -> {
                 state.targetingMode = TargetingMode.DISABLED;
+                state.driveMode = DriveMode.DISABLED;
 
                 if (hardwareError) {
                     state.ledsMode = LEDsMode.ERROR;
@@ -138,6 +139,7 @@ public class RobotBrain {
             case TEST -> {
                 state.targetingMode = TargetingMode.DISABLED;
                 state.ledsMode = hardwareError ? LEDsMode.ERROR : LEDsMode.OK;
+                state.driveMode = DriveMode.TELEOP;
             }
             case TELEOP -> {
                 if (!shooterCanRun) {
@@ -162,6 +164,8 @@ public class RobotBrain {
                 } else {
                     state.ledsMode = LEDsMode.HUB_INACTIVE;
                 }
+
+                state.driveMode = DriveMode.TELEOP;
             }
             case AUTON -> {
                 if (Overrides.disableShooter || Overrides.disableTurret) {
@@ -173,11 +177,12 @@ public class RobotBrain {
                 }
 
                 state.ledsMode = hardwareError ? LEDsMode.ERROR : LEDsMode.AUTON;
+                state.driveMode = DriveMode.AUTON; // or DISABLED if no auto was selected
             }
         }
     }
 
-    public void runCommands() {
+    public void scheduleCommands() {
         if (lastState.isEmpty() || state.targetingMode != lastState.get().targetingMode) {
             switch (state.targetingMode) {
                 case TARGETING_HUB -> changeSubsystemDefaultCommand(
@@ -227,6 +232,16 @@ public class RobotBrain {
                 case HUB_INACTIVE -> changeSubsystemDefaultCommand(
                         RobotContainer.instance().leds,
                         RobotContainer.instance().hubInactiveLEDsCmd());
+            }
+        }
+
+        if (lastState.isEmpty() || state.driveMode != lastState.get().driveMode) {
+            switch (state.driveMode) {
+                case DISABLED -> removeSubsystemDefaultCommand(RobotContainer.instance().swerve);
+                case AUTON -> removeSubsystemDefaultCommand(RobotContainer.instance().swerve); // TODO: auton
+                case TELEOP -> changeSubsystemDefaultCommand(
+                        RobotContainer.instance().swerve,
+                        RobotContainer.instance().teleopDriveCmd());
             }
         }
     }

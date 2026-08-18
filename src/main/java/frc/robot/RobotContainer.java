@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.commands.AimAtTarget;
 import frc.robot.commands.HomeLauncher;
+import frc.robot.commands.TeleopDrive;
 import frc.robot.config.ControllerConfig;
 import frc.robot.config.LEDsConfig;
 import frc.robot.pdh.PDH;
@@ -123,5 +124,9 @@ public final class RobotContainer {
         return Commands.startEnd(() -> leds.applyPattern(LEDPattern.solid(Color.kDimGray)), leds::clear, leds)
                 .ignoringDisable(true)
                 .withName("hubInactiveLEDsCmd");
+    }
+
+    public Command teleopDriveCmd() {
+        return new TeleopDrive(swerve);
     }
 }

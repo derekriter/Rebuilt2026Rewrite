@@ -30,6 +30,7 @@ public class RobotStateWriter implements AutoCloseable {
     private final StringWriter targetingModeWriter;
     private final BoolWriter overrideTurretWriter;
     private final StringWriter ledsModeWriter;
+    private final StringWriter driveModeWriter;
 
     private final RobotState nullFallback;
 
@@ -59,6 +60,7 @@ public class RobotStateWriter implements AutoCloseable {
         targetingModeWriter = Telemetry.makeStringWriterEx(table, "targetingMode", null, true, false);
         overrideTurretWriter = Telemetry.makeBoolWriterEx(table, "overrideTurret", null, true, false);
         ledsModeWriter = Telemetry.makeStringWriterEx(table, "ledsMode", null, true, false);
+        driveModeWriter = Telemetry.makeStringWriterEx(table, "driveMode", null, true, false);
 
         nullFallback = _nullFallback;
     }
@@ -87,6 +89,7 @@ public class RobotStateWriter implements AutoCloseable {
         targetingModeWriter.set(state_nl.targetingMode.name());
         overrideTurretWriter.set(state_nl.overrideTurret);
         ledsModeWriter.set(state_nl.ledsMode.name());
+        driveModeWriter.set(state_nl.driveMode.name());
     }
 
     @Override
@@ -108,5 +111,6 @@ public class RobotStateWriter implements AutoCloseable {
         targetingModeWriter.close();
         overrideTurretWriter.close();
         ledsModeWriter.close();
+        driveModeWriter.close();
     }
 }

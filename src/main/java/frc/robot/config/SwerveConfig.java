@@ -140,15 +140,18 @@ public final class SwerveConfig {
     // Configs for the Pigeon 2; leave this null to skip applying Pigeon 2 configs
     private static final Optional<Pigeon2Configuration> pigeonConfigs = Optional.empty();
 
-    // TODO: tune max translation and angular vel
     // Theoretical free speed (m/s) at 12 V applied output;
     // This needs to be tuned to your individual robot
     public static final LinearVelocity speedAt12Volts = MetersPerSecond.of(9.17);
+    // TODO: tune max translation and angular vel
     public static final LinearVelocity maxTranslationVel = MetersPerSecond.of(9);
     public static final AngularVelocity maxAngularVel = RotationsPerSecond.of(1.5);
-
     public static final LinearVelocity deadbandTranslationVel = MetersPerSecond.of(0.01);
     public static final AngularVelocity deadbandAngularVel = RotationsPerSecond.of(0.01);
+    // TODO: tune heading PID
+    public static final double headingP = 10;
+    public static final double headingI = 0;
+    public static final double headingD = 0;
 
     public static final Time simLoopPeriod = Milliseconds.of(4);
 

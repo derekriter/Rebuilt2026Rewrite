@@ -66,7 +66,7 @@ public final class Robot extends TimedRobot {
 
         RobotBrain.robotStateWriter.set(brain.state);
 
-        brain.runCommands();
+        brain.scheduleCommands();
 
         /*
          * Run command scheduler

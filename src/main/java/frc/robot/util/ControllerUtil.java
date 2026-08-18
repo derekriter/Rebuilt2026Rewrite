@@ -1,7 +1,10 @@
 package frc.robot.util;
 
+import static edu.wpi.first.units.Units.Radians;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Pair;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.Timer;
@@ -143,15 +146,61 @@ public class ControllerUtil {
      * See deadband graphs here: https://www.desmos.com/calculator/994aac3787
      */
 
+    public static boolean isPastDeadband(double raw, double deadband) {
+        return raw < -deadband || raw > deadband;
+    }
+
+    public static boolean isPastDeadband(double rawX, double rawY, double deadband) {
+        return isPastDeadband(Math.hypot(rawX, rawY), deadband);
+    }
+
     public static double applySimpleDeadband(double raw, double deadband) {
-        return Math.abs(raw) <= deadband ? 0 : raw;
+        return isPastDeadband(raw, deadband) ? raw : 0;
+    }
+
+    public static Pair<Double, Double> applySimpleDeadband(double rawX, double rawY, double deadband) {
+        double r = Math.hypot(rawX, rawY);
+        double theta = Math.atan2(rawY, rawX);
+
+        double newR = applySimpleDeadband(r, deadband);
+
+        if (newR == 0) return Pair.of(0.0, 0.0);
+        else return Pair.of(newR * Math.cos(theta), newR * Math.sin(theta));
     }
 
     public static double applyLinearDeadband(double raw, double deadband) {
-        return Math.abs(raw) <= deadband ? 0 : ((raw - deadband * Math.signum(raw)) / (1 - deadband));
+        return isPastDeadband(raw, deadband) ? ((raw - deadband * Math.signum(raw)) / (1 - deadband)) : 0;
+    }
+
+    public static Pair<Double, Double> applyLinearDeadband(double rawX, double rawY, double deadband) {
+        double r = Math.hypot(rawX, rawY);
+        double theta = Math.atan2(rawY, rawX);
+
+        double newR = applyLinearDeadband(r, deadband);
+
+        if (newR == 0) return Pair.of(0.0, 0.0);
+        else return Pair.of(newR * Math.cos(theta), newR * Math.sin(theta));
     }
 
     public static double applyExponentialDeadband(double raw, double deadband, int power) {
         return Math.pow(Math.abs(applyLinearDeadband(raw, deadband)), power) * Math.signum(raw);
+    }
+
+    public static Pair<Double, Double> applyExponentialDeadband(double rawX, double rawY, double deadband, int power) {
+        double r = Math.hypot(rawX, rawY);
+        double theta = Math.atan2(rawY, rawX);
+
+        double newR = applyExponentialDeadband(r, deadband, power);
+
+        if (newR == 0) return Pair.of(0.0, 0.0);
+        else return Pair.of(newR * Math.cos(theta), newR * Math.sin(theta));
+    }
+
+    public static Angle getFieldSpaceJoystickAngle(double x, double y) {
+        return Radians.of(getFieldSpaceJoystickAngle_rad(x, y));
+    }
+
+    public static double getFieldSpaceJoystickAngle_rad(double x, double y) {
+        return Math.atan2(-x, -y);
     }
 }

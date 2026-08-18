@@ -12,6 +12,9 @@ public final class TelemetryUnits {
     public static final String degPerSec = "dps";
     public static final String g = "g";
     public static final String hertz = "hz";
+    public static final String metersPerSecond = "mps";
+    public static final String radiansPerSecond = "rad per sec";
+    public static final String radians = "rad";
 
     private TelemetryUnits() {}
 }

@@ -25,6 +25,7 @@ public final class RobotState {
     public TargetingMode targetingMode = TargetingMode.DISABLED;
     public boolean overrideTurret = false;
     public LEDsMode ledsMode = LEDsMode.DISCONNECTED;
+    public DriveMode driveMode = DriveMode.DISABLED;
 
     public void copyFrom(RobotState ref) {
         opMode = ref.opMode;
@@ -48,5 +49,6 @@ public final class RobotState {
         targetingMode = ref.targetingMode;
         overrideTurret = ref.overrideTurret;
         ledsMode = ref.ledsMode;
+        driveMode = ref.driveMode;
     }
 }
