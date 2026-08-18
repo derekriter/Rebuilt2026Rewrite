@@ -10,6 +10,9 @@ import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotContainer;
@@ -21,6 +24,7 @@ import frc.robot.telemetry.Telemetry;
 import frc.robot.telemetry.TelemetryUnits;
 import frc.robot.telemetry.writer.BoolWriter;
 import frc.robot.telemetry.writer.DoubleWriter;
+import frc.robot.telemetry.writer.StructWriter;
 import frc.robot.telemetry.writer.compound.ShooterTargetWriter;
 import frc.robot.telemetry.writer.compound.SubsystemWriter;
 import frc.robot.telemetry.writer.compound.TurretAngleWriter;
@@ -45,6 +49,7 @@ public final class Launcher extends SubsystemBase {
     // private boolean turretThermalShutdown = false;
     // private boolean turretThermalShutdownLast = false;
     private boolean turretBreakerLast = false;
+    private double lastTurretTarget_rot = Double.NaN;
 
     private final DoubleWriter turretPosWriter_nl;
     private final DoubleWriter turretVelWriter_nl;
@@ -57,6 +62,8 @@ public final class Launcher extends SubsystemBase {
     private final TurretAngleWriter turretTargetWriter_nl;
     private final BoolWriter turretAtHomingLimitWriter_nl;
     private final BoolWriter turretBreakerWriter_nl;
+    private final StructWriter<Pose2d> turretPoseWriter_nl;
+    private final StructWriter<Pose2d> turretTargetPoseWriter_nl;
 
     // ===Shooter===
     private final SparkFlex shooter_nl;
@@ -83,6 +90,8 @@ public final class Launcher extends SubsystemBase {
     private final BoolWriter shooterThermalShutdownWriter_nl;
     private final ShooterTargetWriter shooterTargetWriter_nl;
     private final BoolWriter shooterBreakerWriter_nl;
+    private final StructWriter<Translation2d> shooterPointWriter_nl;
+    private final StructWriter<Translation2d> shooterTargetPointWriter_nl;
 
     public Launcher() {
         // ===Turret===
@@ -101,6 +110,8 @@ public final class Launcher extends SubsystemBase {
             turretTargetWriter_nl = null;
             turretAtHomingLimitWriter_nl = null;
             turretBreakerWriter_nl = null;
+            turretPoseWriter_nl = null;
+            turretTargetPoseWriter_nl = null;
 
             AlertUtils.makeSystemDisabledAlert(TurretConfig.systemName).set(true);
             turretCANWriter.set(false);
@@ -135,6 +146,8 @@ public final class Launcher extends SubsystemBase {
                     LauncherConfig.systemName, "turretTarget", null, false, true);
             turretAtHomingLimitWriter_nl = Telemetry.makeBoolWriter(LauncherConfig.systemName, "turretAtHomingLimit");
             turretBreakerWriter_nl = Telemetry.makeBoolWriter(LauncherConfig.systemName, "turretBreakerTripped");
+            turretPoseWriter_nl = Telemetry.makePose2dWriter(LauncherConfig.systemName, "turretPose");
+            turretTargetPoseWriter_nl = Telemetry.makePose2dWriter(LauncherConfig.systemName, "turretTargetPose");
         }
 
         // ===Shooter===
@@ -152,6 +165,8 @@ public final class Launcher extends SubsystemBase {
             shooterThermalShutdownWriter_nl = null;
             shooterTargetWriter_nl = null;
             shooterBreakerWriter_nl = null;
+            shooterPointWriter_nl = null;
+            shooterTargetPointWriter_nl = null;
 
             AlertUtils.makeSystemDisabledAlert(ShooterConfig.systemName).set(true);
             shooterCANWriter.set(false);
@@ -185,6 +200,9 @@ public final class Launcher extends SubsystemBase {
             shooterTargetWriter_nl = Telemetry.makeShooterTargetWriterInitialEx(
                     LauncherConfig.systemName, "shooterTarget", null, false, true);
             shooterBreakerWriter_nl = Telemetry.makeBoolWriter(LauncherConfig.systemName, "shooterBreakerTripped");
+            shooterPointWriter_nl = Telemetry.makeTranslation2dWriter(LauncherConfig.systemName, "shooterPoint");
+            shooterTargetPointWriter_nl =
+                    Telemetry.makeTranslation2dWriter(LauncherConfig.systemName, "shooterTargetPoint");
         }
     }
 
@@ -196,6 +214,43 @@ public final class Launcher extends SubsystemBase {
     public void report(LauncherReport report) {
         turretReport(report);
         shooterReport(report);
+
+        Translation2d launcherTranslation = getLauncherTranslation();
+        Rotation2d robotRotation =
+                RobotContainer.instance().swerve.getState().Pose.getRotation();
+
+        Rotation2d turretRealRotation;
+        Rotation2d turretTargetRotation;
+        if (turret_nl != null) {
+            turretRealRotation = robotRotation.plus(
+                    new Rotation2d(TurretAngle.motorAngleToMechAngle_ul(turretBuffer.pos_rots * 2 * Math.PI)));
+            turretPoseWriter_nl.set(new Pose2d(launcherTranslation, turretRealRotation));
+
+            if (Double.isNaN(lastTurretTarget_rot)) {
+                turretTargetPoseWriter_nl.set(null);
+                turretTargetRotation = turretRealRotation;
+            } else {
+                turretTargetRotation = robotRotation.plus(
+                        new Rotation2d(TurretAngle.motorAngleToMechAngle_ul(lastTurretTarget_rot * 2 * Math.PI)));
+                turretTargetPoseWriter_nl.set(new Pose2d(launcherTranslation, turretTargetRotation));
+            }
+        } else {
+            turretRealRotation = robotRotation;
+            turretTargetRotation = robotRotation;
+        }
+        if (shooter_nl != null) {
+            shooterPointWriter_nl.set(
+                    launcherTranslation.plus(new Translation2d(ShooterTarget.velToDistance_m(shooterBuffer.vel_RPM), 0)
+                            .rotateBy(turretRealRotation)));
+
+            if (Double.isNaN(lastShooterTarget_RPM)) {
+                shooterTargetPointWriter_nl.set(null);
+            } else {
+                shooterTargetPointWriter_nl.set(launcherTranslation.plus(
+                        new Translation2d(ShooterTarget.velToDistance_m(lastShooterTarget_RPM), 0)
+                                .rotateBy(turretTargetRotation)));
+            }
+        }
     }
 
     private void turretReport(LauncherReport report) {
@@ -368,13 +423,19 @@ public final class Launcher extends SubsystemBase {
         }
     }
 
+    private Translation2d getLauncherTranslation() {
+        Pose2d robotPose = RobotContainer.instance().swerve.getState().Pose;
+        return robotPose.getTranslation().plus(LauncherConfig.launcherOffset.rotateBy(robotPose.getRotation()));
+    }
+
     public void setTurretAngle(TurretAngle ang) {
         if (turret_nl == null /*|| turretThermalShutdown*/ || !turretBuffer.connected) return;
 
         ang.wrap();
         if (!ang.isLegal()) return;
 
-        turret_nl.getClosedLoopController().setSetpoint(ang.asMotorRotations(), ControlType.kPosition);
+        lastTurretTarget_rot = ang.asMotorRotations();
+        turret_nl.getClosedLoopController().setSetpoint(lastTurretTarget_rot, ControlType.kPosition);
         turretTargetWriter_nl.set(ang);
     }
 
@@ -384,6 +445,7 @@ public final class Launcher extends SubsystemBase {
         if ((/*turretThermalShutdown ||*/ !turretBuffer.connected) && duty != 0) return;
 
         turret_nl.set(duty);
+        lastTurretTarget_rot = Double.NaN;
         turretTargetWriter_nl.set(null);
     }
 
@@ -392,6 +454,7 @@ public final class Launcher extends SubsystemBase {
         if (turret_nl == null) return;
 
         turret_nl.stopMotor();
+        lastTurretTarget_rot = Double.NaN;
         turretTargetWriter_nl.set(null);
     }
 
@@ -433,6 +496,7 @@ public final class Launcher extends SubsystemBase {
         if (shooter_nl == null) return;
 
         shooter_nl.stopMotor();
+        lastShooterTarget_RPM = Double.NaN;
         shooterTargetWriter_nl.set(null);
     }
 

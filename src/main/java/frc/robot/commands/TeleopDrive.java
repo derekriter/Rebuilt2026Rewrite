@@ -33,9 +33,9 @@ public class TeleopDrive extends Command {
     private static final DoubleWriter commonYVelWriter =
             Telemetry.makeDoubleWriter(TeleopDrive.class.getSimpleName(), "commonYVel", TelemetryUnits.metersPerSecond);
     private static final DoubleWriter commonMaxAngularRateWriter = Telemetry.makeDoubleWriter(
-            TeleopDrive.class.getSimpleName(), "commonMaxAngularRate", TelemetryUnits.radiansPerSecond);
-    private static final DoubleWriter commonOmegaWriter = Telemetry.makeDoubleWriter(
-            TeleopDrive.class.getSimpleName(), "commonOmega", TelemetryUnits.radiansPerSecond);
+            TeleopDrive.class.getSimpleName(), "commonMaxAngularRate", TelemetryUnits.radPerSec);
+    private static final DoubleWriter commonOmegaWriter =
+            Telemetry.makeDoubleWriter(TeleopDrive.class.getSimpleName(), "commonOmega", TelemetryUnits.radPerSec);
     private static final DoubleWriter povDirectionWriter =
             Telemetry.makeDoubleWriter(TeleopDrive.class.getSimpleName(), "povDirection", TelemetryUnits.degrees);
     private static final DoubleWriter snakeDirectionWriter =

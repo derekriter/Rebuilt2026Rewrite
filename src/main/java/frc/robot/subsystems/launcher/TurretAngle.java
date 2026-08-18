@@ -26,11 +26,11 @@ public final class TurretAngle {
     }
 
     public static TurretAngle fromMotorAngle(Angle motorAngle) {
-        return new TurretAngle(motorAngle.mutableCopy().mut_divide(TurretConfig.motorRotsPerMechRots));
+        return new TurretAngle(Rotations.mutable(motorAngleToMechAngle_ul(motorAngle.in(Rotations))));
     }
 
     public static TurretAngle fromMotorRotations(double motorRots) {
-        return new TurretAngle(Rotations.mutable(motorRots).mut_divide(TurretConfig.motorRotsPerMechRots));
+        return new TurretAngle(Rotations.mutable(motorAngleToMechAngle_ul(motorRots)));
     }
 
     // as
@@ -43,11 +43,28 @@ public final class TurretAngle {
     }
 
     public Angle asMotorAngle() {
-        return mechAngle.times(TurretConfig.motorRotsPerMechRots);
+        return Rotations.of(mechAngleToMotorAngle_ul(mechAngle.in(Rotations)));
     }
 
     public double asMotorRotations() {
-        return mechAngle.in(Rotations) * TurretConfig.motorRotsPerMechRots;
+        return mechAngleToMotorAngle_ul(mechAngle.in(Rotations));
+    }
+
+    // conversions
+    public static Angle mechAngleToMotorAngle(Angle mechAngle) {
+        return mechAngle.div(TurretConfig.mechRotsPerMotorRots);
+    }
+
+    public static double mechAngleToMotorAngle_ul(double mechAngle_ul) {
+        return mechAngle_ul / TurretConfig.mechRotsPerMotorRots;
+    }
+
+    public static Angle motorAngleToMechAngle(Angle motorAngle) {
+        return motorAngle.times(TurretConfig.mechRotsPerMotorRots);
+    }
+
+    public static double motorAngleToMechAngle_ul(double motorAngle_ul) {
+        return motorAngle_ul * TurretConfig.mechRotsPerMotorRots;
     }
 
     // tests + operators

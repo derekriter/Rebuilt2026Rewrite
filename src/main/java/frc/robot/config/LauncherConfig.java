@@ -34,7 +34,7 @@ public final class LauncherConfig {
         // public static final Temperature tempWarnThreshold = Celsius.of(75);
         // public static final Temperature thermalShutdownThreshold = Celsius.of(80);
 
-        public static final double motorRotsPerMechRots = (46.713913 - -19.690401) / 0.5;
+        public static final double mechRotsPerMotorRots = 0.5 / (46.713913 - -19.690401);
 
         public static final TurretAngle breakAngle = TurretAngle.fromMechanismAngle(Degrees.of(225));
         public static final TurretAngle maxLegal = TurretAngle.fromMechanismAngle(Degrees.of(180));

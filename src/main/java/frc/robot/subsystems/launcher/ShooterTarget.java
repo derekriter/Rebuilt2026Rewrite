@@ -27,11 +27,11 @@ public final class ShooterTarget {
     }
 
     public static ShooterTarget fromDistanceToTarget(Distance dist) {
-        return new ShooterTarget(RPM.mutable(381 * dist.in(Meters) + 1614 + ShooterConfig.targetOffset.asShooterRPM()));
+        return new ShooterTarget(RPM.mutable(distanceToVel_rpm(dist.in(Meters))));
     }
 
     public static ShooterTarget fromMetersToTarget(double meters) {
-        return new ShooterTarget(RPM.mutable(381 * meters + 1614 + ShooterConfig.targetOffset.asShooterRPM()));
+        return new ShooterTarget(RPM.mutable(distanceToVel_rpm(meters)));
     }
 
     // as
@@ -44,11 +44,28 @@ public final class ShooterTarget {
     }
 
     public Distance asDistanceToTarget() {
-        return Meters.of((vel.in(RPM) - ShooterConfig.targetOffset.asShooterRPM() - 1614) / 381.0d);
+        return velToDistance(vel);
     }
 
     public double asMetersToTarget() {
-        return (vel.in(RPM) - ShooterConfig.targetOffset.asShooterRPM() - 1614) / 381.0d;
+        return velToDistance_m(vel.in(RPM));
+    }
+
+    // conversions
+    public static Distance velToDistance(AngularVelocity vel) {
+        return Meters.of(velToDistance_m(vel.in(RPM)));
+    }
+
+    public static double velToDistance_m(double vel_rpm) {
+        return Math.max((vel_rpm - ShooterConfig.targetOffset.asShooterRPM() - 1614) / 381.0d, 0);
+    }
+
+    public static AngularVelocity distanceToVel(Distance dist) {
+        return RPM.of(distanceToVel_rpm(dist.in(Meters)));
+    }
+
+    public static double distanceToVel_rpm(double dist_m) {
+        return 381 * dist_m + 1614 + ShooterConfig.targetOffset.asShooterRPM();
     }
 
     // tests + operators
