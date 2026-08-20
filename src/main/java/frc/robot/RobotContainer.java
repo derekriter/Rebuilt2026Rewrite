@@ -52,6 +52,10 @@ public final class RobotContainer {
 
     private RobotContainer() {
         driver1Cmd.b().onTrue(seedSwerveOrientationCmd());
+
+        driver2Cmd.x().onTrue(Commands.runOnce(() -> {
+            Robot.instance().brain.state.isTurretHomed = false;
+        }));
     }
 
     public HomeLauncher homeLauncherCmd() {

@@ -114,7 +114,7 @@ public final class SwerveConfig {
             .withKP(100)
             .withKI(0)
             .withKD(0.5)
-            .withKS(0.1)
+            .withKS(0.2)
             .withKV(2.66)
             .withKA(0)
             .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign);
@@ -122,7 +122,7 @@ public final class SwerveConfig {
     // When using closed-loop control, the drive motor uses the control
     // output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
     private static final Slot0Configs driveGains =
-            new Slot0Configs().withKP(0.1).withKI(0).withKD(0).withKS(0).withKV(0.124);
+            new Slot0Configs().withKP(0.1).withKI(0).withKD(0).withKS(0.2).withKV(0.124);
 
     // TODO: tune slip current
     // The stator current at which the wheels start to slip;

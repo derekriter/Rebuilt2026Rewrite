@@ -62,10 +62,6 @@ public class RobotBrain {
                 || RobotContainer.instance().driver2.getRightStickButton();
         state.overrideTurret = (lastState.map(ls -> ls.overrideTurret).orElse(false) || driver2IsMovingJoysticks)
                 && !driver2IsPressingJoysticks;
-
-        if (RobotContainer.instance().driver2.getXButtonPressed()) {
-            state.isTurretHomed = false;
-        }
     }
 
     private void pollBasicInfo() {
