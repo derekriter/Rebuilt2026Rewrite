@@ -105,9 +105,13 @@ public final class SwerveConfig {
 
     public static final String systemName = "Swerve";
 
+    // TODO: characterize and tune swerve
+    // The stator current at which the wheels start to slip;
+    // This needs to be tuned to your individual robot
+    private static final Current slipCurrent = Amps.of(120);
+
     // Both sets of gains need to be tuned to your individual robot.
 
-    // TODO: tune steer gains
     // The steer motor uses any SwerveModule.SteerRequestType control request with the
     // output type specified by SwerveModuleConstants.SteerMotorClosedLoopOutput
     private static final Slot0Configs steerGains = new Slot0Configs()
@@ -118,16 +122,10 @@ public final class SwerveConfig {
             .withKV(2.66)
             .withKA(0)
             .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign);
-    // TODO: tune drive gains
     // When using closed-loop control, the drive motor uses the control
     // output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
     private static final Slot0Configs driveGains =
             new Slot0Configs().withKP(0.1).withKI(0).withKD(0).withKS(0.2).withKV(0.124);
-
-    // TODO: tune slip current
-    // The stator current at which the wheels start to slip;
-    // This needs to be tuned to your individual robot
-    private static final Current slipCurrent = Amps.of(120);
 
     // Initial configs for the drive and steer motors and the azimuth encoder; these cannot be null.
     // Some configs will be overwritten; check the `with*InitialConfigs()` API documentation.
@@ -153,15 +151,17 @@ public final class SwerveConfig {
     // Theoretical free speed (m/s) at 12 V applied output;
     // This needs to be tuned to your individual robot
     public static final LinearVelocity speedAt12Volts = MetersPerSecond.of(4.87);
-    // TODO: tune max translation and angular vel
+
     public static final LinearVelocity maxTranslationVel = MetersPerSecond.of(4.5);
     public static final AngularVelocity maxAngularVel = RotationsPerSecond.of(1.5);
-    public static final LinearVelocity deadbandTranslationVel = MetersPerSecond.of(0.01);
-    public static final AngularVelocity deadbandAngularVel = RotationsPerSecond.of(0.01);
-    // TODO: tune heading PID
+
     public static final double headingP = 10;
     public static final double headingI = 0;
     public static final double headingD = 0;
+
+    public static final double autonTranslationP = 10;
+    public static final double autonTranslationI = 0;
+    public static final double autonTranslationD = 0;
 
     public static final LinearAcceleration teleopTranslationAcceleration = MetersPerSecondPerSecond.of(24);
     public static final AngularAcceleration teleopAngularAcceleration = RotationsPerSecondPerSecond.of(12);

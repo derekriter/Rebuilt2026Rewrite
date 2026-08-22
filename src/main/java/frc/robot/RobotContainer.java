@@ -7,8 +7,16 @@ package frc.robot;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
 
+import choreo.Choreo;
+import choreo.auto.AutoChooser;
+import choreo.auto.AutoFactory;
+import choreo.trajectory.SwerveSample;
+import choreo.trajectory.Trajectory;
+import com.ctre.phoenix6.swerve.SwerveRequest;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.LEDPattern;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -22,6 +30,10 @@ import frc.robot.pdh.PDH;
 import frc.robot.subsystems.launcher.Launcher;
 import frc.robot.subsystems.led.LEDs;
 import frc.robot.subsystems.swerve.Swerve;
+import frc.robot.telemetry.Telemetry;
+import frc.robot.telemetry.writer.DoubleWriter;
+import frc.robot.telemetry.writer.StringWriter;
+import frc.robot.telemetry.writer.StructArrayWriter;
 
 public final class RobotContainer {
 
@@ -50,12 +62,61 @@ public final class RobotContainer {
     public final CommandXboxController driver2Cmd = new CommandXboxController(ControllerConfig.driver2Port);
     public final XboxController driver2 = driver2Cmd.getHID();
 
+    private AutoFactory autoFactory;
+    private AutoChooser autoChooser;
+    private final StructArrayWriter<Pose2d> choreoTrajWriter =
+            Telemetry.makePose2dArrayWriterInitial("Choreo", "trajectory", null);
+    private final StringWriter choreoTrajNameWriter =
+            Telemetry.makeStringWriterInitial("Choreo", "trajectoryName", null);
+    private final DoubleWriter choreoTrajTimeWriter =
+            Telemetry.makeDoubleWriterInitial("Choreo", "trajectoryTime", Double.NaN);
+
     private RobotContainer() {
+        setupControls();
+        setupChoreo();
+    }
+
+    private void setupControls() {
         driver1Cmd.b().onTrue(seedSwerveOrientationCmd());
 
         driver2Cmd.x().onTrue(Commands.runOnce(() -> {
             Robot.instance().brain.state.isTurretHomed = false;
         }));
+    }
+
+    private void setupChoreo() {
+        autoFactory = new AutoFactory(
+                () -> swerve.getState().Pose,
+                swerve::resetPose,
+                swerve::followTrajectory,
+                true,
+                swerve,
+                (Choreo.TrajectoryLogger<SwerveSample>) (Trajectory<SwerveSample> traj, Boolean isStart) -> {
+                    if (Robot.instance().brain.state.isRed) {
+                        traj = traj.flipped();
+                    }
+
+                    if (isStart) {
+                        choreoTrajWriter.set(traj.getPoses());
+                        choreoTrajNameWriter.set(traj.name());
+                        choreoTrajTimeWriter.set(traj.getTotalTime());
+                    } else {
+                        choreoTrajWriter.set(null);
+                        choreoTrajNameWriter.set(null);
+                        choreoTrajTimeWriter.set(Double.NaN);
+                    }
+                });
+
+        autoChooser = Autos.createAutos(autoFactory);
+        SmartDashboard.putData("autoChooser", autoChooser);
+    }
+
+    public Command getAutonCommand() {
+        return autoChooser.selectedCommand();
+    }
+
+    public Command teleopDriveCmd() {
+        return new TeleopDrive(swerve);
     }
 
     public HomeLauncher homeLauncherCmd() {
@@ -135,11 +196,43 @@ public final class RobotContainer {
                 .withName("hubInactiveLEDsCmd");
     }
 
-    public Command teleopDriveCmd() {
-        return new TeleopDrive(swerve);
-    }
-
     public Command seedSwerveOrientationCmd() {
         return Commands.runOnce(swerve::seedFieldCentric).withName("seedSwerveOrientationCmd");
+    }
+
+    public Command stopSwerveCmd() {
+        return Commands.startEnd(swerve::stop, () -> {}, swerve).withName("stopSwerveCmd");
+    }
+
+    public Command brakeSwerveCmd() {
+        return Commands.startEnd(() -> swerve.setControl(new SwerveRequest.SwerveDriveBrake()), () -> {}, swerve)
+                .withName("brakeSwerveCmd");
+    }
+
+    public Command deployIntakeCmd() {
+        return Commands.runOnce(() -> Telemetry.println("deploy intake") /*, intake*/)
+                .withName("deployIntakeCmd");
+    }
+
+    public Command runIntakeCmd() {
+        return Commands.startRun(() -> Telemetry.println("run intake"), () -> {} /*, intake*/)
+                .withName("runIntakeCmd");
+    }
+
+    public Command stopIntakeCmd() {
+        return Commands.runOnce(() -> Telemetry.println("stop intake") /*, intake*/)
+                .withName("stopIntakeCmd");
+    }
+
+    public Command climbUpPosCmd() {
+        return Commands.startRun(() -> Telemetry.println("climb up"), () -> {} /*, climb*/)
+                .withTimeout(1.6)
+                .withName("climbUpPosCmd");
+    }
+
+    public Command climbHangingPosCmd() {
+        return Commands.startRun(() -> Telemetry.println("climb hanging"), () -> {} /*, climb*/)
+                .withTimeout(1.4)
+                .withName("climbHangingPosCmd");
     }
 }

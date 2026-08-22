@@ -1,0 +1,310 @@
+{
+ "name":"choreoProj",
+ "version":2,
+ "type":"Swerve",
+ "variables":{
+  "expressions":{
+   "collectVel":{
+    "dimension":"LinVel",
+    "var":{
+     "exp":"2 m / s",
+     "val":2.0
+    }
+   },
+   "depotVel":{
+    "dimension":"LinVel",
+    "var":{
+     "exp":"0.5 m / s",
+     "val":0.5
+    }
+   },
+   "fieldHeight":{
+    "dimension":"Length",
+    "var":{
+     "exp":"317.69 in",
+     "val":8.069326
+    }
+   },
+   "trenchTolerance":{
+    "dimension":"Length",
+    "var":{
+     "exp":"99.09801970083144 mm",
+     "val":0.09909801970083144
+    }
+   }
+  },
+  "poses":{
+   "climb_L":{
+    "x":{
+     "exp":"1.03 m",
+     "val":1.03
+    },
+    "y":{
+     "exp":"4.8 m",
+     "val":4.8
+    },
+    "heading":{
+     "exp":"0 deg",
+     "val":0.0
+    }
+   },
+   "climb_R":{
+    "x":{
+     "exp":"1.08 m",
+     "val":1.08
+    },
+    "y":{
+     "exp":"2.691 m",
+     "val":2.691
+    },
+    "heading":{
+     "exp":"180 deg",
+     "val":3.141592653589793
+    }
+   },
+   "collect1_L":{
+    "x":{
+     "exp":"7.67 m",
+     "val":7.67
+    },
+    "y":{
+     "exp":"4 m",
+     "val":4.0
+    },
+    "heading":{
+     "exp":"-90 deg",
+     "val":-1.5707963267948966
+    }
+   },
+   "collect1_R":{
+    "x":{
+     "exp":"collect1_L.x",
+     "val":7.67
+    },
+    "y":{
+     "exp":"fieldHeight - collect1_L.y",
+     "val":4.069326
+    },
+    "heading":{
+     "exp":"-collect1_L.heading",
+     "val":1.5707963267948966
+    }
+   },
+   "collect2_L":{
+    "x":{
+     "exp":"6.281 m",
+     "val":6.281
+    },
+    "y":{
+     "exp":"3 m",
+     "val":3.0
+    },
+    "heading":{
+     "exp":"-90 deg",
+     "val":-1.5707963267948966
+    }
+   },
+   "collect2_R":{
+    "x":{
+     "exp":"collect2_L.x",
+     "val":6.281
+    },
+    "y":{
+     "exp":"fieldHeight - collect2_L.y",
+     "val":5.069326
+    },
+    "heading":{
+     "exp":"-collect2_L.heading",
+     "val":1.5707963267948966
+    }
+   },
+   "depot":{
+    "x":{
+     "exp":"0.6140140295028687 m",
+     "val":0.6140140295028687
+    },
+    "y":{
+     "exp":"5.960522651672363 m",
+     "val":5.960522651672363
+    },
+    "heading":{
+     "exp":"180 deg",
+     "val":3.141592653589793
+    }
+   },
+   "shoot_L":{
+    "x":{
+     "exp":"2.325 m",
+     "val":2.325
+    },
+    "y":{
+     "exp":"6.144 m",
+     "val":6.144
+    },
+    "heading":{
+     "exp":"-60 deg",
+     "val":-1.0471975511965976
+    }
+   },
+   "shoot_R":{
+    "x":{
+     "exp":"shoot_L.x",
+     "val":2.325
+    },
+    "y":{
+     "exp":"fieldHeight - shoot_L.y",
+     "val":1.925326
+    },
+    "heading":{
+     "exp":"0 deg",
+     "val":0.0
+    }
+   },
+   "trenchFEnd_L":{
+    "x":{
+     "exp":"3.6139543056488037 m",
+     "val":3.613954305648804
+    },
+    "y":{
+     "exp":"7.451955318450928 m",
+     "val":7.451955318450928
+    },
+    "heading":{
+     "exp":"0 rad",
+     "val":0.0
+    }
+   },
+   "trenchFEnd_R":{
+    "x":{
+     "exp":"trenchFEnd_L.x",
+     "val":3.613954305648804
+    },
+    "y":{
+     "exp":"fieldHeight - trenchFEnd_L.y",
+     "val":0.6173706815490725
+    },
+    "heading":{
+     "exp":"0 rad",
+     "val":0.0
+    }
+   },
+   "trenchNEnd_L":{
+    "x":{
+     "exp":"5.448629856109619 m",
+     "val":5.448629856109619
+    },
+    "y":{
+     "exp":"7.473433971405029 m",
+     "val":7.473433971405029
+    },
+    "heading":{
+     "exp":"0 rad",
+     "val":0.0
+    }
+   },
+   "trenchNEnd_R":{
+    "x":{
+     "exp":"trenchNEnd_L.x",
+     "val":5.448629856109619
+    },
+    "y":{
+     "exp":"fieldHeight - trenchNEnd_L.y",
+     "val":0.5958920285949709
+    },
+    "heading":{
+     "exp":"0 rad",
+     "val":0.0
+    }
+   },
+   "trench_L":{
+    "x":{
+     "exp":"4.35 m",
+     "val":4.35
+    },
+    "y":{
+     "exp":"7.63 m",
+     "val":7.63
+    },
+    "heading":{
+     "exp":"0 rad",
+     "val":0.0
+    }
+   }
+  }
+ },
+ "config":{
+  "frontLeft":{
+   "x":{
+    "exp":"10.875 in",
+    "val":0.276225
+   },
+   "y":{
+    "exp":"10.875 in",
+    "val":0.276225
+   }
+  },
+  "backLeft":{
+   "x":{
+    "exp":"-10.875 in",
+    "val":-0.276225
+   },
+   "y":{
+    "exp":"10.875 in",
+    "val":0.276225
+   }
+  },
+  "mass":{
+   "exp":"160 lb",
+   "val":72.57477920000001
+  },
+  "inertia":{
+   "exp":"6 kg m ^ 2",
+   "val":6.0
+  },
+  "gearing":{
+   "exp":"6.75",
+   "val":6.75
+  },
+  "radius":{
+   "exp":"2.005 in",
+   "val":0.05092699999999999
+  },
+  "vmax":{
+   "exp":"6000 RPM",
+   "val":628.3185307179587
+  },
+  "tmax":{
+   "exp":"1.6 N * m",
+   "val":1.6
+  },
+  "cof":{
+   "exp":"1.5",
+   "val":1.5
+  },
+  "bumper":{
+   "front":{
+    "exp":"23.5 in",
+    "val":0.5969
+   },
+   "side":{
+    "exp":"15.375 in",
+    "val":0.390525
+   },
+   "back":{
+    "exp":"15.375 in",
+    "val":0.390525
+   }
+  },
+  "differentialTrackWidth":{
+   "exp":"22 in",
+   "val":0.5588
+  }
+ },
+ "generationFeatures":[],
+ "codegen":{
+  "root":"../../java/frc/robot/choreo/generated",
+  "genVars":true,
+  "genTrajData":true,
+  "useChoreoLib":true
+ }
+}

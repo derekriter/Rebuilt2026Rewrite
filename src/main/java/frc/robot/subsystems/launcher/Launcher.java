@@ -10,6 +10,7 @@ import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -331,6 +332,7 @@ public final class Launcher extends SubsystemBase {
 
                 // turretThermalShutdownLast = turretThermalShutdown;
             }
+            report.turretIsAtTarget = isTurretAtTarget();
 
             turretConnectedLast = turretBuffer.connected;
             turretBreakerLast = breakerTripped;
@@ -471,6 +473,14 @@ public final class Launcher extends SubsystemBase {
         turret_nl.getEncoder().setPosition(TurretConfig.homingEndPos.asMotorRotations());
     }
 
+    public boolean isTurretAtTarget() {
+        if (turret_nl == null || !turretBuffer.connected) return false;
+        if (Double.isNaN(lastTurretTarget_rot)) return false;
+
+        return MathUtil.isNear(
+                lastTurretTarget_rot, turretBuffer.pos_rots, TurretConfig.targetTolerance.asMotorRotations());
+    }
+
     public void setShooterVoltage(double volts) {
         if (shooter_nl == null) return;
         // allow voltage to be set to 0 even when disconnected for safety reasons
@@ -504,10 +514,7 @@ public final class Launcher extends SubsystemBase {
         if (shooter_nl == null || !shooterBuffer.connected) return false;
         if (Double.isNaN(lastShooterTarget_RPM)) return false;
 
-        double upwardTol = ShooterConfig.upwardTolerance.asShooterRPM();
-        double downwardTol = ShooterConfig.downwardTolerance.asShooterRPM();
-
-        return shooterBuffer.vel_RPM <= lastShooterTarget_RPM + upwardTol
-                && shooterBuffer.vel_RPM >= lastShooterTarget_RPM - downwardTol;
+        return MathUtil.isNear(
+                lastShooterTarget_RPM, shooterBuffer.vel_RPM, ShooterConfig.targetTolerance.asShooterRPM());
     }
 }
