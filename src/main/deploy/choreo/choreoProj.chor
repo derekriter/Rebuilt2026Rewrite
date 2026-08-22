@@ -47,6 +47,20 @@
      "val":-1.5707963267948966
     }
    },
+   "collect1_R":{
+    "x":{
+     "exp":"collect1_L.x",
+     "val":7.67
+    },
+    "y":{
+     "exp":"317.69 in - collect1_L.y",
+     "val":4.069326
+    },
+    "heading":{
+     "exp":"-collect1_L.heading",
+     "val":1.5707963267948966
+    }
+   },
    "shoot_L":{
     "x":{
      "exp":"2.325 m",
@@ -63,12 +77,12 @@
    },
    "shoot_R":{
     "x":{
-     "exp":"2.369 m",
-     "val":2.369
+     "exp":"shoot_L.x",
+     "val":2.325
     },
     "y":{
-     "exp":"2.145 m",
-     "val":2.145
+     "exp":"317.69 in - shoot_L.y",
+     "val":1.925326
     },
     "heading":{
      "exp":"0 deg",

@@ -40,7 +40,7 @@ public final class LauncherConfig {
         public static final TurretAngle maxLegal = TurretAngle.fromMechanismAngle(Degrees.of(180));
         public static final TurretAngle minLegal = TurretAngle.fromMechanismAngle(Degrees.of(-90));
         public static final TurretAngle forward = TurretAngle.fromMechanismAngle(Degrees.of(0));
-        public static final TurretAngle targetTolerance = TurretAngle.fromMechanismAngle(Degrees.of(0.2));
+        public static final TurretAngle targetTolerance = TurretAngle.fromMechanismAngle(Degrees.of(2));
 
         public static final double homingSpeed = -0.2;
         public static final TurretAngle homingEndPos = TurretAngle.fromMotorRotations(-39.094849);

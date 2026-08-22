@@ -14,6 +14,8 @@ import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.ctre.phoenix6.swerve.SwerveRequest.ApplyFieldSpeeds;
+import com.ctre.phoenix6.swerve.SwerveRequest.Idle;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -65,13 +67,19 @@ public class Swerve extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder> impleme
     private boolean hasAppliedPerspective = false;
     private boolean lastAppliedPerspectiveIsRed = false;
 
-    private final SwerveRequest.ApplyFieldSpeeds trajFollowReq = new SwerveRequest.ApplyFieldSpeeds();
+    private final Idle idleReq = new Idle();
+
+    private final ApplyFieldSpeeds trajFollowReq = new SwerveRequest.ApplyFieldSpeeds();
     private final PIDController trajXController = new PIDController(
             SwerveConfig.autonTranslationP, SwerveConfig.autonTranslationI, SwerveConfig.autonTranslationD);
     private final PIDController trajYController = new PIDController(
             SwerveConfig.autonTranslationP, SwerveConfig.autonTranslationI, SwerveConfig.autonTranslationD);
     private final PIDController trajThetaController =
             new PIDController(SwerveConfig.headingP, SwerveConfig.headingI, SwerveConfig.headingD);
+    private boolean inTrajFollowingMode = false;
+    private SwerveSample lastTrajSample_nl = null;
+    private final BoolWriter inTrajFollowingModeWriter =
+            Telemetry.makeBoolWriterInitial(SwerveConfig.systemName, "inTrajFollowingMode", inTrajFollowingMode);
 
     /* Swerve requests to apply during SysId characterization */
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization =
@@ -280,6 +288,11 @@ public class Swerve extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder> impleme
         }
 
         subsystemWriter.update();
+
+        if (inTrajFollowingMode) {
+            updateTrajFollowing();
+        }
+        inTrajFollowingModeWriter.set(inTrajFollowingMode);
     }
 
     public void report(SwerveReport report) {
@@ -452,25 +465,37 @@ public class Swerve extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder> impleme
 
         super.setControl(request_nl);
         controlWriter.set(request_nl == null ? null : request_nl.getClass().getSimpleName());
+        inTrajFollowingMode = false;
     }
 
     public void stop() {
-        setControl(null);
+        setControl(idleReq);
     }
 
     public void followTrajectory(SwerveSample sample) {
-        Pose2d currPose = getState().Pose;
+        lastTrajSample_nl = sample;
+        inTrajFollowingMode = true;
+    }
 
-        ChassisSpeeds speeds = new ChassisSpeeds(
-                sample.vx + trajXController.calculate(currPose.getX(), sample.x),
-                sample.vy + trajYController.calculate(currPose.getY(), sample.y),
-                sample.omega
-                        + trajThetaController.calculate(currPose.getRotation().getRadians(), sample.heading));
+    private void updateTrajFollowing() {
+        if (lastTrajSample_nl == null) {
+            stop();
+        } else {
+            Pose2d currPose = getState().Pose;
 
-        setControl(trajFollowReq
-                .withSpeeds(speeds)
-                .withWheelForceFeedforwardsX(sample.moduleForcesX())
-                .withWheelForceFeedforwardsY(sample.moduleForcesY()));
+            ChassisSpeeds speeds = new ChassisSpeeds(
+                    lastTrajSample_nl.vx + trajXController.calculate(currPose.getX(), lastTrajSample_nl.x),
+                    lastTrajSample_nl.vy + trajYController.calculate(currPose.getY(), lastTrajSample_nl.y),
+                    lastTrajSample_nl.omega
+                            + trajThetaController.calculate(
+                                    currPose.getRotation().getRadians(), lastTrajSample_nl.heading));
+
+            setControl(trajFollowReq
+                    .withSpeeds(speeds)
+                    .withWheelForceFeedforwardsX(lastTrajSample_nl.moduleForcesX())
+                    .withWheelForceFeedforwardsY(lastTrajSample_nl.moduleForcesY()));
+            inTrajFollowingMode = true; // super janky way to prevent setControl from cancelling traj following mode
+        }
     }
 
     /**

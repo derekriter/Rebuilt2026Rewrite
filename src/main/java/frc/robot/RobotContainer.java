@@ -64,9 +64,12 @@ public final class RobotContainer {
 
     private AutoFactory autoFactory;
     private AutoChooser autoChooser;
-    private final StructArrayWriter<Pose2d> choreoTrajWriter = Telemetry.makePose2dArrayWriter("Choreo", "trajectory");
-    private final StringWriter choreoTrajNameWriter = Telemetry.makeStringWriter("Choreo", "trajectoryName");
-    private final DoubleWriter choreoTrajTimeWriter = Telemetry.makeDoubleWriter("Choreo", "trajectoryTime");
+    private final StructArrayWriter<Pose2d> choreoTrajWriter =
+            Telemetry.makePose2dArrayWriterInitial("Choreo", "trajectory", null);
+    private final StringWriter choreoTrajNameWriter =
+            Telemetry.makeStringWriterInitial("Choreo", "trajectoryName", null);
+    private final DoubleWriter choreoTrajTimeWriter =
+            Telemetry.makeDoubleWriterInitial("Choreo", "trajectoryTime", Double.NaN);
 
     private RobotContainer() {
         setupControls();
@@ -99,7 +102,7 @@ public final class RobotContainer {
                         choreoTrajTimeWriter.set(traj.getTotalTime());
                     } else {
                         choreoTrajWriter.set(null);
-                        choreoTrajNameWriter.set("");
+                        choreoTrajNameWriter.set(null);
                         choreoTrajTimeWriter.set(Double.NaN);
                     }
                 });

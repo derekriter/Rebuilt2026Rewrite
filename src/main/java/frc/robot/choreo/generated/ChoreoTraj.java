@@ -24,20 +24,6 @@ public record ChoreoTraj(
     Pose2d initialPoseBlue,
     Pose2d endPoseBlue
 ) {
-    public static final ChoreoTraj L_trench_collect1 = new ChoreoTraj(
-        "L_trench_collect1",
-        OptionalInt.empty(),
-        2.57265,
-        new Pose2d(4.35, 7.63, Rotation2d.fromRadians(0)),
-        new Pose2d(7.67, 4, Rotation2d.fromRadians(-1.5708))
-    );
-    public static final ChoreoTraj R_shoot_climb = new ChoreoTraj(
-        "R_shoot_climb",
-        OptionalInt.empty(),
-        0.8051,
-        new Pose2d(2.369, 2.145, Rotation2d.fromRadians(0)),
-        new Pose2d(1.08, 2.691, Rotation2d.fromRadians(3.14159))
-    );
     public static final ChoreoTraj L_collect1_shoot = new ChoreoTraj(
         "L_collect1_shoot",
         OptionalInt.empty(),
@@ -52,16 +38,38 @@ public record ChoreoTraj(
         new Pose2d(2.325, 6.144, Rotation2d.fromRadians(-1.0472)),
         new Pose2d(1.03, 4.8, Rotation2d.fromRadians(0))
     );
+    public static final ChoreoTraj L_trench_collect1 = new ChoreoTraj(
+        "L_trench_collect1",
+        OptionalInt.empty(),
+        2.57265,
+        new Pose2d(4.35, 7.63, Rotation2d.fromRadians(0)),
+        new Pose2d(7.67, 4, Rotation2d.fromRadians(-1.5708))
+    );
+    public static final ChoreoTraj R_shoot_climb = new ChoreoTraj(
+        "R_shoot_climb",
+        OptionalInt.empty(),
+        0.81574,
+        new Pose2d(2.325, 1.92533, Rotation2d.fromRadians(0)),
+        new Pose2d(1.08, 2.691, Rotation2d.fromRadians(3.14159))
+    );
+    public static final ChoreoTraj R_collect1_shoot = new ChoreoTraj(
+        "R_collect1_shoot",
+        OptionalInt.empty(),
+        2.15032,
+        new Pose2d(7.67, 4.06933, Rotation2d.fromRadians(1.5708)),
+        new Pose2d(2.325, 1.92533, Rotation2d.fromRadians(0))
+    );
 
     /**
      * A map between trajectory names and their corresponding data.
      * This allows for trajectory data to be looked up with strings during runtime.
      */
     public static final Map<String, ChoreoTraj> ALL_TRAJECTORIES = Map.ofEntries(
+        Map.entry("L_collect1_shoot", L_collect1_shoot),
+        Map.entry("L_shoot_climb", L_shoot_climb),
         Map.entry("L_trench_collect1", L_trench_collect1),
         Map.entry("R_shoot_climb", R_shoot_climb),
-        Map.entry("L_collect1_shoot", L_collect1_shoot),
-        Map.entry("L_shoot_climb", L_shoot_climb)
+        Map.entry("R_collect1_shoot", R_collect1_shoot)
     );
 
     /**

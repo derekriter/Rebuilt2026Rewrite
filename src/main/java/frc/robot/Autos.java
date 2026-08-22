@@ -22,10 +22,10 @@ public final class Autos {
         return chooser;
     }
 
-    private static Command waitForReadyToShootCmd() {
-        return Commands.waitUntil(() -> Robot.instance().brain.isInFZone()
-                        && Robot.instance().brain.state.launcherReport.shooterIsAtTarget
+    private static Command waitForReadyToShootCmd(double timeout_s) {
+        return Commands.waitUntil(() -> Robot.instance().brain.state.launcherReport.shooterIsAtTarget
                         && Robot.instance().brain.state.launcherReport.turretIsAtTarget)
+                .withTimeout(timeout_s)
                 .withName("waitForReadyToShootCmd");
     }
 
@@ -86,13 +86,16 @@ public final class Autos {
                                     Commands.sequence(
                                             Commands.parallel(
                                                     collect1_shoot.cmd(),
-                                                    Commands.sequence(waitForReadyToShootCmd(), shootCmd(4))
+                                                    Commands.sequence(
+                                                            waitUntilInFZoneCmd(),
+                                                            waitForReadyToShootCmd(4),
+                                                            shootCmd(4)
+                                                    )
                                             ),
                                             shoot_climb.cmd()
                                     ),
                                     Commands.sequence(
                                             waitUntilInFZoneCmd(),
-                                            Commands.waitSeconds(0.1),
                                             RobotContainer.instance().climbUpPosCmd()
                                     )
                             ),
