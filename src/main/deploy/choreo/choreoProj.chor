@@ -3,7 +3,36 @@
  "version":2,
  "type":"Swerve",
  "variables":{
-  "expressions":{},
+  "expressions":{
+   "collectVel":{
+    "dimension":"LinVel",
+    "var":{
+     "exp":"2 m / s",
+     "val":2.0
+    }
+   },
+   "depotVel":{
+    "dimension":"LinVel",
+    "var":{
+     "exp":"0.5 m / s",
+     "val":0.5
+    }
+   },
+   "fieldHeight":{
+    "dimension":"Length",
+    "var":{
+     "exp":"317.69 in",
+     "val":8.069326
+    }
+   },
+   "trenchTolerance":{
+    "dimension":"Length",
+    "var":{
+     "exp":"99.09801970083144 mm",
+     "val":0.09909801970083144
+    }
+   }
+  },
   "poses":{
    "climb_L":{
     "x":{
@@ -53,12 +82,54 @@
      "val":7.67
     },
     "y":{
-     "exp":"317.69 in - collect1_L.y",
+     "exp":"fieldHeight - collect1_L.y",
      "val":4.069326
     },
     "heading":{
      "exp":"-collect1_L.heading",
      "val":1.5707963267948966
+    }
+   },
+   "collect2_L":{
+    "x":{
+     "exp":"6.281 m",
+     "val":6.281
+    },
+    "y":{
+     "exp":"3 m",
+     "val":3.0
+    },
+    "heading":{
+     "exp":"-90 deg",
+     "val":-1.5707963267948966
+    }
+   },
+   "collect2_R":{
+    "x":{
+     "exp":"collect2_L.x",
+     "val":6.281
+    },
+    "y":{
+     "exp":"fieldHeight - collect2_L.y",
+     "val":5.069326
+    },
+    "heading":{
+     "exp":"-collect2_L.heading",
+     "val":1.5707963267948966
+    }
+   },
+   "depot":{
+    "x":{
+     "exp":"0.6140140295028687 m",
+     "val":0.6140140295028687
+    },
+    "y":{
+     "exp":"5.960522651672363 m",
+     "val":5.960522651672363
+    },
+    "heading":{
+     "exp":"180 deg",
+     "val":3.141592653589793
     }
    },
    "shoot_L":{
@@ -81,11 +152,67 @@
      "val":2.325
     },
     "y":{
-     "exp":"317.69 in - shoot_L.y",
+     "exp":"fieldHeight - shoot_L.y",
      "val":1.925326
     },
     "heading":{
      "exp":"0 deg",
+     "val":0.0
+    }
+   },
+   "trenchFEnd_L":{
+    "x":{
+     "exp":"3.6139543056488037 m",
+     "val":3.613954305648804
+    },
+    "y":{
+     "exp":"7.451955318450928 m",
+     "val":7.451955318450928
+    },
+    "heading":{
+     "exp":"0 rad",
+     "val":0.0
+    }
+   },
+   "trenchFEnd_R":{
+    "x":{
+     "exp":"trenchFEnd_L.x",
+     "val":3.613954305648804
+    },
+    "y":{
+     "exp":"fieldHeight - trenchFEnd_L.y",
+     "val":0.6173706815490725
+    },
+    "heading":{
+     "exp":"0 rad",
+     "val":0.0
+    }
+   },
+   "trenchNEnd_L":{
+    "x":{
+     "exp":"5.448629856109619 m",
+     "val":5.448629856109619
+    },
+    "y":{
+     "exp":"7.473433971405029 m",
+     "val":7.473433971405029
+    },
+    "heading":{
+     "exp":"0 rad",
+     "val":0.0
+    }
+   },
+   "trenchNEnd_R":{
+    "x":{
+     "exp":"trenchNEnd_L.x",
+     "val":5.448629856109619
+    },
+    "y":{
+     "exp":"fieldHeight - trenchNEnd_L.y",
+     "val":0.5958920285949709
+    },
+    "heading":{
+     "exp":"0 rad",
      "val":0.0
     }
    },

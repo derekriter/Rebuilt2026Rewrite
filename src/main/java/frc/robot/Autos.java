@@ -18,6 +18,11 @@ public final class Autos {
 
         chooser.addCmd("Left Trench, Pickup, Shoot, Climb", () -> trench_pickup_shoot_climb(factory, true));
         chooser.addCmd("Right Trench, Pickup, Shoot, Climb", () -> trench_pickup_shoot_climb(factory, false));
+        chooser.addCmd("Left Trench, Pickup, Depot", () -> L_trench_pickup_depot(factory));
+        chooser.addCmd(
+                "Left Trench, Pickup, Shoot, Pickup, Shoot", () -> trench_pickup_shoot_pickup_shoot(factory, true));
+        chooser.addCmd(
+                "Right Trench, Pickup, Shoot, Pickup, Shoot", () -> trench_pickup_shoot_pickup_shoot(factory, false));
 
         return chooser;
     }
@@ -34,9 +39,11 @@ public final class Autos {
     }
 
     private static Command shootCmd(double timeout_s) {
-        return Commands.runOnce(() -> Telemetry.println("shoot"))
-                .withTimeout(timeout_s)
-                .withName("shootCmd");
+        return shootCmd().withTimeout(timeout_s);
+    }
+
+    private static Command shootCmd() {
+        return Commands.startRun(() -> Telemetry.println("shoot"), () -> {}).withName("shootCmd");
     }
 
     private static Command alignWithTowerCmd() {
@@ -101,6 +108,86 @@ public final class Autos {
                             ),
                             alignWithTowerCmd(),
                             RobotContainer.instance().climbHangingPosCmd()
+                    )
+                );
+        //spotless:on
+
+        return routine.cmd();
+    }
+
+    private static Command trench_pickup_shoot_pickup_shoot(AutoFactory factory, boolean isLeft) {
+        AutoRoutine routine = factory.newRoutine((isLeft ? "Left" : "Right") + " Trench, Pickup, Shoot, Pickup, Shoot");
+
+        String prefix = isLeft ? "L_" : "R_";
+        AutoTrajectory trench_collect1 = routine.trajectory("L_trench_collect1");
+        AutoTrajectory collect1_shoot = routine.trajectory(prefix + "collect1_shoot");
+        AutoTrajectory shoot_collect2 = routine.trajectory(prefix + "shoot_collect2");
+        AutoTrajectory collect2_shoot = routine.trajectory(prefix + "collect2_shoot");
+        if (!isLeft) {
+            trench_collect1 = trench_collect1.mirrorY();
+        }
+
+        // spotless:off
+        routine.active()
+                .onTrue(
+                    Commands.sequence(
+                            trench_collect1.resetOdometry(),
+                            RobotContainer.instance().deployIntakeCmd(),
+                            Commands.deadline(
+                                    trench_collect1.cmd(),
+                                    RobotContainer.instance().runIntakeCmd()
+                            ),
+                            Commands.parallel(
+                                    collect1_shoot.cmd(),
+                                    Commands.sequence(
+                                            waitUntilInFZoneCmd(),
+                                            waitForReadyToShootCmd(2),
+                                            shootCmd(4)
+                                    )
+                            ),
+                            Commands.deadline(
+                                        shoot_collect2.cmd(),
+                                        RobotContainer.instance().runIntakeCmd()
+                            ),
+                            Commands.parallel(
+                                    collect2_shoot.cmd(),
+                                    Commands.sequence(
+                                            waitUntilInFZoneCmd(),
+                                            waitForReadyToShootCmd(2),
+                                            shootCmd()
+                                    )
+                            )
+                    )
+                );
+        //spotless:on
+
+        return routine.cmd();
+    }
+
+    private static Command L_trench_pickup_depot(AutoFactory factory) {
+        AutoRoutine routine = factory.newRoutine("Left Trench, Pickup, Depot");
+
+        AutoTrajectory trench_collect1 = routine.trajectory("L_trench_collect1");
+        AutoTrajectory collect1_depot = routine.trajectory("L_collect1_depot");
+
+        // spotless:off
+        routine.active()
+                .onTrue(
+                    Commands.sequence(
+                            trench_collect1.resetOdometry(),
+                            RobotContainer.instance().deployIntakeCmd(),
+                            Commands.deadline(
+                                    trench_collect1.cmd(),
+                                    RobotContainer.instance().runIntakeCmd()
+                            ),
+                            Commands.parallel(
+                                    collect1_depot.cmd(),
+                                    Commands.sequence(
+                                            waitUntilInFZoneCmd(),
+                                            waitForReadyToShootCmd(4),
+                                            shootCmd()
+                                    )
+                            )
                     )
                 );
         //spotless:on

@@ -17,14 +17,14 @@
  "params":{
   "waypoints":[
     {"x":{"exp":"collect1_R.x", "val":7.67}, "y":{"exp":"collect1_R.y", "val":4.069326}, "heading":{"exp":"collect1_R.heading", "val":1.5707963267948966}, "intervals":35, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
-    {"x":{"exp":"5.448629856109619 m", "val":5.448629856109619}, "y":{"exp":"317.69 in - 7.473433971405029 m", "val":0.5958920285949709}, "heading":{"exp":"0 deg", "val":0.0}, "intervals":16, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
-    {"x":{"exp":"3.6139543056488037 m", "val":3.613954305648804}, "y":{"exp":"317.69 in - 7.451955318450928 m", "val":0.6173706815490725}, "heading":{"exp":"0 deg", "val":0.0}, "intervals":16, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},
+    {"x":{"exp":"trenchNEnd_R.x", "val":5.448629856109619}, "y":{"exp":"trenchNEnd_R.y", "val":0.5958920285949709}, "heading":{"exp":"0 deg", "val":0.0}, "intervals":16, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
+    {"x":{"exp":"trenchFEnd_R.x", "val":3.613954305648804}, "y":{"exp":"trenchFEnd_R.y", "val":0.6173706815490725}, "heading":{"exp":"trenchFEnd_R.heading", "val":0.0}, "intervals":16, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},
     {"x":{"exp":"shoot_R.x", "val":2.325}, "y":{"exp":"shoot_R.y", "val":1.925326}, "heading":{"exp":"shoot_R.heading", "val":0.0}, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false}],
   "constraints":[
     {"from":"first", "to":null, "data":{"type":"StopPoint", "props":{}}, "enabled":true},
     {"from":"last", "to":null, "data":{"type":"StopPoint", "props":{}}, "enabled":true},
     {"from":"first", "to":"last", "data":{"type":"KeepInRectangle", "props":{"x":{"exp":"0 m", "val":0.0}, "y":{"exp":"0 m", "val":0.0}, "w":{"exp":"16.541 m", "val":16.541}, "h":{"exp":"8.0692 m", "val":8.0692}}}, "enabled":false},
-    {"from":1, "to":2, "data":{"type":"KeepInLane", "props":{"tolerance":{"exp":"99.09801970083144 mm", "val":0.09909801970083144}}}, "enabled":true}],
+    {"from":1, "to":2, "data":{"type":"KeepInLane", "props":{"tolerance":{"exp":"trenchTolerance", "val":0.09909801970083144}}}, "enabled":true}],
   "targetDt":{
    "exp":"0.05 s",
    "val":0.05
