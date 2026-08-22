@@ -1,0 +1,169 @@
+{
+ "name":"choreoProj",
+ "version":2,
+ "type":"Swerve",
+ "variables":{
+  "expressions":{},
+  "poses":{
+   "climb_L":{
+    "x":{
+     "exp":"1.03 m",
+     "val":1.03
+    },
+    "y":{
+     "exp":"4.8 m",
+     "val":4.8
+    },
+    "heading":{
+     "exp":"0 deg",
+     "val":0.0
+    }
+   },
+   "climb_R":{
+    "x":{
+     "exp":"1.08 m",
+     "val":1.08
+    },
+    "y":{
+     "exp":"2.691 m",
+     "val":2.691
+    },
+    "heading":{
+     "exp":"180 deg",
+     "val":3.141592653589793
+    }
+   },
+   "collect1_L":{
+    "x":{
+     "exp":"7.67 m",
+     "val":7.67
+    },
+    "y":{
+     "exp":"4 m",
+     "val":4.0
+    },
+    "heading":{
+     "exp":"-90 deg",
+     "val":-1.5707963267948966
+    }
+   },
+   "shoot_L":{
+    "x":{
+     "exp":"2.325 m",
+     "val":2.325
+    },
+    "y":{
+     "exp":"6.144 m",
+     "val":6.144
+    },
+    "heading":{
+     "exp":"-60 deg",
+     "val":-1.0471975511965976
+    }
+   },
+   "shoot_R":{
+    "x":{
+     "exp":"2.369 m",
+     "val":2.369
+    },
+    "y":{
+     "exp":"2.145 m",
+     "val":2.145
+    },
+    "heading":{
+     "exp":"0 deg",
+     "val":0.0
+    }
+   },
+   "trench_L":{
+    "x":{
+     "exp":"4.35 m",
+     "val":4.35
+    },
+    "y":{
+     "exp":"7.63 m",
+     "val":7.63
+    },
+    "heading":{
+     "exp":"0 rad",
+     "val":0.0
+    }
+   }
+  }
+ },
+ "config":{
+  "frontLeft":{
+   "x":{
+    "exp":"10.875 in",
+    "val":0.276225
+   },
+   "y":{
+    "exp":"10.875 in",
+    "val":0.276225
+   }
+  },
+  "backLeft":{
+   "x":{
+    "exp":"-10.875 in",
+    "val":-0.276225
+   },
+   "y":{
+    "exp":"10.875 in",
+    "val":0.276225
+   }
+  },
+  "mass":{
+   "exp":"160 lb",
+   "val":72.57477920000001
+  },
+  "inertia":{
+   "exp":"6 kg m ^ 2",
+   "val":6.0
+  },
+  "gearing":{
+   "exp":"6.75",
+   "val":6.75
+  },
+  "radius":{
+   "exp":"2.005 in",
+   "val":0.05092699999999999
+  },
+  "vmax":{
+   "exp":"6000 RPM",
+   "val":628.3185307179587
+  },
+  "tmax":{
+   "exp":"1.6 N * m",
+   "val":1.6
+  },
+  "cof":{
+   "exp":"1.5",
+   "val":1.5
+  },
+  "bumper":{
+   "front":{
+    "exp":"23.5 in",
+    "val":0.5969
+   },
+   "side":{
+    "exp":"15.375 in",
+    "val":0.390525
+   },
+   "back":{
+    "exp":"15.375 in",
+    "val":0.390525
+   }
+  },
+  "differentialTrackWidth":{
+   "exp":"22 in",
+   "val":0.5588
+  }
+ },
+ "generationFeatures":[],
+ "codegen":{
+  "root":"../../java/frc/robot/choreo/generated",
+  "genVars":true,
+  "genTrajData":true,
+  "useChoreoLib":true
+ }
+}

@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
+import choreo.trajectory.SwerveSample;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.StatusSignal;
@@ -14,6 +15,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -62,6 +64,14 @@ public class Swerve extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder> impleme
 
     private boolean hasAppliedPerspective = false;
     private boolean lastAppliedPerspectiveIsRed = false;
+
+    private final SwerveRequest.ApplyFieldSpeeds trajFollowReq = new SwerveRequest.ApplyFieldSpeeds();
+    private final PIDController trajXController = new PIDController(
+            SwerveConfig.autonTranslationP, SwerveConfig.autonTranslationI, SwerveConfig.autonTranslationD);
+    private final PIDController trajYController = new PIDController(
+            SwerveConfig.autonTranslationP, SwerveConfig.autonTranslationI, SwerveConfig.autonTranslationD);
+    private final PIDController trajThetaController =
+            new PIDController(SwerveConfig.headingP, SwerveConfig.headingI, SwerveConfig.headingD);
 
     /* Swerve requests to apply during SysId characterization */
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization =
@@ -241,6 +251,8 @@ public class Swerve extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder> impleme
             canivoreBreakerAlert = AlertUtils.makeBreakerTripAlert(CANivoreConfig.busName);
         }
 
+        trajThetaController.enableContinuousInput(-Math.PI, Math.PI);
+
         registerTelemetry(this::swerveTelemetry);
 
         if (Utils.isSimulation()) {
@@ -307,7 +319,7 @@ public class Swerve extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder> impleme
                 module0ThermalShutdown || module1ThermalShutdown || module2ThermalShutdown || module3ThermalShutdown;
 
         if (thermalShutdown && !thermalShutdownLast) {
-            setControl(null);
+            stop();
         }
 
         thermalShutdownLast = thermalShutdown;
@@ -440,6 +452,25 @@ public class Swerve extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder> impleme
 
         super.setControl(request_nl);
         controlWriter.set(request_nl == null ? null : request_nl.getClass().getSimpleName());
+    }
+
+    public void stop() {
+        setControl(null);
+    }
+
+    public void followTrajectory(SwerveSample sample) {
+        Pose2d currPose = getState().Pose;
+
+        ChassisSpeeds speeds = new ChassisSpeeds(
+                sample.vx + trajXController.calculate(currPose.getX(), sample.x),
+                sample.vy + trajYController.calculate(currPose.getY(), sample.y),
+                sample.omega
+                        + trajThetaController.calculate(currPose.getRotation().getRadians(), sample.heading));
+
+        setControl(trajFollowReq
+                .withSpeeds(speeds)
+                .withWheelForceFeedforwardsX(sample.moduleForcesX())
+                .withWheelForceFeedforwardsY(sample.moduleForcesY()));
     }
 
     /**

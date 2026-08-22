@@ -155,8 +155,7 @@ public class RobotBrain {
                     state.targetingMode = TargetingMode.DISABLED;
                 } else if (!state.isTurretHomed && turretCanRun) {
                     state.targetingMode = TargetingMode.HOMING;
-                } else if (state.fieldZone == FieldZone.RED && state.isRed
-                        || state.fieldZone == FieldZone.BLUE && !state.isRed) {
+                } else if (isInFZone()) {
                     state.targetingMode = TargetingMode.TARGETING_HUB;
                 } else {
                     state.targetingMode = TargetingMode.TARGETING_FZONE;
@@ -186,7 +185,7 @@ public class RobotBrain {
                 }
 
                 state.ledsMode = hardwareError ? LEDsMode.ERROR : LEDsMode.AUTON;
-                state.driveMode = DriveMode.AUTON; // or DISABLED if no auto was selected
+                state.driveMode = DriveMode.AUTON;
             }
         }
     }
@@ -257,13 +256,25 @@ public class RobotBrain {
 
         if (lastState.isEmpty() || state.driveMode != lastState.get().driveMode) {
             switch (state.driveMode) {
-                case DISABLED -> removeSubsystemDefaultCommand(RobotContainer.instance().swerve);
-                case AUTON -> removeSubsystemDefaultCommand(RobotContainer.instance().swerve); // TODO: auton
+                case DISABLED -> changeSubsystemDefaultCommand(
+                        RobotContainer.instance().swerve,
+                        RobotContainer.instance().stopSwerveCmd());
+                case AUTON -> {
+                    changeSubsystemDefaultCommand(
+                            RobotContainer.instance().swerve,
+                            RobotContainer.instance().brakeSwerveCmd());
+                    CommandScheduler.getInstance()
+                            .schedule(RobotContainer.instance().getAutonCommand());
+                }
                 case TELEOP -> changeSubsystemDefaultCommand(
                         RobotContainer.instance().swerve,
                         RobotContainer.instance().teleopDriveCmd());
             }
         }
+    }
+
+    public boolean isInFZone() {
+        return state.fieldZone == FieldZone.BLUE && !state.isRed || state.fieldZone == FieldZone.RED && state.isRed;
     }
 
     private void changeSubsystemDefaultCommand(Subsystem sub, Command cmd) {
