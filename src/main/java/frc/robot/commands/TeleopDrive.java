@@ -18,33 +18,11 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.RobotContainer;
 import frc.robot.config.ControllerConfig;
 import frc.robot.config.SwerveConfig;
-import frc.robot.logging.LoggingUnits;
-import frc.robot.logging.Telemetry;
-import frc.robot.logging.writer.BoolWriter;
-import frc.robot.logging.writer.DoubleWriter;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.util.ControllerUtil;
+import org.littletonrobotics.junction.Logger;
 
 public class TeleopDrive extends Command {
-
-    private static final DoubleWriter speedShifterWriter =
-            Telemetry.makeDoubleWriter(TeleopDrive.class.getSimpleName(), "speedShifter");
-    private static final DoubleWriter slowDownWriter =
-            Telemetry.makeDoubleWriter(TeleopDrive.class.getSimpleName(), "slowDown");
-    private static final DoubleWriter commonXVelWriter =
-            Telemetry.makeDoubleWriter(TeleopDrive.class.getSimpleName(), "commonXVel", LoggingUnits.metersPerSecond);
-    private static final DoubleWriter commonYVelWriter =
-            Telemetry.makeDoubleWriter(TeleopDrive.class.getSimpleName(), "commonYVel", LoggingUnits.metersPerSecond);
-    private static final DoubleWriter commonMaxAngularRateWriter = Telemetry.makeDoubleWriter(
-            TeleopDrive.class.getSimpleName(), "commonMaxAngularRate", LoggingUnits.radPerSec);
-    private static final DoubleWriter commonOmegaWriter =
-            Telemetry.makeDoubleWriter(TeleopDrive.class.getSimpleName(), "commonOmega", LoggingUnits.radPerSec);
-    private static final DoubleWriter povDirectionWriter =
-            Telemetry.makeDoubleWriter(TeleopDrive.class.getSimpleName(), "povDirection", LoggingUnits.degrees);
-    private static final DoubleWriter snakeDirectionWriter =
-            Telemetry.makeDoubleWriter(TeleopDrive.class.getSimpleName(), "snakeDirection", LoggingUnits.degrees);
-    private static final BoolWriter usePOVWriter =
-            Telemetry.makeBoolWriter(TeleopDrive.class.getSimpleName(), "usePOV");
 
     private final Swerve swerve;
     private final SwerveDriveBrake brake = new SwerveDriveBrake();
@@ -85,7 +63,7 @@ public class TeleopDrive extends Command {
                 ControllerUtil.isPastDeadband(driver1.getRightTriggerAxis(), ControllerConfig.triggerThreshold)
                         ? 0.25
                         : 1;
-        speedShifterWriter.set(speedShifter);
+        Logger.recordOutput("TeleopDrive/speedShifter", speedShifter);
         double slowDown;
         // if (driver1.getRightBumperButton()) {
         //     slowDown = 1;
@@ -101,7 +79,7 @@ public class TeleopDrive extends Command {
         } else {
             slowDown = 1;
         }
-        slowDownWriter.set(slowDown);
+        Logger.recordOutput("TeleopDrive/slowDown", slowDown);
 
         Pair<Double, Double> cubicLeft = ControllerUtil.applyExponentialDeadband(
                 driver1.getLeftX(),
@@ -118,14 +96,15 @@ public class TeleopDrive extends Command {
 
         double commonXVel_mps = xSlew.calculate(
                 SwerveConfig.maxTranslationVel.in(MetersPerSecond) * -cubicLeft.getSecond() * speedShifter * slowDown);
-        commonXVelWriter.set(commonXVel_mps);
         double commonYVel_mps = ySlew.calculate(
                 SwerveConfig.maxTranslationVel.in(MetersPerSecond) * -cubicLeft.getFirst() * speedShifter * slowDown);
-        commonYVelWriter.set(commonYVel_mps);
         double commmonMaxAngularRate_radps = SwerveConfig.maxAngularVel.in(RadiansPerSecond) * speedShifter;
-        commonMaxAngularRateWriter.set(commmonMaxAngularRate_radps);
         double commonOmega_radps = omegaSlew.calculate(commmonMaxAngularRate_radps * omegaDirection);
-        commonOmegaWriter.set(commonOmega_radps);
+
+        Logger.recordOutput("TeleopDrive/commonXVel", commonXVel_mps, MetersPerSecond.name());
+        Logger.recordOutput("TeleopDrive/commonYVel", commonYVel_mps, MetersPerSecond.name());
+        Logger.recordOutput("TeleopDrive/commonMaxAngularRate", commmonMaxAngularRate_radps, RadiansPerSecond.name());
+        Logger.recordOutput("TeleopDrive/commonOmega", commonOmega_radps, RadiansPerSecond.name());
 
         Rotation2d povDirection_nl = null;
         if (ControllerUtil.isPastDeadband(
@@ -133,7 +112,7 @@ public class TeleopDrive extends Command {
             povDirection_nl = new Rotation2d(
                     ControllerUtil.getFieldSpaceJoystickAngle_rad(driver1.getRightX(), driver1.getRightY()));
         }
-        povDirectionWriter.set(povDirection_nl == null ? Double.NaN : povDirection_nl.getDegrees());
+        Logger.recordOutput("TeleopDrive/povDirection", povDirection_nl);
 
         Rotation2d snakeDirection_nl = null;
         if (ControllerUtil.isPastDeadband(
@@ -141,10 +120,10 @@ public class TeleopDrive extends Command {
             snakeDirection_nl = new Rotation2d(
                     ControllerUtil.getFieldSpaceJoystickAngle_rad(driver1.getLeftX(), driver1.getLeftY()));
         }
-        snakeDirectionWriter.set(snakeDirection_nl == null ? Double.NaN : snakeDirection_nl.getDegrees());
+        Logger.recordOutput("TeleopDrive/snakeDirection", snakeDirection_nl);
 
         boolean usePOV = povDirection_nl != null;
-        usePOVWriter.set(usePOV);
+        Logger.recordOutput("TeleopDrive/usePOV", usePOV);
         if (driver1.getXButton()) {
             // brake
             swerve.setControl(brake);

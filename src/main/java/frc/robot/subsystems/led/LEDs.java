@@ -4,36 +4,30 @@ import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.LEDPattern;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotContainer;
 import frc.robot.config.LEDsConfig;
 import frc.robot.config.Overrides;
-import frc.robot.logging.Telemetry;
-import frc.robot.logging.writer.BoolWriter;
-import frc.robot.logging.writer.compound.SubsystemWriter;
 import frc.robot.util.AlertUtils;
+import frc.robot.util.Console;
+import org.littletonrobotics.junction.Logger;
 
 public class LEDs extends SubsystemBase {
 
     private final AddressableLED leds_nl;
     private final AddressableLEDBuffer buffer_nl;
 
-    private final Alert breakerAlert = AlertUtils.makeBreakerTripAlert(LEDsConfig.systemName);
+    private final Alert breakerAlert = AlertUtils.makeBreakerTripAlert("LEDs");
     private boolean breakerLast = false;
-
-    private final SubsystemWriter<LEDs> subsystemWriter =
-            Telemetry.makeSubsystemWriter(this, "/", LEDsConfig.systemName);
-    private final BoolWriter breakerWriter_nl;
-
     private boolean needsUpdate = false;
 
     public LEDs() {
         if (Overrides.disableLEDs) {
-            AlertUtils.makeSystemDisabledAlert(LEDsConfig.systemName).set(true);
+            AlertUtils.makeSystemDisabledAlert("LEDs").set(true);
 
             leds_nl = null;
             buffer_nl = null;
-            breakerWriter_nl = null;
         } else {
             leds_nl = new AddressableLED(LEDsConfig.dataPort);
             buffer_nl = new AddressableLEDBuffer(LEDsConfig.ledCount);
@@ -43,37 +37,37 @@ public class LEDs extends SubsystemBase {
 
             leds_nl.setData(buffer_nl);
             leds_nl.start();
-
-            breakerWriter_nl = Telemetry.makeBoolWriter(LEDsConfig.systemName, "breakerTripped");
         }
     }
 
     @Override
     public void periodic() {
-        subsystemWriter.update();
+        Command currentCommand = getCurrentCommand();
+        Logger.recordOutput("LEDs/currentCommand", currentCommand == null ? null : currentCommand.getName());
 
-        if (needsUpdate && leds_nl != null) {
-            leds_nl.setData(buffer_nl);
-            needsUpdate = false;
-        }
-    }
+        Command defaultCommand = getDefaultCommand();
+        Logger.recordOutput("LEDs/defaultCommand", defaultCommand == null ? null : defaultCommand.getName());
 
-    public void update() {
-        if (leds_nl == null) return;
-
-        boolean breakerTripped = RobotContainer.instance().pdh.isBreakerTripped(LEDsConfig.channelID);
-
-        breakerWriter_nl.set(breakerTripped);
-        breakerAlert.set(breakerTripped);
-        if (breakerTripped != breakerLast) {
-            if (breakerTripped) {
-                Telemetry.reportBreakerTripNoCAN(LEDsConfig.systemName, LEDsConfig.channelID);
-            } else {
-                Telemetry.reportBreakerResetNoCAN(LEDsConfig.systemName, LEDsConfig.channelID);
+        if (leds_nl != null) {
+            if (needsUpdate) {
+                leds_nl.setData(buffer_nl);
+                needsUpdate = false;
             }
-        }
 
-        breakerLast = breakerTripped;
+            boolean breakerTripped = RobotContainer.instance().pdh.isBreakerTripped(LEDsConfig.channelID);
+
+            Logger.recordOutput("LEDs/breakerTripped", breakerTripped);
+            breakerAlert.set(breakerTripped);
+            if (breakerTripped != breakerLast) {
+                if (breakerTripped) {
+                    Console.reportBreakerTripNoCAN("LEDs", LEDsConfig.channelID);
+                } else {
+                    Console.reportBreakerResetNoCAN("LEDs", LEDsConfig.channelID);
+                }
+            }
+
+            breakerLast = breakerTripped;
+        }
     }
 
     public void applyPattern(LEDPattern pattern) {

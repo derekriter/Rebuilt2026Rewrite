@@ -1,17 +1,15 @@
 package frc.robot.commands;
 
+import static edu.wpi.first.units.Units.Seconds;
+import static edu.wpi.first.units.Units.Volts;
+
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.config.LauncherConfig.TurretConfig;
-import frc.robot.logging.LoggingUnits;
-import frc.robot.logging.Telemetry;
-import frc.robot.logging.writer.DoubleWriter;
 import frc.robot.subsystems.launcher.Launcher;
+import org.littletonrobotics.junction.Logger;
 
 public class HomeLauncher extends Command {
-
-    private static final DoubleWriter timeSinceStartWriter = Telemetry.makeDoubleWriterInitial(
-            HomeLauncher.class.getSimpleName(), "timeSinceStart", LoggingUnits.seconds, Double.NaN);
 
     private final Launcher launcher;
     private Timer startTimer = new Timer();
@@ -23,19 +21,19 @@ public class HomeLauncher extends Command {
 
     @Override
     public void initialize() {
-        launcher.setTurretDuty(TurretConfig.homingSpeed);
+        launcher.setTurretVoltage(TurretConfig.homingVoltage.in(Volts));
         startTimer.restart();
     }
 
     @Override
     public void execute() {
-        timeSinceStartWriter.set(startTimer.get());
+        Logger.recordOutput("HomeLauncher/timeSinceStart", startTimer.get(), Seconds.name());
     }
 
     @Override
     public void end(boolean interrupted) {
         launcher.stopTurret();
-        timeSinceStartWriter.set(Double.NaN);
+        Logger.recordOutput("HomeLauncher/timeSinceStart", Double.NaN, Seconds.name());
 
         if (!interrupted) {
             launcher.setAsTurretHomingPosition();

@@ -1,6 +1,7 @@
 package frc.robot.commands;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.RPM;
 
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import edu.wpi.first.math.Pair;
@@ -9,9 +10,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.RobotContainer;
 import frc.robot.config.ControllerConfig;
 import frc.robot.constants.FieldConstants;
-import frc.robot.logging.LoggingUnits;
-import frc.robot.logging.Telemetry;
-import frc.robot.logging.writer.DoubleWriter;
 import frc.robot.subsystems.launcher.LaunchCalculator;
 import frc.robot.subsystems.launcher.Launcher;
 import frc.robot.subsystems.launcher.shooter.ShooterTarget;
@@ -20,11 +18,9 @@ import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.util.ControllerUtil;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.Logger;
 
 public class AimAtTarget extends Command {
-
-    private static final DoubleWriter extraRPMWriter = Telemetry.makeDoubleWriterInitial(
-            AimAtTarget.class.getSimpleName(), "extraRPM", LoggingUnits.rpm, Double.NaN);
 
     private final Launcher launcher;
     private final Swerve swerve_noDep;
@@ -80,11 +76,11 @@ public class AimAtTarget extends Command {
                 MetersPerSecond.of(swerveState.Speeds.vyMetersPerSecond));
 
         if (overrideTurret.getAsBoolean()) {
-            launcher.setTurretDuty(-ControllerUtil.applyLinearDeadband(
+            launcher.setTurretVoltage(-ControllerUtil.applyLinearDeadband(
                             RobotContainer.instance().driver2.getLeftX()
                                     + RobotContainer.instance().driver2.getRightX(),
                             ControllerConfig.overrideTurretDeadband)
-                    * 0.1);
+                    * 1.2);
         } else {
             launcher.setTurretAngle(target.getFirst());
         }
@@ -93,7 +89,7 @@ public class AimAtTarget extends Command {
 
         // quicky and hacky compensation button for driver 2
         double extraRPM = RobotContainer.instance().driver2.getRightBumperButton() ? 100 : 0;
-        extraRPMWriter.set(extraRPM);
+        Logger.recordOutput("AimAtTarget/extraRPM", extraRPM, RPM.name());
         st.add(ShooterTarget.fromShooterRPM(extraRPM));
 
         st.clampToLegalRange();
@@ -105,7 +101,7 @@ public class AimAtTarget extends Command {
         launcher.stopTurret();
         launcher.stopShooter();
 
-        extraRPMWriter.set(Double.NaN);
+        Logger.recordOutput("AimAtTarget/extraRPM", Double.NaN, RPM.name());
     }
 
     @Override

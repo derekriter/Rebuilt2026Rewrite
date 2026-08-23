@@ -1,10 +1,11 @@
 package frc.robot.brain;
 
+import static edu.wpi.first.units.Units.Seconds;
+
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -15,10 +16,11 @@ import frc.robot.config.ControllerConfig;
 import frc.robot.config.Overrides;
 import frc.robot.util.Console;
 import java.util.Optional;
+import org.littletonrobotics.conduit.ConduitApi;
+import org.littletonrobotics.junction.Logger;
 
 public class RobotBrain {
 
-    private static final RobotStateWriter robotStateWriter = Telemetry.makeRobotStateWriter("RobotBrain", "robotState");
     private static final Alert driver1MissingAlert = new Alert(
             String.format("Driver 1 controller not connected to port %d", ControllerConfig.driver1Port),
             AlertType.kWarning);
@@ -41,10 +43,8 @@ public class RobotBrain {
     public void pollState() {
         pollBasicInfo();
 
-        RobotContainer.instance().pdh.update();
         RobotContainer.instance().launcher.report(state.launcherReport);
         RobotContainer.instance().swerve.report(state.swerveReport);
-        RobotContainer.instance().leds.update();
 
         state.fieldZone = FieldZone.fromRobotX(
                 RobotContainer.instance().swerve.getState().Pose.getX());
@@ -92,7 +92,7 @@ public class RobotBrain {
         }
 
         state.modeTime_s = modeTimer.get();
-        state.isBrownedOut = RobotController.isBrownedOut();
+        state.isBrownedOut = ConduitApi.getInstance().getBrownedOut();
     }
 
     private void pollTeleopData() {
@@ -189,8 +189,37 @@ public class RobotBrain {
         }
     }
 
-    public void telemeterize() {
-        robotStateWriter.set(state);
+    public void log() {
+        Logger.recordOutput("RobotBrain/robotState/opMode", state.opMode.name());
+        Logger.recordOutput("RobotBrain/robotState/isReal", state.isReal);
+        Logger.recordOutput("RobotBrain/robotState/isDSAttached", state.isDSAttached);
+        Logger.recordOutput("RobotBrain/robotState/isBrownedOut", state.isBrownedOut);
+
+        Logger.recordOutput("RobotBrain/robotState/isRed", state.isRed);
+        Logger.recordOutput("RobotBrain/robotState/autoWinnerIsKnown", state.autoWinnerIsKnown);
+        Logger.recordOutput("RobotBrain/robotState/didWinAuto", state.didWinAuto);
+
+        Logger.recordOutput("RobotBrain/robotState/modeTime", state.modeTime_s, Seconds.name());
+        Logger.recordOutput("RobotBrain/robotState/phase", state.phase.name());
+        Logger.recordOutput("RobotBrain/robotState/timeLeftInPhase", state.timeLeftInPhase_s, Seconds.name());
+        Logger.recordOutput("RobotBrain/robotState/fieldZone", state.fieldZone.name());
+        Logger.recordOutput("RobotBrain/robotState/isHubActive", state.isHubActive);
+
+        Logger.recordOutput(
+                "RobotBrain/robotState/launcherReport/turretOperational", state.launcherReport.turretOperational);
+        Logger.recordOutput(
+                "RobotBrain/robotState/launcherReport/turretIsAtTarget", state.launcherReport.turretIsAtTarget);
+        Logger.recordOutput(
+                "RobotBrain/robotState/launcherReport/shooterOperational", state.launcherReport.shooterOperational);
+        Logger.recordOutput(
+                "RobotBrain/robotState/launcherReport/shooterIsAtTarget", state.launcherReport.shooterIsAtTarget);
+        Logger.recordOutput("RobotBrain/robotState/isTurretHomed", state.isTurretHomed);
+        Logger.recordOutput("RobotBrain/robotState/swerveReport/isOperational", state.swerveReport.isOperational);
+
+        Logger.recordOutput("RobotBrain/robotState/targetingMode", state.targetingMode.name());
+        Logger.recordOutput("RobotBrain/robotState/overrideTurret", state.overrideTurret);
+        Logger.recordOutput("RobotBrain/robotState/ledsMode", state.ledsMode.name());
+        Logger.recordOutput("RobotBrain/robotState/driveMode", state.driveMode.name());
 
         driver1MissingAlert.set(!RobotContainer.instance().driver1.isConnected());
         driver2MissingAlert.set(!RobotContainer.instance().driver2.isConnected());
@@ -263,7 +292,7 @@ public class RobotBrain {
                             RobotContainer.instance().swerve,
                             RobotContainer.instance().brakeSwerveCmd());
                     CommandScheduler.getInstance()
-                            .schedule(RobotContainer.instance().getAutonCommand());
+                            .schedule(RobotContainer.instance().autonCmd());
                 }
                 case TELEOP -> changeSubsystemDefaultCommand(
                         RobotContainer.instance().swerve,

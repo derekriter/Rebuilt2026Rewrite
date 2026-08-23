@@ -8,15 +8,12 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
 
 import choreo.Choreo;
-import choreo.auto.AutoChooser;
 import choreo.auto.AutoFactory;
 import choreo.trajectory.SwerveSample;
 import choreo.trajectory.Trajectory;
 import com.ctre.phoenix6.swerve.SwerveRequest;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.LEDPattern;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -37,7 +34,10 @@ import frc.robot.subsystems.launcher.turret.TurretIOReal;
 import frc.robot.subsystems.launcher.turret.TurretIOSim;
 import frc.robot.subsystems.led.LEDs;
 import frc.robot.subsystems.swerve.Swerve;
-import java.io.StringWriter;
+import frc.robot.util.BlankValues;
+import frc.robot.util.Console;
+import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 public final class RobotContainer {
 
@@ -67,13 +67,7 @@ public final class RobotContainer {
     public final XboxController driver2 = driver2Cmd.getHID();
 
     private AutoFactory autoFactory;
-    private AutoChooser autoChooser;
-    private final StructArrayWriter<Pose2d> choreoTrajWriter =
-            Telemetry.makePose2dArrayWriterInitial("Choreo", "trajectory", null);
-    private final StringWriter choreoTrajNameWriter =
-            Telemetry.makeStringWriterInitial("Choreo", "trajectoryName", null);
-    private final DoubleWriter choreoTrajTimeWriter =
-            Telemetry.makeDoubleWriterInitial("Choreo", "trajectoryTime", Double.NaN);
+    private LoggedDashboardChooser<Command> autoChooser;
 
     private RobotContainer() {
         switch (Mode.getMode()) {
@@ -92,6 +86,8 @@ public final class RobotContainer {
                         Overrides.disableTurret ? null : ITurretIO.blank,
                         Overrides.disableShooter ? null : IShooterIO.blank);
             }
+                // shouldn't be possible to trigger, but the compiler required it anyways
+            default -> throw new Error("Unhandled mode encountered");
         }
 
         setupControls();
@@ -119,22 +115,27 @@ public final class RobotContainer {
                     }
 
                     if (isStart) {
-                        choreoTrajWriter.set(traj.getPoses());
-                        choreoTrajNameWriter.set(traj.name());
-                        choreoTrajTimeWriter.set(traj.getTotalTime());
+                        Logger.recordOutput("Choreo/trajectory", traj.getPoses());
+                        Logger.recordOutput("Choreo/trajectoryName", traj.name());
+                        Logger.recordOutput("Choreo/trajectoryTime", traj.getTotalTime(), Seconds.name());
                     } else {
-                        choreoTrajWriter.set(null);
-                        choreoTrajNameWriter.set(null);
-                        choreoTrajTimeWriter.set(Double.NaN);
+                        Logger.recordOutput("Choreo/trajectory", BlankValues.pose2dArray);
+                        Logger.recordOutput("Choreo/trajectoryName", BlankValues.string);
+                        Logger.recordOutput("Choreo/trajectoryTime", Double.NaN, Seconds.name());
                     }
                 });
 
         autoChooser = Autos.createAutos(autoFactory);
-        SmartDashboard.putData("autoChooser", autoChooser);
     }
 
-    public Command getAutonCommand() {
-        return autoChooser.selectedCommand();
+    public Command autonCmd() {
+        Command cmd = autoChooser.get();
+        if (cmd == null) {
+            return Commands.runOnce(() -> Console.println("No autonomous selected"))
+                    .withName("Fallback auton");
+        } else {
+            return cmd;
+        }
     }
 
     public Command teleopDriveCmd() {
@@ -232,28 +233,28 @@ public final class RobotContainer {
     }
 
     public Command deployIntakeCmd() {
-        return Commands.runOnce(() -> Telemetry.println("deploy intake") /*, intake*/)
+        return Commands.runOnce(() -> Console.println("deploy intake") /*, intake*/)
                 .withName("deployIntakeCmd");
     }
 
     public Command runIntakeCmd() {
-        return Commands.startRun(() -> Telemetry.println("run intake"), () -> {} /*, intake*/)
+        return Commands.startRun(() -> Console.println("run intake"), () -> {} /*, intake*/)
                 .withName("runIntakeCmd");
     }
 
     public Command stopIntakeCmd() {
-        return Commands.runOnce(() -> Telemetry.println("stop intake") /*, intake*/)
+        return Commands.runOnce(() -> Console.println("stop intake") /*, intake*/)
                 .withName("stopIntakeCmd");
     }
 
     public Command climbUpPosCmd() {
-        return Commands.startRun(() -> Telemetry.println("climb up"), () -> {} /*, climb*/)
+        return Commands.startRun(() -> Console.println("climb up"), () -> {} /*, climb*/)
                 .withTimeout(1.6)
                 .withName("climbUpPosCmd");
     }
 
     public Command climbHangingPosCmd() {
-        return Commands.startRun(() -> Telemetry.println("climb hanging"), () -> {} /*, climb*/)
+        return Commands.startRun(() -> Console.println("climb hanging"), () -> {} /*, climb*/)
                 .withTimeout(1.4)
                 .withName("climbHangingPosCmd");
     }

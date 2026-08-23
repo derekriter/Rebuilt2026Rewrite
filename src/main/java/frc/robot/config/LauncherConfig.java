@@ -6,6 +6,7 @@ import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Seconds;
+import static edu.wpi.first.units.Units.Volts;
 
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
@@ -15,6 +16,7 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Time;
+import edu.wpi.first.units.measure.Voltage;
 import frc.robot.subsystems.launcher.shooter.ShooterTarget;
 import frc.robot.subsystems.launcher.turret.TurretAngle;
 
@@ -38,7 +40,7 @@ public final class LauncherConfig {
         public static final TurretAngle forward = TurretAngle.fromMechanismAngle(Degrees.of(0));
         public static final TurretAngle targetTolerance = TurretAngle.fromMechanismAngle(Degrees.of(2));
 
-        public static final double homingSpeed = -0.2;
+        public static final Voltage homingVoltage = Volts.of(-0.2 * 12);
         public static final TurretAngle homingEndPos = TurretAngle.fromMotorRotations(-39.094849);
         public static final Time homingMinRunTime = Seconds.of(0.2);
         public static final Current homingThresholdCurrent = Amps.of(20);

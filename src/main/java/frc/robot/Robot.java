@@ -5,6 +5,7 @@
 package frc.robot;
 
 import com.revrobotics.util.StatusLogger;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -98,9 +99,11 @@ public final class Robot extends LoggedRobot {
 
         Logger.registerURCL(URCL.startExternal(Map.ofEntries(
                 Map.entry(TurretConfig.canID, "turretMotor"),
-                Map.entry(ShooterConfig.canID, ShooterConfig.motorName),
-                Map.entry(PDHConfig.canID, PDHConfig.systemName))));
+                Map.entry(ShooterConfig.canID, "shooterMotor"),
+                Map.entry(PDHConfig.canID, "PDH"))));
         StatusLogger.disableAutoLogging();
+
+        DriverStation.silenceJoystickConnectionWarning(true);
 
         Logger.start();
     }
@@ -113,12 +116,13 @@ public final class Robot extends LoggedRobot {
          *
          * Have to run before brain in order to make sure that inputs have been updated before subsystems are asked to report
          */
+        RobotContainer.instance().pdh.periodic();
         CommandScheduler.getInstance().run();
         ControllerUtil.periodic(RobotContainer.instance().driver1, RobotContainer.instance().driver2);
 
         brain.pollState();
         brain.determineModes();
-        brain.telemeterize();
+        brain.log();
         brain.scheduleCommands();
 
         // update lastState in brain

@@ -38,5 +38,7 @@ public final class BlankValues {
     public static final SwerveModulePosition swerveModulePosition = new SwerveModulePosition(Double.NaN, rotation2d);
     public static final SwerveModulePosition[] swerveModulePositionArray = new SwerveModulePosition[0];
 
+    public static final String string = "null";
+
     private BlankValues() {}
 }

@@ -7,9 +7,7 @@ import edu.wpi.first.math.Pair;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
-import frc.robot.logging.Telemetry;
 import edu.wpi.first.wpilibj.Timer;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -63,7 +61,7 @@ public class ControllerUtil {
 
             int contrId = contr.getPort();
             if (contrId < 0 || contrId > 5) {
-                Telemetry.reportWarning("Controller list contains controller with invalid port", true);
+                Console.reportWarning("Controller list contains controller with invalid port", true);
                 continue;
             }
 
@@ -103,15 +101,15 @@ public class ControllerUtil {
 
     public static boolean scheduleControllerRumble(int id, double lStrength, double rStrength, double seconds) {
         if (id < 0 || id > 5) {
-            Telemetry.reportError("Invalid controller id", true);
+            Console.reportError("Invalid controller id", true);
             return false;
         }
         if (seconds <= 0) {
-            Telemetry.reportWarning("Cannot schedule a rumble with a length <= 0", true);
+            Console.reportWarning("Cannot schedule a rumble with a length <= 0", true);
             return false;
         }
         if (getActiveRumbleCount(id) >= MAX_RUMBLES) {
-            Telemetry.reportWarning("Max rumble limit hit on controller " + id + ", cancelling requested rumble", true);
+            Console.reportWarning("Max rumble limit hit on controller " + id + ", cancelling requested rumble", true);
             return false;
         }
 
@@ -127,7 +125,7 @@ public class ControllerUtil {
 
     public static void cancelControllerRumbles(int id) {
         if (id < 0 || id > 5) {
-            Telemetry.reportError("Invalid controller id", true);
+            Console.reportError("Invalid controller id", true);
             return;
         }
 
@@ -136,7 +134,7 @@ public class ControllerUtil {
 
     public static int getActiveRumbleCount(int id) {
         if (id < 0 || id > 5) {
-            Telemetry.reportError("Invalid controller id", true);
+            Console.reportError("Invalid controller id", true);
             return 0;
         }
 
