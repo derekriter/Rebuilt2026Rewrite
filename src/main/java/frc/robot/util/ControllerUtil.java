@@ -7,8 +7,9 @@ import edu.wpi.first.math.Pair;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
+import frc.robot.logging.Telemetry;
 import edu.wpi.first.wpilibj.Timer;
-import frc.robot.telemetry.Telemetry;
+
 import java.util.ArrayList;
 import java.util.List;
 

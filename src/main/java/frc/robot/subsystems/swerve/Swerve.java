@@ -41,14 +41,14 @@ import frc.robot.config.SwerveConfig;
 import frc.robot.config.SwerveConfig.CANivoreConfig;
 import frc.robot.config.SwerveConfig.PigeonConfig;
 import frc.robot.constants.FieldConstants;
-import frc.robot.telemetry.Telemetry;
-import frc.robot.telemetry.TelemetryUnits;
-import frc.robot.telemetry.writer.BoolWriter;
-import frc.robot.telemetry.writer.DoubleWriter;
-import frc.robot.telemetry.writer.StringWriter;
-import frc.robot.telemetry.writer.StructArrayWriter;
-import frc.robot.telemetry.writer.StructWriter;
-import frc.robot.telemetry.writer.compound.SubsystemWriter;
+import frc.robot.logging.LoggingUnits;
+import frc.robot.logging.Telemetry;
+import frc.robot.logging.writer.BoolWriter;
+import frc.robot.logging.writer.DoubleWriter;
+import frc.robot.logging.writer.StringWriter;
+import frc.robot.logging.writer.StructArrayWriter;
+import frc.robot.logging.writer.StructWriter;
+import frc.robot.logging.writer.compound.SubsystemWriter;
 import frc.robot.util.AlertUtils;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -144,7 +144,7 @@ public class Swerve extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder> impleme
     private final StringWriter controlWriter =
             Telemetry.makeStringWriter(SwerveConfig.systemName, "controllingRequest");
     private final DoubleWriter odometryFrequencyWriter =
-            Telemetry.makeDoubleWriter(SwerveConfig.systemName, "odometryFrequency", TelemetryUnits.hertz);
+            Telemetry.makeDoubleWriter(SwerveConfig.systemName, "odometryFrequency", LoggingUnits.hertz);
     private final StructWriter<Pose2d> robotPoseWriter =
             Telemetry.makePose2dWriter(SwerveConfig.systemName, "robotPose");
     private final StructWriter<ChassisSpeeds> chassisSpeedsWriter =
@@ -241,17 +241,17 @@ public class Swerve extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder> impleme
             pigeonBreakerWriter = Telemetry.makeBoolWriter(SwerveConfig.systemName, "pigeonBreakerTripped");
             pigeonBreakerAlert = AlertUtils.makeBreakerTripAlert(PigeonConfig.imuName);
             pigeonAngularVelXWorldWriter =
-                    Telemetry.makeDoubleWriter(pigeonTable, "angularVelXWorld", TelemetryUnits.degPerSec);
+                    Telemetry.makeDoubleWriter(pigeonTable, "angularVelXWorld", LoggingUnits.degPerSec);
             pigeonAngularVelYWorldWriter =
-                    Telemetry.makeDoubleWriter(pigeonTable, "angularVelYWorld", TelemetryUnits.degPerSec);
+                    Telemetry.makeDoubleWriter(pigeonTable, "angularVelYWorld", LoggingUnits.degPerSec);
             pigeonAngularVelZWorldWriter =
-                    Telemetry.makeDoubleWriter(pigeonTable, "angularVelZWorld", TelemetryUnits.degPerSec);
-            pigeonRollWriter = Telemetry.makeDoubleWriter(pigeonTable, "roll", TelemetryUnits.degrees);
-            pigeonPitchWriter = Telemetry.makeDoubleWriter(pigeonTable, "pitch", TelemetryUnits.degrees);
-            pigeonYawWriter = Telemetry.makeDoubleWriter(pigeonTable, "yaw", TelemetryUnits.degrees);
-            pigeonAccelXWriter = Telemetry.makeDoubleWriter(pigeonTable, "accelX", TelemetryUnits.g);
-            pigeonAccelYWriter = Telemetry.makeDoubleWriter(pigeonTable, "accelY", TelemetryUnits.g);
-            pigeonAccelZWriter = Telemetry.makeDoubleWriter(pigeonTable, "accelZ", TelemetryUnits.g);
+                    Telemetry.makeDoubleWriter(pigeonTable, "angularVelZWorld", LoggingUnits.degPerSec);
+            pigeonRollWriter = Telemetry.makeDoubleWriter(pigeonTable, "roll", LoggingUnits.degrees);
+            pigeonPitchWriter = Telemetry.makeDoubleWriter(pigeonTable, "pitch", LoggingUnits.degrees);
+            pigeonYawWriter = Telemetry.makeDoubleWriter(pigeonTable, "yaw", LoggingUnits.degrees);
+            pigeonAccelXWriter = Telemetry.makeDoubleWriter(pigeonTable, "accelX", LoggingUnits.g);
+            pigeonAccelYWriter = Telemetry.makeDoubleWriter(pigeonTable, "accelY", LoggingUnits.g);
+            pigeonAccelZWriter = Telemetry.makeDoubleWriter(pigeonTable, "accelZ", LoggingUnits.g);
         }
 
         {

@@ -3,15 +3,15 @@ package frc.robot.commands;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.config.LauncherConfig.TurretConfig;
+import frc.robot.logging.LoggingUnits;
+import frc.robot.logging.Telemetry;
+import frc.robot.logging.writer.DoubleWriter;
 import frc.robot.subsystems.launcher.Launcher;
-import frc.robot.telemetry.Telemetry;
-import frc.robot.telemetry.TelemetryUnits;
-import frc.robot.telemetry.writer.DoubleWriter;
 
 public class HomeLauncher extends Command {
 
     private static final DoubleWriter timeSinceStartWriter = Telemetry.makeDoubleWriterInitial(
-            HomeLauncher.class.getSimpleName(), "timeSinceStart", TelemetryUnits.seconds, Double.NaN);
+            HomeLauncher.class.getSimpleName(), "timeSinceStart", LoggingUnits.seconds, Double.NaN);
 
     private final Launcher launcher;
     private Timer startTimer = new Timer();

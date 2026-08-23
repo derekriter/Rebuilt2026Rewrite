@@ -5,12 +5,12 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import frc.robot.config.Overrides;
 import frc.robot.config.PDHConfig;
-import frc.robot.telemetry.Telemetry;
-import frc.robot.telemetry.TelemetryUnits;
-import frc.robot.telemetry.writer.BoolArrayWriter;
-import frc.robot.telemetry.writer.BoolWriter;
-import frc.robot.telemetry.writer.DoubleArrayWriter;
-import frc.robot.telemetry.writer.DoubleWriter;
+import frc.robot.logging.LoggingUnits;
+import frc.robot.logging.Telemetry;
+import frc.robot.logging.writer.BoolArrayWriter;
+import frc.robot.logging.writer.BoolWriter;
+import frc.robot.logging.writer.DoubleArrayWriter;
+import frc.robot.logging.writer.DoubleWriter;
 import frc.robot.util.AlertUtils;
 
 public class PDH {
@@ -46,11 +46,10 @@ public class PDH {
             powerDistribution_nl = new PowerDistribution(PDHConfig.canID, PDHConfig.type);
             buffer.breakersTripped = new boolean[powerDistribution_nl.getNumChannels()];
 
-            voltageWriter_nl = Telemetry.makeDoubleWriter(PDHConfig.systemName, "voltage", TelemetryUnits.volts);
-            totalCurrentWriter_nl =
-                    Telemetry.makeDoubleWriter(PDHConfig.systemName, "totalCurrent", TelemetryUnits.amps);
+            voltageWriter_nl = Telemetry.makeDoubleWriter(PDHConfig.systemName, "voltage", LoggingUnits.volts);
+            totalCurrentWriter_nl = Telemetry.makeDoubleWriter(PDHConfig.systemName, "totalCurrent", LoggingUnits.amps);
             connWriter_nl = Telemetry.makeBoolWriter(PDHConfig.systemName, "connected");
-            currentsWriter_nl = Telemetry.makeDoubleArrayWriter(PDHConfig.systemName, "currents", TelemetryUnits.amps);
+            currentsWriter_nl = Telemetry.makeDoubleArrayWriter(PDHConfig.systemName, "currents", LoggingUnits.amps);
             breakersWriter_nl = Telemetry.makeBoolArrayWriter(PDHConfig.systemName, "breakers");
         }
     }

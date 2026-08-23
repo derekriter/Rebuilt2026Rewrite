@@ -26,14 +26,18 @@ import frc.robot.commands.HomeLauncher;
 import frc.robot.commands.TeleopDrive;
 import frc.robot.config.ControllerConfig;
 import frc.robot.config.LEDsConfig;
+import frc.robot.config.Overrides;
 import frc.robot.pdh.PDH;
 import frc.robot.subsystems.launcher.Launcher;
+import frc.robot.subsystems.launcher.shooter.IShooterIO;
+import frc.robot.subsystems.launcher.shooter.ShooterIOReal;
+import frc.robot.subsystems.launcher.shooter.ShooterIOSim;
+import frc.robot.subsystems.launcher.turret.ITurretIO;
+import frc.robot.subsystems.launcher.turret.TurretIOReal;
+import frc.robot.subsystems.launcher.turret.TurretIOSim;
 import frc.robot.subsystems.led.LEDs;
 import frc.robot.subsystems.swerve.Swerve;
-import frc.robot.telemetry.Telemetry;
-import frc.robot.telemetry.writer.DoubleWriter;
-import frc.robot.telemetry.writer.StringWriter;
-import frc.robot.telemetry.writer.StructArrayWriter;
+import java.io.StringWriter;
 
 public final class RobotContainer {
 
@@ -54,7 +58,7 @@ public final class RobotContainer {
     public final PDH pdh = new PDH();
 
     public final Swerve swerve = new Swerve();
-    public final Launcher launcher = new Launcher();
+    public final Launcher launcher;
     public final LEDs leds = new LEDs();
 
     public final CommandXboxController driver1Cmd = new CommandXboxController(ControllerConfig.driver1Port);
@@ -72,6 +76,24 @@ public final class RobotContainer {
             Telemetry.makeDoubleWriterInitial("Choreo", "trajectoryTime", Double.NaN);
 
     private RobotContainer() {
+        switch (Mode.getMode()) {
+            case REAL -> {
+                launcher = new Launcher(
+                        Overrides.disableTurret ? null : new TurretIOReal(),
+                        Overrides.disableShooter ? null : new ShooterIOReal());
+            }
+            case SIM -> {
+                launcher = new Launcher(
+                        Overrides.disableTurret ? null : new TurretIOSim(),
+                        Overrides.disableShooter ? null : new ShooterIOSim());
+            }
+            case REPLAY -> {
+                launcher = new Launcher(
+                        Overrides.disableTurret ? null : ITurretIO.blank,
+                        Overrides.disableShooter ? null : IShooterIO.blank);
+            }
+        }
+
         setupControls();
         setupChoreo();
     }

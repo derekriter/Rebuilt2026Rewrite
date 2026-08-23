@@ -6,6 +6,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.measure.LinearVelocity;
 import frc.robot.config.LauncherConfig;
+import frc.robot.subsystems.launcher.shooter.ShooterTarget;
+import frc.robot.subsystems.launcher.turret.TurretAngle;
 
 public final class LaunchCalculator {
     public static Pair<TurretAngle, ShooterTarget> calcShot(

@@ -13,8 +13,7 @@ import frc.robot.Robot;
 import frc.robot.RobotContainer;
 import frc.robot.config.ControllerConfig;
 import frc.robot.config.Overrides;
-import frc.robot.telemetry.Telemetry;
-import frc.robot.telemetry.writer.compound.RobotStateWriter;
+import frc.robot.util.Console;
 import java.util.Optional;
 
 public class RobotBrain {
@@ -197,7 +196,7 @@ public class RobotBrain {
         driver2MissingAlert.set(!RobotContainer.instance().driver2.isConnected());
 
         if (state.isBrownedOut && !lastState.map(s -> s.isBrownedOut).orElse(false)) {
-            Telemetry.reportWarning("Brown out detected", false);
+            Console.reportWarning("Brown out detected", false);
         }
     }
 

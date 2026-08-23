@@ -16,10 +16,10 @@ import frc.robot.RobotContainer;
 import frc.robot.config.Overrides;
 import frc.robot.config.SwerveConfig;
 import frc.robot.config.SwerveConfig.ModuleConfig;
-import frc.robot.telemetry.Telemetry;
-import frc.robot.telemetry.TelemetryUnits;
-import frc.robot.telemetry.writer.BoolWriter;
-import frc.robot.telemetry.writer.DoubleWriter;
+import frc.robot.logging.LoggingUnits;
+import frc.robot.logging.Telemetry;
+import frc.robot.logging.writer.BoolWriter;
+import frc.robot.logging.writer.DoubleWriter;
 import frc.robot.util.AlertUtils;
 
 public class ModuleHelper {
@@ -117,11 +117,11 @@ public class ModuleHelper {
             driveThermalShutdownWriter =
                     Telemetry.makeBoolWriter(SwerveConfig.systemName, config.prefix + "DriveThermalShutdown");
             driveThermalShutdownAlert = AlertUtils.makeThermalShutdownAlert(config.driveMotorName);
-            driveTempWriter = Telemetry.makeDoubleWriter(driveBufferTable, "temp", TelemetryUnits.celsius);
+            driveTempWriter = Telemetry.makeDoubleWriter(driveBufferTable, "temp", LoggingUnits.celsius);
             driveAppliedOutWriter = Telemetry.makeDoubleWriter(driveBufferTable, "appliedOut");
-            driveVoltageOutWriter = Telemetry.makeDoubleWriter(driveBufferTable, "voltageOut", TelemetryUnits.volts);
-            driveCurrentOutWriter = Telemetry.makeDoubleWriter(driveBufferTable, "currentOut", TelemetryUnits.amps);
-            driveCurrentInWriter = Telemetry.makeDoubleWriter(driveBufferTable, "currentIn", TelemetryUnits.amps);
+            driveVoltageOutWriter = Telemetry.makeDoubleWriter(driveBufferTable, "voltageOut", LoggingUnits.volts);
+            driveCurrentOutWriter = Telemetry.makeDoubleWriter(driveBufferTable, "currentOut", LoggingUnits.amps);
+            driveCurrentInWriter = Telemetry.makeDoubleWriter(driveBufferTable, "currentIn", LoggingUnits.amps);
         }
 
         {
@@ -145,11 +145,11 @@ public class ModuleHelper {
             steerThermalShutdownWriter =
                     Telemetry.makeBoolWriter(SwerveConfig.systemName, config.prefix + "SteerThermalShutdown");
             steerThermalShutdownAlert = AlertUtils.makeThermalShutdownAlert(config.steerMotorName);
-            steerTempWriter = Telemetry.makeDoubleWriter(steerBufferTable, "temp", TelemetryUnits.celsius);
+            steerTempWriter = Telemetry.makeDoubleWriter(steerBufferTable, "temp", LoggingUnits.celsius);
             steerAppliedOutWriter = Telemetry.makeDoubleWriter(steerBufferTable, "appliedOut");
-            steerVoltageOutWriter = Telemetry.makeDoubleWriter(steerBufferTable, "voltageOut", TelemetryUnits.volts);
-            steerCurrentOutWriter = Telemetry.makeDoubleWriter(steerBufferTable, "currentOut", TelemetryUnits.amps);
-            steerCurrentInWriter = Telemetry.makeDoubleWriter(steerBufferTable, "currentIn", TelemetryUnits.amps);
+            steerVoltageOutWriter = Telemetry.makeDoubleWriter(steerBufferTable, "voltageOut", LoggingUnits.volts);
+            steerCurrentOutWriter = Telemetry.makeDoubleWriter(steerBufferTable, "currentOut", LoggingUnits.amps);
+            steerCurrentInWriter = Telemetry.makeDoubleWriter(steerBufferTable, "currentIn", LoggingUnits.amps);
         }
 
         {
@@ -167,10 +167,10 @@ public class ModuleHelper {
             encoderBreakerWriter =
                     Telemetry.makeBoolWriter(SwerveConfig.systemName, config.prefix + "SteerBreakerTripped");
             encoderBreakerAlert = AlertUtils.makeBreakerTripAlert(config.encoderName);
-            encoderAbsPosWriter = Telemetry.makeDoubleWriter(encoderBufferTable, "absPos", TelemetryUnits.rotations);
-            encoderPosWriter = Telemetry.makeDoubleWriter(encoderBufferTable, "pos", TelemetryUnits.rotations);
+            encoderAbsPosWriter = Telemetry.makeDoubleWriter(encoderBufferTable, "absPos", LoggingUnits.rotations);
+            encoderPosWriter = Telemetry.makeDoubleWriter(encoderBufferTable, "pos", LoggingUnits.rotations);
             encoderPosSinceBootWriter =
-                    Telemetry.makeDoubleWriter(encoderBufferTable, "posSinceBoot", TelemetryUnits.rotations);
+                    Telemetry.makeDoubleWriter(encoderBufferTable, "posSinceBoot", LoggingUnits.rotations);
         }
     }
 

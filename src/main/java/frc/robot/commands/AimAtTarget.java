@@ -9,14 +9,14 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.RobotContainer;
 import frc.robot.config.ControllerConfig;
 import frc.robot.constants.FieldConstants;
+import frc.robot.logging.LoggingUnits;
+import frc.robot.logging.Telemetry;
+import frc.robot.logging.writer.DoubleWriter;
 import frc.robot.subsystems.launcher.LaunchCalculator;
 import frc.robot.subsystems.launcher.Launcher;
-import frc.robot.subsystems.launcher.ShooterTarget;
-import frc.robot.subsystems.launcher.TurretAngle;
+import frc.robot.subsystems.launcher.shooter.ShooterTarget;
+import frc.robot.subsystems.launcher.turret.TurretAngle;
 import frc.robot.subsystems.swerve.Swerve;
-import frc.robot.telemetry.Telemetry;
-import frc.robot.telemetry.TelemetryUnits;
-import frc.robot.telemetry.writer.DoubleWriter;
 import frc.robot.util.ControllerUtil;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
@@ -24,7 +24,7 @@ import java.util.function.Supplier;
 public class AimAtTarget extends Command {
 
     private static final DoubleWriter extraRPMWriter = Telemetry.makeDoubleWriterInitial(
-            AimAtTarget.class.getSimpleName(), "extraRPM", TelemetryUnits.rpm, Double.NaN);
+            AimAtTarget.class.getSimpleName(), "extraRPM", LoggingUnits.rpm, Double.NaN);
 
     private final Launcher launcher;
     private final Swerve swerve_noDep;

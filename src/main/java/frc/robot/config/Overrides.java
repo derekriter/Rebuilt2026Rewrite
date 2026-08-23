@@ -1,6 +1,6 @@
 package frc.robot.config;
 
-import frc.robot.telemetry.Telemetry;
+import frc.robot.logging.Telemetry;
 
 public final class Overrides {
     public static final boolean disableShooterSafety = false;

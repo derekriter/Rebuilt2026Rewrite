@@ -4,21 +4,32 @@
 
 package frc.robot;
 
-import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.Timer;
+import com.revrobotics.util.StatusLogger;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.brain.RobotBrain;
 import frc.robot.brain.RobotState;
+import frc.robot.config.LauncherConfig.ShooterConfig;
+import frc.robot.config.LauncherConfig.TurretConfig;
 import frc.robot.config.Overrides;
-import frc.robot.telemetry.Telemetry;
-import frc.robot.telemetry.TelemetryUnits;
-import frc.robot.telemetry.writer.DoubleWriter;
+import frc.robot.config.PDHConfig;
+import frc.robot.constants.BuildConstants;
 import frc.robot.util.ControllerUtil;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Map;
 import java.util.Optional;
+import java.util.TimeZone;
+import org.littletonrobotics.junction.LogFileUtil;
+import org.littletonrobotics.junction.LoggedRobot;
+import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.NT4Publisher;
+import org.littletonrobotics.junction.wpilog.WPILOGReader;
+import org.littletonrobotics.junction.wpilog.WPILOGWriter;
+import org.littletonrobotics.urcl.URCL;
 
-public final class Robot extends TimedRobot {
+public final class Robot extends LoggedRobot {
 
     private static boolean _hasCreatedInstance = false;
     private static Robot _inst_nl = null;
@@ -37,41 +48,78 @@ public final class Robot extends TimedRobot {
     public final RobotBrain brain;
     public final Field2d field;
 
-    private double lastLoopTime = Double.NaN;
-    private final DoubleWriter loopTimeWriter;
-
     private Robot() {
-        Telemetry.init(this);
+        initLogging();
         Overrides.telemeterizeOverrides();
         RobotContainer.instance();
 
         brain = new RobotBrain();
         field = new Field2d();
         SmartDashboard.putData("field", field);
+    }
 
-        loopTimeWriter = Telemetry.makeDoubleWriter("/", "loopTime", TelemetryUnits.seconds);
+    private void initLogging() {
+        Logger.recordMetadata("projectName", BuildConstants.MAVEN_NAME);
+        Logger.recordMetadata("buildDate", BuildConstants.BUILD_DATE);
+        Logger.recordMetadata("commitSHA", BuildConstants.GIT_SHA);
+        Logger.recordMetadata("commitDate", BuildConstants.GIT_DATE);
+        Logger.recordMetadata("commitBranch", BuildConstants.GIT_BRANCH);
+        Logger.recordMetadata(
+                "gitDirty",
+                switch (BuildConstants.DIRTY) {
+                    case 0 -> "clean";
+                    case 1 -> "dirty";
+                    default -> "unknown";
+                });
+        Logger.recordMetadata("runtimeType", getRuntimeType().name());
+        Logger.recordMetadata(
+                "initDate",
+                new SimpleDateFormat("dd MMM yyyy, hh:mm:ss a")
+                        .format(Calendar.getInstance(TimeZone.getTimeZone("America/Detroit"))
+                                .getTime()));
+
+        switch (Mode.getMode()) {
+            case REAL -> {
+                Logger.addDataReceiver(new WPILOGWriter());
+                Logger.addDataReceiver(new NT4Publisher());
+            }
+            case SIM -> {
+                // Logger.addDataReceiver(new WPILOGWriter());
+                Logger.addDataReceiver(new NT4Publisher());
+            }
+            case REPLAY -> {
+                setUseTiming(false);
+
+                String logPath = LogFileUtil.findReplayLog();
+                Logger.setReplaySource(new WPILOGReader(logPath));
+                Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")));
+            }
+        }
+
+        Logger.registerURCL(URCL.startExternal(Map.ofEntries(
+                Map.entry(TurretConfig.canID, "turretMotor"),
+                Map.entry(ShooterConfig.canID, ShooterConfig.motorName),
+                Map.entry(PDHConfig.canID, PDHConfig.systemName))));
+        StatusLogger.disableAutoLogging();
+
+        Logger.start();
     }
 
     @Override
     public void robotPeriodic() {
-        // track loop time
-        double time = Timer.getFPGATimestamp();
-        if (!Double.isNaN(lastLoopTime)) {
-            loopTimeWriter.set(time - lastLoopTime);
-        }
-        lastLoopTime = time;
+        /*
+         * Run command scheduler
+         * First runs subsystem periodics, then scheduled commands
+         *
+         * Have to run before brain in order to make sure that inputs have been updated before subsystems are asked to report
+         */
+        CommandScheduler.getInstance().run();
+        ControllerUtil.periodic(RobotContainer.instance().driver1, RobotContainer.instance().driver2);
 
         brain.pollState();
         brain.determineModes();
         brain.telemeterize();
         brain.scheduleCommands();
-
-        /*
-         * Run command scheduler
-         * First runs subsystem periodics, then scheduled commands
-         */
-        CommandScheduler.getInstance().run();
-        ControllerUtil.periodic(RobotContainer.instance().driver1, RobotContainer.instance().driver2);
 
         // update lastState in brain
         if (brain.lastState.isEmpty()) {

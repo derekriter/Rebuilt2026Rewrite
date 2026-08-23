@@ -1,4 +1,4 @@
-package frc.robot.subsystems.launcher;
+package frc.robot.subsystems.launcher.turret;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Rotations;

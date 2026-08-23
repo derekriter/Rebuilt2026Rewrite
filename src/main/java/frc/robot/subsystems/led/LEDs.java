@@ -8,9 +8,9 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotContainer;
 import frc.robot.config.LEDsConfig;
 import frc.robot.config.Overrides;
-import frc.robot.telemetry.Telemetry;
-import frc.robot.telemetry.writer.BoolWriter;
-import frc.robot.telemetry.writer.compound.SubsystemWriter;
+import frc.robot.logging.Telemetry;
+import frc.robot.logging.writer.BoolWriter;
+import frc.robot.logging.writer.compound.SubsystemWriter;
 import frc.robot.util.AlertUtils;
 
 public class LEDs extends SubsystemBase {

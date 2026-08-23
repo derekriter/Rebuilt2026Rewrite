@@ -18,11 +18,11 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.RobotContainer;
 import frc.robot.config.ControllerConfig;
 import frc.robot.config.SwerveConfig;
+import frc.robot.logging.LoggingUnits;
+import frc.robot.logging.Telemetry;
+import frc.robot.logging.writer.BoolWriter;
+import frc.robot.logging.writer.DoubleWriter;
 import frc.robot.subsystems.swerve.Swerve;
-import frc.robot.telemetry.Telemetry;
-import frc.robot.telemetry.TelemetryUnits;
-import frc.robot.telemetry.writer.BoolWriter;
-import frc.robot.telemetry.writer.DoubleWriter;
 import frc.robot.util.ControllerUtil;
 
 public class TeleopDrive extends Command {
@@ -32,17 +32,17 @@ public class TeleopDrive extends Command {
     private static final DoubleWriter slowDownWriter =
             Telemetry.makeDoubleWriter(TeleopDrive.class.getSimpleName(), "slowDown");
     private static final DoubleWriter commonXVelWriter =
-            Telemetry.makeDoubleWriter(TeleopDrive.class.getSimpleName(), "commonXVel", TelemetryUnits.metersPerSecond);
+            Telemetry.makeDoubleWriter(TeleopDrive.class.getSimpleName(), "commonXVel", LoggingUnits.metersPerSecond);
     private static final DoubleWriter commonYVelWriter =
-            Telemetry.makeDoubleWriter(TeleopDrive.class.getSimpleName(), "commonYVel", TelemetryUnits.metersPerSecond);
+            Telemetry.makeDoubleWriter(TeleopDrive.class.getSimpleName(), "commonYVel", LoggingUnits.metersPerSecond);
     private static final DoubleWriter commonMaxAngularRateWriter = Telemetry.makeDoubleWriter(
-            TeleopDrive.class.getSimpleName(), "commonMaxAngularRate", TelemetryUnits.radPerSec);
+            TeleopDrive.class.getSimpleName(), "commonMaxAngularRate", LoggingUnits.radPerSec);
     private static final DoubleWriter commonOmegaWriter =
-            Telemetry.makeDoubleWriter(TeleopDrive.class.getSimpleName(), "commonOmega", TelemetryUnits.radPerSec);
+            Telemetry.makeDoubleWriter(TeleopDrive.class.getSimpleName(), "commonOmega", LoggingUnits.radPerSec);
     private static final DoubleWriter povDirectionWriter =
-            Telemetry.makeDoubleWriter(TeleopDrive.class.getSimpleName(), "povDirection", TelemetryUnits.degrees);
+            Telemetry.makeDoubleWriter(TeleopDrive.class.getSimpleName(), "povDirection", LoggingUnits.degrees);
     private static final DoubleWriter snakeDirectionWriter =
-            Telemetry.makeDoubleWriter(TeleopDrive.class.getSimpleName(), "snakeDirection", TelemetryUnits.degrees);
+            Telemetry.makeDoubleWriter(TeleopDrive.class.getSimpleName(), "snakeDirection", LoggingUnits.degrees);
     private static final BoolWriter usePOVWriter =
             Telemetry.makeBoolWriter(TeleopDrive.class.getSimpleName(), "usePOV");
 

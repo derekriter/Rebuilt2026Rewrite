@@ -1,7 +1,7 @@
 package frc.robot.config;
 
 import edu.wpi.first.units.measure.Time;
-import frc.robot.telemetry.TelemetryLevel;
+import frc.robot.logging.TelemetryLevel;
 import java.util.Optional;
 
 public final class TelemetryConfig {

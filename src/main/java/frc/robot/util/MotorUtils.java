@@ -5,7 +5,6 @@ import com.revrobotics.REVLibError;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkBase;
 import com.revrobotics.spark.config.SparkBaseConfig;
-import frc.robot.telemetry.Telemetry;
 
 public class MotorUtils {
     /**
@@ -52,15 +51,15 @@ public class MotorUtils {
             PersistMode persistMode,
             int maxTries) {
         if (motor == null) {
-            Telemetry.reportError("Cannot configure a null SparkBase", true);
+            Console.reportError("Cannot configure a null SparkBase", true);
             return false;
         }
         if (motorName == null || motorName.isEmpty()) {
-            Telemetry.reportWarning("Please provide a motor name when apply configurations", true);
+            Console.reportWarning("Please provide a motor name when apply configurations", true);
             motorName = "UNNAMED SparkMotor";
         }
         if (config == null) {
-            Telemetry.reportError("Cannot apply a null SparkBaseConfig", true);
+            Console.reportError("Cannot apply a null SparkBaseConfig", true);
             return false;
         }
 
@@ -76,16 +75,19 @@ public class MotorUtils {
             }
 
             if (i < maxTries - 1) {
-                Telemetry.reportWarning(
+                Console.reportWarning(
                         String.format(
                                 "Failed to configure %s (CAN %d, ch %d), retrying...", motorName, canID, channelID),
                         false);
             }
         }
 
-        Telemetry.reportError(
-                String.format("Failed to configure %s (CAN %d, ch %d)", motorName, canID, channelID), true);
+        Console.reportError(String.format("Failed to configure %s (CAN %d, ch %d)", motorName, canID, channelID), true);
         AlertUtils.makeConfigFailAlert(motorName).set(true);
         return false;
+    }
+
+    public static boolean isSparkConnected(SparkBase spark) {
+        return !spark.getFaults().firmware;
     }
 }
