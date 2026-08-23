@@ -1,10 +1,12 @@
 package frc.robot.util;
 
+import com.ctre.phoenix6.StatusCode;
 import com.revrobotics.PersistMode;
 import com.revrobotics.REVLibError;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkBase;
 import com.revrobotics.spark.config.SparkBaseConfig;
+import java.util.function.Supplier;
 
 public class MotorUtils {
     /**
@@ -89,5 +91,20 @@ public class MotorUtils {
 
     public static boolean isSparkConnected(SparkBase spark) {
         return !spark.getFaults().firmware;
+    }
+
+    // Copyright (c) 2021-2026 Littleton Robotics
+    // http://github.com/Mechanical-Advantage
+    //
+    // Use of this source code is governed by a BSD
+    // license that can be found in the LICENSE_AdvantageKit file
+    // at the root directory of this project.
+
+    /** Attempts to run the command until no error is produced. */
+    public static void tryUntilOk(int maxAttempts, Supplier<StatusCode> command) {
+        for (int i = 0; i < maxAttempts; i++) {
+            var error = command.get();
+            if (error.isOK()) break;
+        }
     }
 }

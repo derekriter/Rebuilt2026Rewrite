@@ -11,7 +11,8 @@ import choreo.Choreo;
 import choreo.auto.AutoFactory;
 import choreo.trajectory.SwerveSample;
 import choreo.trajectory.Trajectory;
-import com.ctre.phoenix6.swerve.SwerveRequest;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.LEDPattern;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.util.Color;
@@ -24,6 +25,7 @@ import frc.robot.commands.TeleopDrive;
 import frc.robot.config.ControllerConfig;
 import frc.robot.config.LEDsConfig;
 import frc.robot.config.Overrides;
+import frc.robot.config.SwerveConfig;
 import frc.robot.pdh.PDH;
 import frc.robot.subsystems.launcher.Launcher;
 import frc.robot.subsystems.launcher.shooter.IShooterIO;
@@ -33,6 +35,11 @@ import frc.robot.subsystems.launcher.turret.ITurretIO;
 import frc.robot.subsystems.launcher.turret.TurretIOReal;
 import frc.robot.subsystems.launcher.turret.TurretIOSim;
 import frc.robot.subsystems.led.LEDs;
+import frc.robot.subsystems.swerve.GyroIOPigeon2;
+import frc.robot.subsystems.swerve.IGyroIO;
+import frc.robot.subsystems.swerve.IModuleIO;
+import frc.robot.subsystems.swerve.ModuleIOSim;
+import frc.robot.subsystems.swerve.ModuleIOTalonFX;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.util.BlankValues;
 import frc.robot.util.Console;
@@ -57,7 +64,7 @@ public final class RobotContainer {
 
     public final PDH pdh = new PDH();
 
-    public final Swerve swerve = new Swerve();
+    public final Swerve swerve;
     public final Launcher launcher;
     public final LEDs leds = new LEDs();
 
@@ -72,21 +79,34 @@ public final class RobotContainer {
     private RobotContainer() {
         switch (Mode.getMode()) {
             case REAL -> {
+                swerve = new Swerve(
+                        new GyroIOPigeon2(),
+                        new ModuleIOTalonFX(SwerveConfig.modules[0].constants),
+                        new ModuleIOTalonFX(SwerveConfig.modules[1].constants),
+                        new ModuleIOTalonFX(SwerveConfig.modules[2].constants),
+                        new ModuleIOTalonFX(SwerveConfig.modules[3].constants));
                 launcher = new Launcher(
                         Overrides.disableTurret ? null : new TurretIOReal(),
                         Overrides.disableShooter ? null : new ShooterIOReal());
             }
             case SIM -> {
+                swerve = new Swerve(
+                        IGyroIO.blank,
+                        new ModuleIOSim(SwerveConfig.modules[0].constants),
+                        new ModuleIOSim(SwerveConfig.modules[1].constants),
+                        new ModuleIOSim(SwerveConfig.modules[2].constants),
+                        new ModuleIOSim(SwerveConfig.modules[3].constants));
                 launcher = new Launcher(
                         Overrides.disableTurret ? null : new TurretIOSim(),
                         Overrides.disableShooter ? null : new ShooterIOSim());
             }
             case REPLAY -> {
+                swerve = new Swerve(IGyroIO.blank, IModuleIO.blank, IModuleIO.blank, IModuleIO.blank, IModuleIO.blank);
                 launcher = new Launcher(
                         Overrides.disableTurret ? null : ITurretIO.blank,
                         Overrides.disableShooter ? null : IShooterIO.blank);
             }
-                // shouldn't be possible to trigger, but the compiler required it anyways
+                // shouldn't be possible to trigger, but the compiler required it anyway
             default -> throw new Error("Unhandled mode encountered");
         }
 
@@ -104,26 +124,23 @@ public final class RobotContainer {
 
     private void setupChoreo() {
         autoFactory = new AutoFactory(
-                () -> swerve.getState().Pose,
-                swerve::resetPose,
-                swerve::followTrajectory,
-                true,
-                swerve,
-                (Choreo.TrajectoryLogger<SwerveSample>) (Trajectory<SwerveSample> traj, Boolean isStart) -> {
-                    if (Robot.instance().brain.state.isRed) {
-                        traj = traj.flipped();
-                    }
+                swerve::getPose, swerve::setPose, swerve::followTrajectory, true, swerve, (Choreo.TrajectoryLogger<
+                                SwerveSample>)
+                        (Trajectory<SwerveSample> traj, Boolean isStart) -> {
+                            if (Robot.instance().brain.state.isRed) {
+                                traj = traj.flipped();
+                            }
 
-                    if (isStart) {
-                        Logger.recordOutput("Choreo/trajectory", traj.getPoses());
-                        Logger.recordOutput("Choreo/trajectoryName", traj.name());
-                        Logger.recordOutput("Choreo/trajectoryTime", traj.getTotalTime(), Seconds.name());
-                    } else {
-                        Logger.recordOutput("Choreo/trajectory", BlankValues.pose2dArray);
-                        Logger.recordOutput("Choreo/trajectoryName", BlankValues.string);
-                        Logger.recordOutput("Choreo/trajectoryTime", Double.NaN, Seconds.name());
-                    }
-                });
+                            if (isStart) {
+                                Logger.recordOutput("Choreo/trajectory", traj.getPoses());
+                                Logger.recordOutput("Choreo/trajectoryName", traj.name());
+                                Logger.recordOutput("Choreo/trajectoryTime", traj.getTotalTime(), Seconds.name());
+                            } else {
+                                Logger.recordOutput("Choreo/trajectory", BlankValues.pose2dArray);
+                                Logger.recordOutput("Choreo/trajectoryName", BlankValues.string);
+                                Logger.recordOutput("Choreo/trajectoryTime", Double.NaN, Seconds.name());
+                            }
+                        });
 
         autoChooser = Autos.createAutos(autoFactory);
     }
@@ -220,7 +237,13 @@ public final class RobotContainer {
     }
 
     public Command seedSwerveOrientationCmd() {
-        return Commands.runOnce(swerve::seedFieldCentric).withName("seedSwerveOrientationCmd");
+        return Commands.runOnce(
+                        () -> swerve.setPose(new Pose2d(
+                                swerve.getPose().getTranslation(),
+                                Robot.instance().brain.state.isRed ? Rotation2d.k180deg : Rotation2d.kZero)),
+                        swerve)
+                .ignoringDisable(true)
+                .withName("seedSwerveOrientationCmd");
     }
 
     public Command stopSwerveCmd() {
@@ -228,8 +251,7 @@ public final class RobotContainer {
     }
 
     public Command brakeSwerveCmd() {
-        return Commands.startEnd(() -> swerve.setControl(new SwerveRequest.SwerveDriveBrake()), () -> {}, swerve)
-                .withName("brakeSwerveCmd");
+        return Commands.startEnd(swerve::stopWithX, () -> {}, swerve).withName("brakeSwerveCmd");
     }
 
     public Command deployIntakeCmd() {

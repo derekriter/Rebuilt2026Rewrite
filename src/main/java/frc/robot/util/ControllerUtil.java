@@ -182,7 +182,8 @@ public class ControllerUtil {
     }
 
     public static double applyExponentialDeadband(double raw, double deadband, int power) {
-        return Math.pow(Math.abs(applyLinearDeadband(raw, deadband)), power) * Math.signum(raw);
+        // return Math.pow(Math.abs(applyLinearDeadband(raw, deadband)), power) * Math.signum(raw);
+        return Math.copySign(Math.pow(applyLinearDeadband(raw, deadband), power), raw);
     }
 
     public static Pair<Double, Double> applyExponentialDeadband(double rawX, double rawY, double deadband, int power) {

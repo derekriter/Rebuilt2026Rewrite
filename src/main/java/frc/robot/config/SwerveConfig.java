@@ -1,6 +1,7 @@
 package frc.robot.config;
 
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Hertz;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.KilogramSquareMeters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
@@ -30,9 +31,9 @@ import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.Frequency;
 import edu.wpi.first.units.measure.LinearAcceleration;
 import edu.wpi.first.units.measure.LinearVelocity;
-import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Time;
 import java.util.Optional;
 
@@ -118,14 +119,14 @@ public final class SwerveConfig {
             .withKP(100)
             .withKI(0)
             .withKD(0.5)
-            .withKS(0.2)
-            .withKV(2.66)
+            .withKS(0.1)
+            .withKV(1.91)
             .withKA(0)
             .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign);
     // When using closed-loop control, the drive motor uses the control
     // output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
     private static final Slot0Configs driveGains =
-            new Slot0Configs().withKP(0.1).withKI(0).withKD(0).withKS(0.2).withKV(0.124);
+            new Slot0Configs().withKP(0.1).withKI(0).withKD(0).withKS(0).withKV(0.124);
 
     // Initial configs for the drive and steer motors and the azimuth encoder; these cannot be null.
     // Some configs will be overwritten; check the `with*InitialConfigs()` API documentation.
@@ -167,16 +168,12 @@ public final class SwerveConfig {
     public static final AngularAcceleration teleopAngularAcceleration = RotationsPerSecondPerSecond.of(12);
 
     public static final Time simLoopPeriod = Milliseconds.of(4);
+    public static final Frequency odometryFrequency = Hertz.of(250);
 
     public static final SwerveDrivetrainConstants drivetrainConstants = new SwerveDrivetrainConstants()
             .withCANBusName(CANivoreConfig.busID)
             .withPigeon2Id(PigeonConfig.canID)
             .withPigeon2Configs(pigeonConfigs.orElse(null));
-
-    public static final Temperature driveTempWarnThreshold = MotorConfig.krakenX60TempWarnThreshold;
-    public static final Temperature driveThermalShutdownThreshold = MotorConfig.krakenX60ThermalShutdownThreshold;
-    public static final Temperature steerTempWarnThreshold = MotorConfig.falcon500TempWarnThreshold;
-    public static final Temperature steerThermalShutdownThreshold = MotorConfig.falcon500ThermalShutdownThreshold;
 
     private static final SwerveModuleConstantsFactory<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
             moduleConstantsFactory = new SwerveModuleConstantsFactory<
@@ -187,8 +184,8 @@ public final class SwerveConfig {
                     .withWheelRadius(Inches.of(2.005))
                     .withSteerMotorGains(steerGains)
                     .withDriveMotorGains(driveGains)
-                    .withSteerMotorClosedLoopOutput(ClosedLoopOutputType.Voltage)
-                    .withDriveMotorClosedLoopOutput(ClosedLoopOutputType.Voltage)
+                    .withSteerMotorClosedLoopOutput(ClosedLoopOutputType.TorqueCurrentFOC)
+                    .withDriveMotorClosedLoopOutput(ClosedLoopOutputType.TorqueCurrentFOC)
                     .withSlipCurrent(slipCurrent)
                     .withSpeedAt12Volts(speedAt12Volts)
                     .withDriveMotorType(DriveMotorArrangement.TalonFX_Integrated)
@@ -286,6 +283,14 @@ public final class SwerveConfig {
 
         public static final CANBus bus = new CANBus(busID);
     }
+
+    public static final double driveBaseRadius_m = Math.max(
+            Math.max(
+                    Math.hypot(modules[0].constants.LocationX, modules[9].constants.LocationY),
+                    Math.hypot(modules[1].constants.LocationX, modules[1].constants.LocationY)),
+            Math.max(
+                    Math.hypot(modules[2].constants.LocationX, modules[2].constants.LocationY),
+                    Math.hypot(modules[3].constants.LocationX, modules[3].constants.LocationY)));
 
     private SwerveConfig() {}
 }

@@ -90,7 +90,7 @@ public final class Launcher extends SubsystemBase {
     public void periodic() {
         if (turretIO_nl != null) {
             turretIO_nl.updateInputs(turretInputs);
-            Logger.processInputs("turret", turretInputs);
+            Logger.processInputs("Launcher/turret/Inputs", turretInputs);
 
             turretBreaker = RobotContainer.instance().pdh.isBreakerTripped(TurretConfig.channelID);
 
@@ -120,7 +120,7 @@ public final class Launcher extends SubsystemBase {
 
         if (shooterIO_nl != null) {
             shooterIO_nl.updateInputs(shooterInputs);
-            Logger.processInputs("shooter", shooterInputs);
+            Logger.processInputs("Launcher/Shooter/Inputs", shooterInputs);
 
             shooterBreaker = RobotContainer.instance().pdh.isBreakerTripped(ShooterConfig.channelID);
 
@@ -175,8 +175,7 @@ public final class Launcher extends SubsystemBase {
         Logger.recordOutput("Launcher/defaultCommand", defaultCommand == null ? null : defaultCommand.getName());
 
         Translation2d launcherTranslation = getLauncherTranslation();
-        Rotation2d robotRotation =
-                RobotContainer.instance().swerve.getState().Pose.getRotation();
+        Rotation2d robotRotation = RobotContainer.instance().swerve.getRotation();
 
         Rotation2d turretRealRotation;
         Rotation2d turretTargetRotation;
@@ -245,7 +244,7 @@ public final class Launcher extends SubsystemBase {
     }
 
     private Translation2d getLauncherTranslation() {
-        Pose2d robotPose = RobotContainer.instance().swerve.getState().Pose;
+        Pose2d robotPose = RobotContainer.instance().swerve.getPose();
         return robotPose.getTranslation().plus(LauncherConfig.launcherOffset.rotateBy(robotPose.getRotation()));
     }
 

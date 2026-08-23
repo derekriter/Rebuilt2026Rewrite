@@ -126,7 +126,7 @@ public class TeleopDrive extends Command {
         Logger.recordOutput("TeleopDrive/usePOV", usePOV);
         if (driver1.getXButton()) {
             // brake
-            swerve.setControl(brake);
+            swerve.stopWithX();
         } else if (ControllerUtil.isPastDeadband(driver1.getLeftTriggerAxis(), ControllerConfig.triggerThreshold)) {
             if (usePOV) {
                 // robot centric POV
