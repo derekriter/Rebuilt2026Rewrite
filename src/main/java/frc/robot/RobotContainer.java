@@ -30,10 +30,8 @@ import frc.robot.pdh.PDH;
 import frc.robot.subsystems.launcher.Launcher;
 import frc.robot.subsystems.launcher.shooter.IShooterIO;
 import frc.robot.subsystems.launcher.shooter.ShooterIOReal;
-import frc.robot.subsystems.launcher.shooter.ShooterIOSim;
 import frc.robot.subsystems.launcher.turret.ITurretIO;
 import frc.robot.subsystems.launcher.turret.TurretIOReal;
-import frc.robot.subsystems.launcher.turret.TurretIOSim;
 import frc.robot.subsystems.led.LEDs;
 import frc.robot.subsystems.swerve.GyroIOPigeon2;
 import frc.robot.subsystems.swerve.IGyroIO;
@@ -48,15 +46,11 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 public final class RobotContainer {
 
-    private static boolean _hasCreatedInstance = false;
     private static RobotContainer _inst_nl = null;
 
     public static RobotContainer instance() {
-        if (!_hasCreatedInstance) {
-            _hasCreatedInstance = true;
+        if (_inst_nl == null) {
             _inst_nl = new RobotContainer();
-        } else if (_inst_nl == null) {
-            throw new Error("Cannot access RobotContainer instance within its own constructor!");
         }
 
         return _inst_nl;
@@ -77,6 +71,8 @@ public final class RobotContainer {
     private LoggedDashboardChooser<Command> autoChooser;
 
     private RobotContainer() {
+        _inst_nl = this;
+
         switch (Mode.getMode()) {
             case REAL -> {
                 swerve = new Swerve(
@@ -96,9 +92,11 @@ public final class RobotContainer {
                         new ModuleIOSim(SwerveConfig.modules[1].constants),
                         new ModuleIOSim(SwerveConfig.modules[2].constants),
                         new ModuleIOSim(SwerveConfig.modules[3].constants));
+
+                // TODO: Launcher sim io
                 launcher = new Launcher(
-                        Overrides.disableTurret ? null : new TurretIOSim(),
-                        Overrides.disableShooter ? null : new ShooterIOSim());
+                        Overrides.disableTurret ? null : new TurretIOReal(),
+                        Overrides.disableShooter ? null : new ShooterIOReal());
             }
             case REPLAY -> {
                 swerve = new Swerve(IGyroIO.blank, IModuleIO.blank, IModuleIO.blank, IModuleIO.blank, IModuleIO.blank);

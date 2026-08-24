@@ -15,7 +15,8 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
-import edu.wpi.first.wpilibj.Alert.AlertType;
+import frc.robot.config.SwerveConfig;
+import frc.robot.util.AlertUtils;
 import org.littletonrobotics.junction.Logger;
 
 public class Module {
@@ -37,11 +38,14 @@ public class Module {
         this.index = index;
         this.constants = constants;
         driveDisconnectedAlert =
-                new Alert("Disconnected drive motor on module " + Integer.toString(index) + ".", AlertType.kError);
+                // new Alert("Disconnected drive motor on module " + Integer.toString(index) + ".", AlertType.kError);
+                AlertUtils.makeCANFailureAlert(SwerveConfig.modules[index].driveMotorName);
         turnDisconnectedAlert =
-                new Alert("Disconnected turn motor on module " + Integer.toString(index) + ".", AlertType.kError);
+                // new Alert("Disconnected turn motor on module " + Integer.toString(index) + ".", AlertType.kError);
+                AlertUtils.makeCANFailureAlert(SwerveConfig.modules[index].steerMotorName);
         turnEncoderDisconnectedAlert =
-                new Alert("Disconnected turn encoder on module " + Integer.toString(index) + ".", AlertType.kError);
+                // new Alert("Disconnected turn encoder on module " + Integer.toString(index) + ".", AlertType.kError);
+                AlertUtils.makeCANFailureAlert(SwerveConfig.modules[index].encoderName);
     }
 
     public void periodic() {
@@ -61,6 +65,10 @@ public class Module {
         driveDisconnectedAlert.set(!inputs.driveConnected);
         turnDisconnectedAlert.set(!inputs.turnConnected);
         turnEncoderDisconnectedAlert.set(!inputs.turnEncoderConnected);
+    }
+
+    public boolean isOperational() {
+        return inputs.driveConnected && inputs.turnConnected && inputs.turnEncoderConnected;
     }
 
     /** Runs the module with the specified setpoint state. Mutates the state to optimize it. */

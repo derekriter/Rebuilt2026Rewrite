@@ -1,9 +1,7 @@
 package frc.robot.commands;
 
-import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RPM;
 
-import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -55,7 +53,7 @@ public class AimAtTarget extends Command {
                 launcher,
                 swerve_noDep,
                 () -> {
-                    boolean inTop = swerve_noDep.getState().Pose.getY() > FieldConstants.fieldCenter.getY();
+                    boolean inTop = swerve_noDep.getPose().getY() > FieldConstants.fieldCenter.getY();
                     if (isRed) {
                         return inTop ? FieldConstants.redZoneTopTargetLoc : FieldConstants.redZoneBottomTargetLoc;
                     } else {
@@ -67,13 +65,8 @@ public class AimAtTarget extends Command {
 
     @Override
     public void execute() {
-        SwerveDriveState swerveState = swerve_noDep.getState();
-
         Pair<TurretAngle, ShooterTarget> target = LaunchCalculator.calcShot(
-                targetSupplier.get(),
-                swerveState.Pose,
-                MetersPerSecond.of(swerveState.Speeds.vxMetersPerSecond),
-                MetersPerSecond.of(swerveState.Speeds.vyMetersPerSecond));
+                targetSupplier.get(), swerve_noDep.getPose(), swerve_noDep.getRobotRelativeSpeeds());
 
         if (overrideTurret.getAsBoolean()) {
             launcher.setTurretVoltage(-ControllerUtil.applyLinearDeadband(

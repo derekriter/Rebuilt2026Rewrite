@@ -3,8 +3,6 @@ package frc.robot;
 import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
-import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
-import com.ctre.phoenix6.swerve.SwerveRequest.ApplyRobotSpeeds;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -47,21 +45,18 @@ public final class Autos {
     }
 
     private static Command alignWithTowerCmd() {
-        ApplyRobotSpeeds towardsReq = new ApplyRobotSpeeds()
-                .withDriveRequestType(DriveRequestType.Velocity)
-                .withSpeeds(ChassisSpeeds.discretize(new ChassisSpeeds(0, -0.5, 0), 0.02));
-        ApplyRobotSpeeds finalAlignReq = new ApplyRobotSpeeds()
-                .withDriveRequestType(DriveRequestType.Velocity)
-                .withSpeeds(ChassisSpeeds.discretize(new ChassisSpeeds(-0.5, 0, 0), 0.02));
-
         return Commands.sequence(
                         Commands.runOnce(
-                                () -> RobotContainer.instance().swerve.setControl(towardsReq),
+                                () -> RobotContainer.instance()
+                                        .swerve
+                                        .runRobotRelativeVelocity(new ChassisSpeeds(0, -0.5, 0)),
                                 RobotContainer.instance().swerve),
                         Commands.waitUntil(() -> /*RobotContainer.instance().climb.canSeeTower()*/ true)
                                 .withTimeout(5),
                         Commands.runEnd(
-                                        () -> RobotContainer.instance().swerve.setControl(finalAlignReq),
+                                        () -> RobotContainer.instance()
+                                                .swerve
+                                                .runRobotRelativeVelocity(new ChassisSpeeds(-0.5, 0, 0)),
                                         () -> RobotContainer.instance().swerve.stop(),
                                         RobotContainer.instance().swerve)
                                 .withTimeout(0.25))

@@ -2,17 +2,14 @@ package frc.robot.commands;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
+import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 
-import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric;
-import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle;
-import com.ctre.phoenix6.swerve.SwerveRequest.RobotCentric;
-import com.ctre.phoenix6.swerve.SwerveRequest.RobotCentricFacingAngle;
-import com.ctre.phoenix6.swerve.SwerveRequest.SwerveDriveBrake;
 import edu.wpi.first.math.Pair;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
-import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.RobotContainer;
@@ -25,21 +22,6 @@ import org.littletonrobotics.junction.Logger;
 public class TeleopDrive extends Command {
 
     private final Swerve swerve;
-    private final SwerveDriveBrake brake = new SwerveDriveBrake();
-    private final RobotCentric robotOmega = new RobotCentric();
-    // .withDeadband(SwerveConfig.deadbandTranslationVel)
-    // .withRotationalDeadband(SwerveConfig.deadbandAngularVel);
-    private final RobotCentricFacingAngle robotPOV = new RobotCentricFacingAngle()
-            // .withDeadband(SwerveConfig.deadbandTranslationVel)
-            // .withRotationalDeadband(SwerveConfig.deadbandAngularVel)
-            .withHeadingPID(SwerveConfig.headingP, SwerveConfig.headingI, SwerveConfig.headingD);
-    private final FieldCentric fieldOmega = new FieldCentric();
-    // .withDeadband(SwerveConfig.deadbandTranslationVel)
-    // .withRotationalDeadband(SwerveConfig.deadbandAngularVel);
-    private final FieldCentricFacingAngle fieldPOV = new FieldCentricFacingAngle()
-            // .withDeadband(SwerveConfig.deadbandTranslationVel)
-            // .withRotationalDeadband(SwerveConfig.deadbandAngularVel)
-            .withHeadingPID(SwerveConfig.headingP, SwerveConfig.headingI, SwerveConfig.headingD);
 
     private final SlewRateLimiter xSlew =
             new SlewRateLimiter(SwerveConfig.teleopTranslationAcceleration.in(MetersPerSecondPerSecond));
@@ -48,10 +30,19 @@ public class TeleopDrive extends Command {
     private final SlewRateLimiter omegaSlew =
             new SlewRateLimiter(SwerveConfig.teleopAngularAcceleration.in(RadiansPerSecondPerSecond));
 
+    private final PIDController headingController =
+            new PIDController(SwerveConfig.headingP, SwerveConfig.headingI, SwerveConfig.headingD);
+
     public TeleopDrive(Swerve _swerve) {
         swerve = _swerve;
-
         addRequirements(swerve);
+
+        headingController.enableContinuousInput(-Math.PI, Math.PI);
+    }
+
+    @Override
+    public void initialize() {
+        headingController.reset();
     }
 
     @Override
@@ -99,72 +90,53 @@ public class TeleopDrive extends Command {
         double commonYVel_mps = ySlew.calculate(
                 SwerveConfig.maxTranslationVel.in(MetersPerSecond) * -cubicLeft.getFirst() * speedShifter * slowDown);
         double commmonMaxAngularRate_radps = SwerveConfig.maxAngularVel.in(RadiansPerSecond) * speedShifter;
-        double commonOmega_radps = omegaSlew.calculate(commmonMaxAngularRate_radps * omegaDirection);
 
         Logger.recordOutput("TeleopDrive/commonXVel", commonXVel_mps, MetersPerSecond.name());
         Logger.recordOutput("TeleopDrive/commonYVel", commonYVel_mps, MetersPerSecond.name());
         Logger.recordOutput("TeleopDrive/commonMaxAngularRate", commmonMaxAngularRate_radps, RadiansPerSecond.name());
-        Logger.recordOutput("TeleopDrive/commonOmega", commonOmega_radps, RadiansPerSecond.name());
 
-        Rotation2d povDirection_nl = null;
-        if (ControllerUtil.isPastDeadband(
-                driver1.getRightX(), driver1.getRightY(), ControllerConfig.turnJoystickDeadband)) {
-            povDirection_nl = new Rotation2d(
-                    ControllerUtil.getFieldSpaceJoystickAngle_rad(driver1.getRightX(), driver1.getRightY()));
-        }
-        Logger.recordOutput("TeleopDrive/povDirection", povDirection_nl);
-
-        Rotation2d snakeDirection_nl = null;
-        if (ControllerUtil.isPastDeadband(
-                driver1.getLeftX(), driver1.getLeftY(), ControllerConfig.driveJoystickDeadband)) {
-            snakeDirection_nl = new Rotation2d(
-                    ControllerUtil.getFieldSpaceJoystickAngle_rad(driver1.getLeftX(), driver1.getLeftY()));
-        }
-        Logger.recordOutput("TeleopDrive/snakeDirection", snakeDirection_nl);
-
-        boolean usePOV = povDirection_nl != null;
-        Logger.recordOutput("TeleopDrive/usePOV", usePOV);
         if (driver1.getXButton()) {
-            // brake
             swerve.stopWithX();
-        } else if (ControllerUtil.isPastDeadband(driver1.getLeftTriggerAxis(), ControllerConfig.triggerThreshold)) {
-            if (usePOV) {
-                // robot centric POV
-                swerve.setControl(robotPOV.withVelocityX(commonXVel_mps)
-                        .withVelocityY(commonYVel_mps)
-                        .withTargetDirection(povDirection_nl)
-                        .withMaxAbsRotationalRate(commmonMaxAngularRate_radps));
-            } else {
-                // robot centric omega
-                swerve.setControl(robotOmega
-                        .withVelocityX(commonXVel_mps)
-                        .withVelocityY(commonYVel_mps)
-                        .withRotationalRate(commonOmega_radps));
-            }
-        } else if (driver1.getLeftBumperButton()) {
-            // snake
-            if (snakeDirection_nl != null) {
-                swerve.setControl(fieldPOV.withVelocityX(commonXVel_mps)
-                        .withVelocityY(commonYVel_mps)
-                        .withTargetDirection(snakeDirection_nl)
-                        .withMaxAbsRotationalRate(commmonMaxAngularRate_radps));
-            } else {
-                // fallback to field centric omega with a rotational rate of 0
-                swerve.setControl(fieldOmega.withVelocityX(commonXVel_mps).withVelocityY(commonYVel_mps));
-            }
+            Logger.recordOutput("TeleopDrive/headingDirection", Double.NaN, Radians.name());
+            Logger.recordOutput("TeleopDrive/targetOmega", Double.NaN, RadiansPerSecond.name());
+            headingController.reset();
         } else {
-            if (usePOV) {
-                // field centric POV
-                swerve.setControl(fieldPOV.withVelocityX(commonXVel_mps)
-                        .withVelocityY(commonYVel_mps)
-                        .withTargetDirection(povDirection_nl)
-                        .withMaxAbsRotationalRate(commmonMaxAngularRate_radps));
+            double targetOmega_radps;
+            if (ControllerUtil.isPastDeadband(
+                    driver1.getRightX(), driver1.getRightY(), ControllerConfig.turnJoystickDeadband)) {
+                double heading_rad =
+                        ControllerUtil.getFieldSpaceJoystickAngle_rad(driver1.getRightX(), driver1.getRightY());
+                Logger.recordOutput("TeleopDrive/headingDirection", heading_rad, Radians.name());
+
+                targetOmega_radps =
+                        headingController.calculate(swerve.getRotation().getRadians(), heading_rad);
+
+            } else if (ControllerUtil.isPastDeadband(
+                    driver1.getLeftX(), driver1.getLeftY(), ControllerConfig.driveJoystickDeadband)) {
+                double heading_rad =
+                        ControllerUtil.getFieldSpaceJoystickAngle_rad(driver1.getLeftX(), driver1.getLeftY());
+                Logger.recordOutput("TeleopDrive/headingDirection", heading_rad, Radians.name());
+
+                targetOmega_radps =
+                        headingController.calculate(swerve.getRotation().getRadians(), heading_rad);
             } else {
-                // field centric omega
-                swerve.setControl(fieldOmega
-                        .withVelocityX(commonXVel_mps)
-                        .withVelocityY(commonYVel_mps)
-                        .withRotationalRate(commonOmega_radps));
+                targetOmega_radps = omegaSlew.calculate(commmonMaxAngularRate_radps * omegaDirection);
+                Logger.recordOutput("TeleopDrive/headingDirection", Double.NaN, Radians.name());
+
+                headingController.reset();
+            }
+
+            targetOmega_radps = Math.copySign(
+                    Math.min(Math.abs(targetOmega_radps), commmonMaxAngularRate_radps), targetOmega_radps);
+            Logger.recordOutput("TeleopDrive/targetOmega", targetOmega_radps, RadiansPerSecond.name());
+
+            if (ControllerUtil.isPastDeadband(driver1.getLeftTriggerAxis(), ControllerConfig.triggerThreshold)) {
+                // robot centric
+                swerve.runRobotRelativeVelocity(new ChassisSpeeds(commonXVel_mps, commonYVel_mps, targetOmega_radps));
+            } else {
+                // operator centric
+                swerve.runOperatorRelativeVelocity(
+                        new ChassisSpeeds(commonXVel_mps, commonYVel_mps, targetOmega_radps));
             }
         }
     }

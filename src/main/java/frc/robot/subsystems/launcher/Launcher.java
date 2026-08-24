@@ -90,7 +90,7 @@ public final class Launcher extends SubsystemBase {
     public void periodic() {
         if (turretIO_nl != null) {
             turretIO_nl.updateInputs(turretInputs);
-            Logger.processInputs("Launcher/turret/Inputs", turretInputs);
+            Logger.processInputs("Launcher/Turret/Inputs", turretInputs);
 
             turretBreaker = RobotContainer.instance().pdh.isBreakerTripped(TurretConfig.channelID);
 

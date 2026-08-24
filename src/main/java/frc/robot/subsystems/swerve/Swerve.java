@@ -33,6 +33,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Mode;
 import frc.robot.Robot;
+import frc.robot.config.Overrides;
 import frc.robot.config.SwerveConfig;
 import frc.robot.util.AlertUtils;
 import java.util.concurrent.locks.Lock;
@@ -173,6 +174,18 @@ public class Swerve extends SubsystemBase {
         }
     }
 
+    public void report(SwerveReport report) {
+        if (Overrides.disableSwerveSafety) {
+            report.isOperational = true;
+        } else {
+            report.isOperational = modules[0].isOperational()
+                    && modules[1].isOperational()
+                    && modules[2].isOperational()
+                    && modules[3].isOperational()
+                    && gyroInputs.connected;
+        }
+    }
+
     /**
      * Runs the drive at the desired velocity.
      *
@@ -269,7 +282,7 @@ public class Swerve extends SubsystemBase {
 
     /** Returns the measured chassis speeds of the robot. */
     @AutoLogOutput(key = "SwerveChassisSpeeds/measured")
-    private ChassisSpeeds getChassisSpeeds() {
+    public ChassisSpeeds getRobotRelativeSpeeds() {
         return kinematics.toChassisSpeeds(getModuleStates());
     }
 

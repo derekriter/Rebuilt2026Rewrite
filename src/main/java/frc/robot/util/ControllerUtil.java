@@ -1,13 +1,11 @@
 package frc.robot.util;
 
-import static edu.wpi.first.units.Units.Radians;
-
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Pair;
-import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.Timer;
+import frc.robot.Robot;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -196,11 +194,11 @@ public class ControllerUtil {
         else return Pair.of(newR * Math.cos(theta), newR * Math.sin(theta));
     }
 
-    public static Angle getFieldSpaceJoystickAngle(double x, double y) {
-        return Radians.of(getFieldSpaceJoystickAngle_rad(x, y));
+    public static double getOperatorSpaceJoystickAngle_rad(double x, double y) {
+        return Math.atan2(-x, -y);
     }
 
     public static double getFieldSpaceJoystickAngle_rad(double x, double y) {
-        return Math.atan2(-x, -y);
+        return getOperatorSpaceJoystickAngle_rad(x, y) + (Robot.instance().brain.state.isRed ? Math.PI : 0);
     }
 }

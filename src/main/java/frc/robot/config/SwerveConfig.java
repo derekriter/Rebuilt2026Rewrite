@@ -41,8 +41,6 @@ import java.util.Optional;
 // https://v6.docs.ctr-electronics.com/en/stable/docs/tuner/tuner-swerve/index.html
 public final class SwerveConfig {
     public static class ModuleConfig {
-        public final String prefix;
-
         public final Distance xPos, yPos;
         public final String driveMotorName, steerMotorName, encoderName;
         public final int driveCANID, steerCANID, encoderCANID;
@@ -70,8 +68,6 @@ public final class SwerveConfig {
                 int _encoderChannelID,
                 boolean _encoderInverted,
                 Angle _encoderOffset) {
-            prefix = _prefix;
-
             xPos = _xPos;
             yPos = _yPos;
 
@@ -204,11 +200,11 @@ public final class SwerveConfig {
                 "fl",
                 Inches.of(10.875),
                 Inches.of(10.875),
-                "flDriveMotor",
+                "flDrive",
                 10,
                 10,
                 false,
-                "flSteerMotor",
+                "flSteer",
                 11,
                 11,
                 true,
@@ -221,11 +217,11 @@ public final class SwerveConfig {
                 "fr",
                 Inches.of(10.875),
                 Inches.of(-10.875),
-                "frDriveMotor",
+                "frDrive",
                 19,
                 19,
                 true,
-                "frSteerMotor",
+                "frSteer",
                 18,
                 18,
                 true,
@@ -238,11 +234,11 @@ public final class SwerveConfig {
                 "bl",
                 Inches.of(-10.875),
                 Inches.of(10.875),
-                "blDriveMotor",
+                "blDrive",
                 2,
                 2,
                 false,
-                "blSteerMotor",
+                "blSteer",
                 1,
                 1,
                 true,
@@ -255,11 +251,11 @@ public final class SwerveConfig {
                 "br",
                 Inches.of(-10.875),
                 Inches.of(-10.875),
-                "brDriveMotor",
+                "brDrive",
                 9,
                 9,
                 true,
-                "brSteerMotor",
+                "brSteer",
                 8,
                 8,
                 true,
@@ -286,7 +282,7 @@ public final class SwerveConfig {
 
     public static final double driveBaseRadius_m = Math.max(
             Math.max(
-                    Math.hypot(modules[0].constants.LocationX, modules[9].constants.LocationY),
+                    Math.hypot(modules[0].constants.LocationX, modules[0].constants.LocationY),
                     Math.hypot(modules[1].constants.LocationX, modules[1].constants.LocationY)),
             Math.max(
                     Math.hypot(modules[2].constants.LocationX, modules[2].constants.LocationY),

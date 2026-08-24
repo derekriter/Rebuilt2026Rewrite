@@ -1,21 +1,23 @@
 package frc.robot.subsystems.launcher;
 
+import static edu.wpi.first.units.Units.Seconds;
+
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.units.measure.LinearVelocity;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import frc.robot.config.LauncherConfig;
 import frc.robot.subsystems.launcher.shooter.ShooterTarget;
 import frc.robot.subsystems.launcher.turret.TurretAngle;
 
 public final class LaunchCalculator {
     public static Pair<TurretAngle, ShooterTarget> calcShot(
-            Translation2d target, Pose2d robotPose, LinearVelocity robotCentricVelX, LinearVelocity robotCentricVelY) {
+            Translation2d target, Pose2d robotPose, ChassisSpeeds robotRelativeSpeeds) {
 
         Translation2d launcherLoc = getLauncherLocOnField(robotPose);
         Translation2d compensatedTarget =
-                target.plus(calcPointCompensation(robotCentricVelX, robotCentricVelY, robotPose.getRotation()));
+                target.plus(calcPointCompensation(robotRelativeSpeeds, robotPose.getRotation()));
 
         Translation2d vecToTarget = compensatedTarget.minus(launcherLoc);
         double fieldCentricDeg = Math.toDegrees(Math.atan2(vecToTarget.getY(), vecToTarget.getX()));
@@ -30,11 +32,10 @@ public final class LaunchCalculator {
         return robotPose.getTranslation().plus(LauncherConfig.launcherOffset.rotateBy(robotPose.getRotation()));
     }
 
-    private static Translation2d calcPointCompensation(
-            LinearVelocity robotCentricVelX, LinearVelocity robotCentricVelY, Rotation2d robotRot) {
+    private static Translation2d calcPointCompensation(ChassisSpeeds robotRelativeSpeeds, Rotation2d robotRot) {
         Translation2d velCompensation = new Translation2d(
-                        robotCentricVelX.times(LauncherConfig.ballAirTime),
-                        robotCentricVelY.times(LauncherConfig.ballAirTime))
+                        robotRelativeSpeeds.vxMetersPerSecond * LauncherConfig.ballAirTime.in(Seconds),
+                        robotRelativeSpeeds.vyMetersPerSecond * LauncherConfig.ballAirTime.in(Seconds))
                 .rotateBy(robotRot)
                 .unaryMinus();
 

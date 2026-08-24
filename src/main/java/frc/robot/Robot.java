@@ -32,15 +32,11 @@ import org.littletonrobotics.urcl.URCL;
 
 public final class Robot extends LoggedRobot {
 
-    private static boolean _hasCreatedInstance = false;
     private static Robot _inst_nl = null;
 
     public static Robot instance() {
-        if (!_hasCreatedInstance) {
-            _hasCreatedInstance = true;
+        if (_inst_nl == null) {
             _inst_nl = new Robot();
-        } else if (_inst_nl == null) {
-            throw new Error("Cannot access Robot instance within its own constructor!");
         }
 
         return _inst_nl;
@@ -50,6 +46,8 @@ public final class Robot extends LoggedRobot {
     public final Field2d field;
 
     private Robot() {
+        _inst_nl = this;
+
         initLogging();
         Overrides.telemeterizeOverrides();
         RobotContainer.instance();

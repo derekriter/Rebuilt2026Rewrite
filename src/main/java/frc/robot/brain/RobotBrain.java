@@ -46,8 +46,8 @@ public class RobotBrain {
         RobotContainer.instance().launcher.report(state.launcherReport);
         RobotContainer.instance().swerve.report(state.swerveReport);
 
-        state.fieldZone = FieldZone.fromRobotX(
-                RobotContainer.instance().swerve.getState().Pose.getX());
+        state.fieldZone =
+                FieldZone.fromRobotX(RobotContainer.instance().swerve.getPose().getX());
 
         if (state.opMode == OpMode.TELEOP) {
             pollTeleopData();
@@ -190,36 +190,36 @@ public class RobotBrain {
     }
 
     public void log() {
-        Logger.recordOutput("RobotBrain/robotState/opMode", state.opMode.name());
-        Logger.recordOutput("RobotBrain/robotState/isReal", state.isReal);
-        Logger.recordOutput("RobotBrain/robotState/isDSAttached", state.isDSAttached);
-        Logger.recordOutput("RobotBrain/robotState/isBrownedOut", state.isBrownedOut);
+        Logger.recordOutput("RobotBrain/RobotState/opMode", state.opMode.name());
+        Logger.recordOutput("RobotBrain/RobotState/isReal", state.isReal);
+        Logger.recordOutput("RobotBrain/RobotState/isDSAttached", state.isDSAttached);
+        Logger.recordOutput("RobotBrain/RobotState/isBrownedOut", state.isBrownedOut);
 
-        Logger.recordOutput("RobotBrain/robotState/isRed", state.isRed);
-        Logger.recordOutput("RobotBrain/robotState/autoWinnerIsKnown", state.autoWinnerIsKnown);
-        Logger.recordOutput("RobotBrain/robotState/didWinAuto", state.didWinAuto);
+        Logger.recordOutput("RobotBrain/RobotState/isRed", state.isRed);
+        Logger.recordOutput("RobotBrain/RobotState/autoWinnerIsKnown", state.autoWinnerIsKnown);
+        Logger.recordOutput("RobotBrain/RobotState/didWinAuto", state.didWinAuto);
 
-        Logger.recordOutput("RobotBrain/robotState/modeTime", state.modeTime_s, Seconds.name());
-        Logger.recordOutput("RobotBrain/robotState/phase", state.phase.name());
-        Logger.recordOutput("RobotBrain/robotState/timeLeftInPhase", state.timeLeftInPhase_s, Seconds.name());
-        Logger.recordOutput("RobotBrain/robotState/fieldZone", state.fieldZone.name());
-        Logger.recordOutput("RobotBrain/robotState/isHubActive", state.isHubActive);
+        Logger.recordOutput("RobotBrain/RobotState/modeTime", state.modeTime_s, Seconds.name());
+        Logger.recordOutput("RobotBrain/RobotState/phase", state.phase.name());
+        Logger.recordOutput("RobotBrain/RobotState/timeLeftInPhase", state.timeLeftInPhase_s, Seconds.name());
+        Logger.recordOutput("RobotBrain/RobotState/fieldZone", state.fieldZone.name());
+        Logger.recordOutput("RobotBrain/RobotState/isHubActive", state.isHubActive);
 
         Logger.recordOutput(
-                "RobotBrain/robotState/launcherReport/turretOperational", state.launcherReport.turretOperational);
+                "RobotBrain/RobotState/LauncherReport/turretOperational", state.launcherReport.turretOperational);
         Logger.recordOutput(
-                "RobotBrain/robotState/launcherReport/turretIsAtTarget", state.launcherReport.turretIsAtTarget);
+                "RobotBrain/RobotState/LauncherReport/turretIsAtTarget", state.launcherReport.turretIsAtTarget);
         Logger.recordOutput(
-                "RobotBrain/robotState/launcherReport/shooterOperational", state.launcherReport.shooterOperational);
+                "RobotBrain/RobotState/LauncherReport/shooterOperational", state.launcherReport.shooterOperational);
         Logger.recordOutput(
-                "RobotBrain/robotState/launcherReport/shooterIsAtTarget", state.launcherReport.shooterIsAtTarget);
-        Logger.recordOutput("RobotBrain/robotState/isTurretHomed", state.isTurretHomed);
-        Logger.recordOutput("RobotBrain/robotState/swerveReport/isOperational", state.swerveReport.isOperational);
+                "RobotBrain/RobotState/LauncherReport/shooterIsAtTarget", state.launcherReport.shooterIsAtTarget);
+        Logger.recordOutput("RobotBrain/RobotState/isTurretHomed", state.isTurretHomed);
+        Logger.recordOutput("RobotBrain/RobotState/SwerveReport/isOperational", state.swerveReport.isOperational);
 
-        Logger.recordOutput("RobotBrain/robotState/targetingMode", state.targetingMode.name());
-        Logger.recordOutput("RobotBrain/robotState/overrideTurret", state.overrideTurret);
-        Logger.recordOutput("RobotBrain/robotState/ledsMode", state.ledsMode.name());
-        Logger.recordOutput("RobotBrain/robotState/driveMode", state.driveMode.name());
+        Logger.recordOutput("RobotBrain/RobotState/targetingMode", state.targetingMode.name());
+        Logger.recordOutput("RobotBrain/RobotState/overrideTurret", state.overrideTurret);
+        Logger.recordOutput("RobotBrain/RobotState/ledsMode", state.ledsMode.name());
+        Logger.recordOutput("RobotBrain/RobotState/driveMode", state.driveMode.name());
 
         driver1MissingAlert.set(!RobotContainer.instance().driver1.isConnected());
         driver2MissingAlert.set(!RobotContainer.instance().driver2.isConnected());
