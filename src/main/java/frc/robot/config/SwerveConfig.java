@@ -41,6 +41,8 @@ import java.util.Optional;
 // https://v6.docs.ctr-electronics.com/en/stable/docs/tuner/tuner-swerve/index.html
 public final class SwerveConfig {
     public static class ModuleConfig {
+        public final String prefix;
+
         public final Distance xPos, yPos;
         public final String driveMotorName, steerMotorName, encoderName;
         public final int driveCANID, steerCANID, encoderCANID;
@@ -68,6 +70,8 @@ public final class SwerveConfig {
                 int _encoderChannelID,
                 boolean _encoderInverted,
                 Angle _encoderOffset) {
+            prefix = _prefix;
+
             xPos = _xPos;
             yPos = _yPos;
 

@@ -38,7 +38,6 @@ import frc.robot.config.SwerveConfig;
 import frc.robot.util.AlertUtils;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Swerve extends SubsystemBase {
@@ -76,10 +75,10 @@ public class Swerve extends SubsystemBase {
     public Swerve(
             IGyroIO gyroIO, IModuleIO flModuleIO, IModuleIO frModuleIO, IModuleIO blModuleIO, IModuleIO brModuleIO) {
         this.gyroIO = gyroIO;
-        modules[0] = new Module(flModuleIO, 0, SwerveConfig.modules[0].constants);
-        modules[1] = new Module(frModuleIO, 1, SwerveConfig.modules[1].constants);
-        modules[2] = new Module(blModuleIO, 2, SwerveConfig.modules[2].constants);
-        modules[3] = new Module(brModuleIO, 3, SwerveConfig.modules[3].constants);
+        modules[0] = new Module(flModuleIO, 0);
+        modules[1] = new Module(frModuleIO, 1);
+        modules[2] = new Module(blModuleIO, 2);
+        modules[3] = new Module(brModuleIO, 3);
 
         // Usage reporting for swerve template
         HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_AdvantageKit);
@@ -98,7 +97,7 @@ public class Swerve extends SubsystemBase {
     public void periodic() {
         odometryLock.lock(); // Prevents odometry updates while reading data
         gyroIO.updateInputs(gyroInputs);
-        Logger.processInputs("Swerve/GyroInputs", gyroInputs);
+        Logger.processInputs("SwerveInputs/GyroInputs", gyroInputs);
         for (var module : modules) {
             module.periodic();
         }
@@ -107,6 +106,7 @@ public class Swerve extends SubsystemBase {
         // Stop moving when disabled
         if (DriverStation.isDisabled()) {
             inTrajFollowingMode = false;
+
             for (var module : modules) {
                 module.stop();
             }
@@ -114,8 +114,8 @@ public class Swerve extends SubsystemBase {
 
         // Log empty setpoint states when disabled
         if (DriverStation.isDisabled()) {
-            Logger.recordOutput("SwerveStates/setpoints", new SwerveModuleState[] {});
-            Logger.recordOutput("SwerveStates/setpointsOptimized", new SwerveModuleState[] {});
+            Logger.recordOutput("Swerve/targetStates", new SwerveModuleState[] {});
+            Logger.recordOutput("Swerve/optimizedTargetStates", new SwerveModuleState[] {});
         }
 
         // Update odometry
@@ -150,10 +150,20 @@ public class Swerve extends SubsystemBase {
         // Update gyro alert
         gyroDisconnectedAlert.set(!gyroInputs.connected && Mode.getMode() != Mode.SIM);
 
+        Logger.recordOutput("Swerve/measuredStates", getMeasuredModuleStates());
+        Logger.recordOutput("Swerve/measuredSpeeds", getMeasuredRobotRelativeSpeeds());
+        Logger.recordOutput("Swerve/robotPose", getPose());
+
         if (inTrajFollowingMode) {
             updateTrajFollowing();
         }
         Logger.recordOutput("Swerve/inTrajFollowingMode", inTrajFollowingMode);
+
+        Command currentCommand = getCurrentCommand();
+        Logger.recordOutput("Swerve/currentCommand", currentCommand == null ? null : currentCommand.getName());
+
+        Command defaultCommand = getDefaultCommand();
+        Logger.recordOutput("Swerve/defaultCommand", defaultCommand == null ? null : defaultCommand.getName());
     }
 
     private void updateTrajFollowing() {
@@ -182,15 +192,10 @@ public class Swerve extends SubsystemBase {
                     && modules[1].isOperational()
                     && modules[2].isOperational()
                     && modules[3].isOperational()
-                    && gyroInputs.connected;
+                    && (gyroInputs.connected || Mode.getMode() == Mode.SIM);
         }
     }
 
-    /**
-     * Runs the drive at the desired velocity.
-     *
-     * @param speeds Speeds in meters/sec
-     */
     public void runRobotRelativeVelocity(ChassisSpeeds speeds) {
         // Calculate module setpoints
         ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(speeds, 0.02);
@@ -198,8 +203,8 @@ public class Swerve extends SubsystemBase {
         SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, SwerveConfig.speedAt12Volts);
 
         // Log unoptimized setpoints and setpoint speeds
-        Logger.recordOutput("SwerveStates/setpoints", setpointStates);
-        Logger.recordOutput("SwerveChassisSpeeds/setpoints", discreteSpeeds);
+        Logger.recordOutput("Swerve/targetStates", setpointStates);
+        Logger.recordOutput("Swerve/targetSpeeds", discreteSpeeds);
 
         // Send setpoints to modules
         for (int i = 0; i < 4; i++) {
@@ -207,7 +212,7 @@ public class Swerve extends SubsystemBase {
         }
 
         // Log optimized setpoints (runSetpoint mutates each state)
-        Logger.recordOutput("SwerveStates/setpointsOptimized", setpointStates);
+        Logger.recordOutput("Swerve/optimizedTargetStates", setpointStates);
 
         inTrajFollowingMode = false;
     }
@@ -262,8 +267,7 @@ public class Swerve extends SubsystemBase {
     }
 
     /** Returns the module states (turn angles and drive velocities) for all of the modules. */
-    @AutoLogOutput(key = "SwerveStates/measured")
-    private SwerveModuleState[] getModuleStates() {
+    private SwerveModuleState[] getMeasuredModuleStates() {
         SwerveModuleState[] states = new SwerveModuleState[4];
         for (int i = 0; i < 4; i++) {
             states[i] = modules[i].getState();
@@ -272,7 +276,7 @@ public class Swerve extends SubsystemBase {
     }
 
     /** Returns the module positions (turn angles and drive positions) for all of the modules. */
-    private SwerveModulePosition[] getModulePositions() {
+    private SwerveModulePosition[] getMeasuredModulePositions() {
         SwerveModulePosition[] states = new SwerveModulePosition[4];
         for (int i = 0; i < 4; i++) {
             states[i] = modules[i].getPosition();
@@ -281,9 +285,8 @@ public class Swerve extends SubsystemBase {
     }
 
     /** Returns the measured chassis speeds of the robot. */
-    @AutoLogOutput(key = "SwerveChassisSpeeds/measured")
-    public ChassisSpeeds getRobotRelativeSpeeds() {
-        return kinematics.toChassisSpeeds(getModuleStates());
+    public ChassisSpeeds getMeasuredRobotRelativeSpeeds() {
+        return kinematics.toChassisSpeeds(getMeasuredModuleStates());
     }
 
     /** Returns the position of each module in radians. */
@@ -305,7 +308,6 @@ public class Swerve extends SubsystemBase {
     }
 
     /** Returns the current odometry pose. */
-    @AutoLogOutput(key = "Odometry/robot")
     public Pose2d getPose() {
         return poseEstimator.getEstimatedPosition();
     }
@@ -317,7 +319,7 @@ public class Swerve extends SubsystemBase {
 
     /** Resets the current odometry pose. */
     public void setPose(Pose2d pose) {
-        poseEstimator.resetPosition(rawGyroRotation, getModulePositions(), pose);
+        poseEstimator.resetPosition(rawGyroRotation, getMeasuredModulePositions(), pose);
     }
 
     /** Adds a new timestamped vision measurement. */

@@ -66,7 +66,7 @@ public class AimAtTarget extends Command {
     @Override
     public void execute() {
         Pair<TurretAngle, ShooterTarget> target = LaunchCalculator.calcShot(
-                targetSupplier.get(), swerve_noDep.getPose(), swerve_noDep.getRobotRelativeSpeeds());
+                targetSupplier.get(), swerve_noDep.getPose(), swerve_noDep.getMeasuredRobotRelativeSpeeds());
 
         if (overrideTurret.getAsBoolean()) {
             launcher.setTurretVoltage(-ControllerUtil.applyLinearDeadband(

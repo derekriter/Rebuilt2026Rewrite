@@ -7,9 +7,6 @@
 
 package frc.robot.subsystems.swerve;
 
-import com.ctre.phoenix6.configs.CANcoderConfiguration;
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
@@ -23,20 +20,15 @@ public class Module {
     private final IModuleIO io;
     private final ModuleIOInputsAutoLogged inputs = new ModuleIOInputsAutoLogged();
     private final int index;
-    private final SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration> constants;
 
     private final Alert driveDisconnectedAlert;
     private final Alert turnDisconnectedAlert;
     private final Alert turnEncoderDisconnectedAlert;
     private SwerveModulePosition[] odometryPositions = new SwerveModulePosition[] {};
 
-    public Module(
-            IModuleIO io,
-            int index,
-            SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration> constants) {
+    public Module(IModuleIO io, int index) {
         this.io = io;
         this.index = index;
-        this.constants = constants;
         driveDisconnectedAlert =
                 // new Alert("Disconnected drive motor on module " + Integer.toString(index) + ".", AlertType.kError);
                 AlertUtils.makeCANFailureAlert(SwerveConfig.modules[index].driveMotorName);
@@ -50,13 +42,17 @@ public class Module {
 
     public void periodic() {
         io.updateInputs(inputs);
-        Logger.processInputs("Drive/Module" + Integer.toString(index), inputs);
+        Logger.processInputs(
+                String.format(
+                        "SwerveInputs/%d_%sModuleInputs", index, SwerveConfig.modules[index].prefix.toUpperCase()),
+                inputs);
 
         // Calculate positions for odometry
         int sampleCount = inputs.odometryTimestamps.length; // All signals are sampled together
         odometryPositions = new SwerveModulePosition[sampleCount];
         for (int i = 0; i < sampleCount; i++) {
-            double positionMeters = inputs.odometryDrivePositionsRad[i] * constants.WheelRadius;
+            double positionMeters =
+                    inputs.odometryDrivePositionsRad[i] * SwerveConfig.modules[index].constants.WheelRadius;
             Rotation2d angle = inputs.odometryTurnPositions[i];
             odometryPositions[i] = new SwerveModulePosition(positionMeters, angle);
         }
@@ -78,7 +74,7 @@ public class Module {
         state.cosineScale(inputs.turnPosition);
 
         // Apply setpoints
-        io.setDriveVelocity(state.speedMetersPerSecond / constants.WheelRadius);
+        io.setDriveVelocity(state.speedMetersPerSecond / SwerveConfig.modules[index].constants.WheelRadius);
         io.setTurnPosition(state.angle);
     }
 
@@ -101,12 +97,12 @@ public class Module {
 
     /** Returns the current drive position of the module in meters. */
     public double getPositionMeters() {
-        return inputs.drivePositionRad * constants.WheelRadius;
+        return inputs.drivePositionRad * SwerveConfig.modules[index].constants.WheelRadius;
     }
 
     /** Returns the current drive velocity of the module in meters per second. */
     public double getVelocityMetersPerSec() {
-        return inputs.driveVelocityRadPerSec * constants.WheelRadius;
+        return inputs.driveVelocityRadPerSec * SwerveConfig.modules[index].constants.WheelRadius;
     }
 
     /** Returns the module position (turn angle and drive position). */

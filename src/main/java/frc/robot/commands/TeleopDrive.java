@@ -90,6 +90,7 @@ public class TeleopDrive extends Command {
         double commonYVel_mps = ySlew.calculate(
                 SwerveConfig.maxTranslationVel.in(MetersPerSecond) * -cubicLeft.getFirst() * speedShifter * slowDown);
         double commmonMaxAngularRate_radps = SwerveConfig.maxAngularVel.in(RadiansPerSecond) * speedShifter;
+        double ommegaControl_radps = omegaSlew.calculate(commmonMaxAngularRate_radps * omegaDirection);
 
         Logger.recordOutput("TeleopDrive/commonXVel", commonXVel_mps, MetersPerSecond.name());
         Logger.recordOutput("TeleopDrive/commonYVel", commonYVel_mps, MetersPerSecond.name());
@@ -102,8 +103,30 @@ public class TeleopDrive extends Command {
             headingController.reset();
         } else {
             double targetOmega_radps;
-            if (ControllerUtil.isPastDeadband(
+            if (driver1.getLeftBumperButton()) {
+                // snake orientation
+                if (ControllerUtil.isPastDeadband(
+                        driver1.getLeftX(), driver1.getLeftY(), ControllerConfig.driveJoystickDeadband)) {
+                    double heading_rad =
+                            ControllerUtil.getFieldSpaceJoystickAngle_rad(driver1.getLeftX(), driver1.getLeftY());
+                    Logger.recordOutput("TeleopDrive/headingDirection", heading_rad, Radians.name());
+
+                    targetOmega_radps =
+                            headingController.calculate(swerve.getRotation().getRadians(), heading_rad);
+                } else {
+                    // fallback to no rotation
+                    targetOmega_radps = 0;
+                    Logger.recordOutput("TeleopDrive/headingDirection", Double.NaN, Radians.name());
+                }
+            } else if (omegaDirection != 0) {
+                // omega control with dpad
+                targetOmega_radps = ommegaControl_radps;
+                Logger.recordOutput("TeleopDrive/headingDirection", Double.NaN, Radians.name());
+
+                headingController.reset();
+            } else if (ControllerUtil.isPastDeadband(
                     driver1.getRightX(), driver1.getRightY(), ControllerConfig.turnJoystickDeadband)) {
+                // joystick orientation
                 double heading_rad =
                         ControllerUtil.getFieldSpaceJoystickAngle_rad(driver1.getRightX(), driver1.getRightY());
                 Logger.recordOutput("TeleopDrive/headingDirection", heading_rad, Radians.name());
@@ -111,19 +134,10 @@ public class TeleopDrive extends Command {
                 targetOmega_radps =
                         headingController.calculate(swerve.getRotation().getRadians(), heading_rad);
 
-            } else if (ControllerUtil.isPastDeadband(
-                    driver1.getLeftX(), driver1.getLeftY(), ControllerConfig.driveJoystickDeadband)) {
-                double heading_rad =
-                        ControllerUtil.getFieldSpaceJoystickAngle_rad(driver1.getLeftX(), driver1.getLeftY());
-                Logger.recordOutput("TeleopDrive/headingDirection", heading_rad, Radians.name());
-
-                targetOmega_radps =
-                        headingController.calculate(swerve.getRotation().getRadians(), heading_rad);
             } else {
-                targetOmega_radps = omegaSlew.calculate(commmonMaxAngularRate_radps * omegaDirection);
+                // fallback to no rotation
+                targetOmega_radps = 0;
                 Logger.recordOutput("TeleopDrive/headingDirection", Double.NaN, Radians.name());
-
-                headingController.reset();
             }
 
             targetOmega_radps = Math.copySign(
