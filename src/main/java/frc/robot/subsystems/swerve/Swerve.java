@@ -10,6 +10,7 @@ package frc.robot.subsystems.swerve;
 import static edu.wpi.first.units.Units.*;
 
 import choreo.trajectory.SwerveSample;
+import com.ctre.phoenix6.CANBus;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
@@ -27,29 +28,45 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.Alert;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Mode;
 import frc.robot.Robot;
+import frc.robot.RobotContainer;
+import frc.robot.brain.OpMode;
 import frc.robot.config.Overrides;
 import frc.robot.config.SwerveConfig;
+import frc.robot.config.SwerveConfig.CANivoreConfig;
+import frc.robot.config.SwerveConfig.PigeonConfig;
+import frc.robot.subsystems.swerve.IGyroIO.GyroIOInputs;
 import frc.robot.util.AlertUtils;
+import frc.robot.util.BlankValues;
+import frc.robot.util.Console;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import org.littletonrobotics.junction.Logger;
 
 public class Swerve extends SubsystemBase {
 
+    // package private
     static final Lock odometryLock = new ReentrantLock();
+
+    private final CANBus canBus;
+    private final Alert canBusBreakerAlert = AlertUtils.makeBreakerTripAlert("canivore");
+    private boolean canBusBreaker = false;
+    private boolean canBusBreakerLast = false;
+
     private final IGyroIO gyroIO;
-    private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
+    private final GyroIOInputs gyroInputs = new GyroIOInputs();
+    private final Alert gyroCANAlert = AlertUtils.makeCANFailureAlert("pigeon2");
+    private final Alert gyroBreakerAlert = AlertUtils.makeBreakerTripAlert("pigeon2");
+    private boolean gyroConnectedLast = false;
+    private boolean gyroBreaker = false;
+    private boolean gyroBreakerLast = false;
+
     private final Module[] modules = new Module[4]; // FL, FR, BL, BR
     private final SysIdRoutine sysId;
-    // private final Alert gyroDisconnectedAlert =
-    //         new Alert("Disconnected gyro, using kinematics as fallback.", AlertType.kError);
-    private final Alert gyroDisconnectedAlert = AlertUtils.makeCANFailureAlert("pigeon2");
 
     private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());
     private Rotation2d rawGyroRotation = Rotation2d.kZero;
@@ -73,24 +90,33 @@ public class Swerve extends SubsystemBase {
     private SwerveSample lastTrajSample_nl = null;
 
     public Swerve(
-            IGyroIO gyroIO, IModuleIO flModuleIO, IModuleIO frModuleIO, IModuleIO blModuleIO, IModuleIO brModuleIO) {
-        this.gyroIO = gyroIO;
-        modules[0] = new Module(flModuleIO, 0);
-        modules[1] = new Module(frModuleIO, 1);
-        modules[2] = new Module(blModuleIO, 2);
-        modules[3] = new Module(brModuleIO, 3);
+            CANBusDependentConstructor<IGyroIO> _gyroIO,
+            CANBusDependentConstructor<IModuleIO> flModuleIO,
+            CANBusDependentConstructor<IModuleIO> frModuleIO,
+            CANBusDependentConstructor<IModuleIO> blModuleIO,
+            CANBusDependentConstructor<IModuleIO> brModuleIO) {
+        canBus = new CANBus(CANivoreConfig.busID);
+
+        gyroIO = _gyroIO.construct(canBus);
+        modules[0] = new Module(flModuleIO.construct(canBus), 0);
+        modules[1] = new Module(frModuleIO.construct(canBus), 1);
+        modules[2] = new Module(blModuleIO.construct(canBus), 2);
+        modules[3] = new Module(brModuleIO.construct(canBus), 3);
 
         // Usage reporting for swerve template
         HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_AdvantageKit);
 
         // Start odometry thread
-        PhoenixOdometryThread.getInstance().start();
+        PhoenixOdometryThread.seedIsCANFD(canBus.isNetworkFD());
+        PhoenixOdometryThread.instance().start();
 
         // Configure SysId
         sysId = new SysIdRoutine(
                 new SysIdRoutine.Config(
                         null, null, null, (state) -> Logger.recordOutput("Swerve/sysIdState", state.toString())),
                 new SysIdRoutine.Mechanism((voltage) -> runCharacterization(voltage.in(Volts)), null, this));
+
+        trajThetaController.enableContinuousInput(-Math.PI, Math.PI);
     }
 
     @Override
@@ -98,28 +124,26 @@ public class Swerve extends SubsystemBase {
         odometryLock.lock(); // Prevents odometry updates while reading data
         gyroIO.updateInputs(gyroInputs);
         Logger.processInputs("SwerveInputs/GyroInputs", gyroInputs);
-        for (var module : modules) {
-            module.periodic();
+        for (Module m : modules) {
+            m.periodic();
         }
         odometryLock.unlock();
 
-        // Stop moving when disabled
-        if (DriverStation.isDisabled()) {
+        if (Robot.instance().brain.state.opMode == OpMode.DISABLED) {
+            // Stop moving when disabled
             inTrajFollowingMode = false;
-
-            for (var module : modules) {
-                module.stop();
+            for (Module m : modules) {
+                m.stop();
             }
-        }
 
-        // Log empty setpoint states when disabled
-        if (DriverStation.isDisabled()) {
-            Logger.recordOutput("Swerve/targetStates", new SwerveModuleState[] {});
-            Logger.recordOutput("Swerve/optimizedTargetStates", new SwerveModuleState[] {});
+            // Log empty setpoint states when disabled
+            Logger.recordOutput("Swerve/targetStates", BlankValues.swerveModuleStateArray);
+            Logger.recordOutput("Swerve/optimizedTargetStates", BlankValues.swerveModuleStateArray);
+            Logger.recordOutput("Swerve/targetSpeeds", BlankValues.chassisSpeeds);
         }
 
         // Update odometry
-        double[] sampleTimestamps = modules[0].getOdometryTimestamps(); // All signals are sampled together
+        double[] sampleTimestamps = modules[0].getOdometryTimestamps_s(); // All signals are sampled together
         int sampleCount = sampleTimestamps.length;
         for (int i = 0; i < sampleCount; i++) {
             // Read wheel positions and deltas from each module
@@ -147,9 +171,40 @@ public class Swerve extends SubsystemBase {
             poseEstimator.updateWithTime(sampleTimestamps[i], rawGyroRotation, modulePositions);
         }
 
-        // Update gyro alert
-        gyroDisconnectedAlert.set(!gyroInputs.connected && Mode.getMode() != Mode.SIM);
+        // Update canivore logging
+        canBusBreaker = RobotContainer.instance().pdh.isBreakerTripped(CANivoreConfig.channelID);
+        Logger.recordOutput("Swerve/CANivore/breakerTripped", canBusBreaker);
+        canBusBreakerAlert.set(canBusBreaker);
+        if (canBusBreaker != canBusBreakerLast) {
+            if (canBusBreaker) {
+                Console.reportBreakerTripNoCAN("canivore", CANivoreConfig.channelID);
+            } else {
+                Console.reportBreakerResetNoCAN("canivore", CANivoreConfig.channelID);
+            }
+        }
 
+        // Update gyro logging
+        gyroBreaker = RobotContainer.instance().pdh.isBreakerTripped(PigeonConfig.channelID);
+        Logger.recordOutput("CAN/pigeon2_" + PigeonConfig.canID, gyroInputs.connected);
+        gyroCANAlert.set(!gyroInputs.connected && !gyroBreaker && Mode.getMode() != Mode.SIM);
+        if (gyroInputs.connected != gyroConnectedLast) {
+            if (gyroInputs.connected) {
+                Console.reportCANConnect("pigeon2", PigeonConfig.canID, PigeonConfig.channelID);
+            } else {
+                Console.reportCANDisconnect("pigeon2", PigeonConfig.canID, PigeonConfig.channelID);
+            }
+        }
+        Logger.recordOutput("Swerve/Gyro/breakerTripped", gyroBreaker);
+        gyroBreakerAlert.set(gyroBreaker);
+        if (gyroBreaker != gyroBreakerLast) {
+            if (gyroBreaker) {
+                Console.reportBreakerTrip("pigeon2", PigeonConfig.canID, PigeonConfig.channelID);
+            } else {
+                Console.reportBreakerReset("pigeon2", PigeonConfig.canID, PigeonConfig.channelID);
+            }
+        }
+
+        // Update general logging
         Logger.recordOutput("Swerve/measuredStates", getMeasuredModuleStates());
         Logger.recordOutput("Swerve/measuredSpeeds", getMeasuredRobotRelativeSpeeds());
         Logger.recordOutput("Swerve/robotPose", getPose());
@@ -164,6 +219,10 @@ public class Swerve extends SubsystemBase {
 
         Command defaultCommand = getDefaultCommand();
         Logger.recordOutput("Swerve/defaultCommand", defaultCommand == null ? null : defaultCommand.getName());
+
+        canBusBreakerLast = canBusBreaker;
+        gyroConnectedLast = gyroInputs.connected;
+        gyroBreakerLast = gyroBreaker;
     }
 
     private void updateTrajFollowing() {
@@ -179,7 +238,7 @@ public class Swerve extends SubsystemBase {
                             + trajThetaController.calculate(
                                     currPose.getRotation().getRadians(), lastTrajSample_nl.heading));
 
-            runRobotRelativeVelocity(speeds);
+            runFieldRelativeVelocity(speeds);
             inTrajFollowingMode = true; // super janky way to prevent runVelocity from cancelling traj following mode
         }
     }
@@ -192,7 +251,7 @@ public class Swerve extends SubsystemBase {
                     && modules[1].isOperational()
                     && modules[2].isOperational()
                     && modules[3].isOperational()
-                    && (gyroInputs.connected || Mode.getMode() == Mode.SIM);
+                    && ((gyroInputs.connected && !gyroBreaker) || Mode.getMode() == Mode.SIM);
         }
     }
 
@@ -218,7 +277,7 @@ public class Swerve extends SubsystemBase {
     }
 
     public void runFieldRelativeVelocity(ChassisSpeeds speeds) {
-        ChassisSpeeds.fromFieldRelativeSpeeds(speeds, getRotation());
+        runRobotRelativeVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(speeds, getRotation()));
     }
 
     public void runOperatorRelativeVelocity(ChassisSpeeds speeds) {
@@ -227,9 +286,9 @@ public class Swerve extends SubsystemBase {
     }
 
     /** Runs the drive in a straight line with the specified drive output. */
-    public void runCharacterization(double output) {
+    public void runCharacterization(double output_V) {
         for (int i = 0; i < 4; i++) {
-            modules[i].runCharacterization(output);
+            modules[i].runCharacterization(output_V);
         }
     }
 
@@ -290,19 +349,19 @@ public class Swerve extends SubsystemBase {
     }
 
     /** Returns the position of each module in radians. */
-    public double[] getWheelRadiusCharacterizationPositions() {
+    public double[] getWheelRadiusCharacterizationPositions_rad() {
         double[] values = new double[4];
         for (int i = 0; i < 4; i++) {
-            values[i] = modules[i].getWheelRadiusCharacterizationPosition();
+            values[i] = modules[i].getWheelRadiusCharacterizationPosition_rad();
         }
         return values;
     }
 
     /** Returns the average velocity of the modules in rotations/sec (Phoenix native units). */
-    public double getFFCharacterizationVelocity() {
+    public double getFFCharacterizationVelocity_rps() {
         double output = 0.0;
         for (int i = 0; i < 4; i++) {
-            output += modules[i].getFFCharacterizationVelocity() / 4.0;
+            output += modules[i].getFFCharacterizationVelocity_rps() / 4.0;
         }
         return output;
     }
@@ -324,18 +383,18 @@ public class Swerve extends SubsystemBase {
 
     /** Adds a new timestamped vision measurement. */
     public void addVisionMeasurement(
-            Pose2d visionRobotPoseMeters, double timestampSeconds, Matrix<N3, N1> visionMeasurementStdDevs) {
-        poseEstimator.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
+            Pose2d visionRobotPose, double timestamp_s, Matrix<N3, N1> visionMeasurementStdDevs) {
+        poseEstimator.addVisionMeasurement(visionRobotPose, timestamp_s, visionMeasurementStdDevs);
     }
 
     /** Returns the maximum linear speed in meters per sec. */
-    public double getMaxLinearSpeedMetersPerSec() {
+    public double getMaxLinearSpeed_mps() {
         return SwerveConfig.speedAt12Volts.in(MetersPerSecond);
     }
 
     /** Returns the maximum angular speed in radians per sec. */
-    public double getMaxAngularSpeedRadPerSec() {
-        return getMaxLinearSpeedMetersPerSec() / SwerveConfig.driveBaseRadius_m;
+    public double getMaxAngularSpeed_radps() {
+        return getMaxLinearSpeed_mps() / SwerveConfig.driveBaseRadius_m;
     }
 
     /** Returns an array of module translations. */

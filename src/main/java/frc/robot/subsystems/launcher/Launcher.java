@@ -37,7 +37,6 @@ public final class Launcher extends SubsystemBase {
 
     private final Alert turretCANAlert = AlertUtils.makeCANFailureAlert("turret"),
             turretBreakerAlert = AlertUtils.makeBreakerTripAlert("turret");
-    private final String turretCANKey = "CAN/turret_" + TurretConfig.canID;
 
     private TurretIOInputs turretInputs = new TurretIOInputs();
     private boolean turretConnectedLast = false;
@@ -52,7 +51,6 @@ public final class Launcher extends SubsystemBase {
             shooterTempWarnAlert = AlertUtils.makeTempWarnAlert("shooter"),
             shooterThermalShutdownAlert = AlertUtils.makeThermalShutdownAlert("shooter"),
             shooterBreakerAlert = AlertUtils.makeBreakerTripAlert("shooter");
-    private final String shooterCANKey = "CAN/shooter_" + ShooterConfig.canID;
 
     private ShooterIOInputs shooterInputs = new ShooterIOInputs();
     private boolean shooterConnectedLast = false;
@@ -66,7 +64,7 @@ public final class Launcher extends SubsystemBase {
         // ===Turret===
         turretIO_nl = _turretIO_nl;
         if (turretIO_nl == null) {
-            Logger.recordOutput(turretCANKey, false);
+            Logger.recordOutput("CAN/turret_" + TurretConfig.canID, false);
             AlertUtils.makeSystemDisabledAlert("turret").set(true);
         } else {
             if (Overrides.disableTurretSafety) {
@@ -77,7 +75,7 @@ public final class Launcher extends SubsystemBase {
         // ===Shooter===
         shooterIO_nl = _shooterIO_nl;
         if (shooterIO_nl == null) {
-            Logger.recordOutput(shooterCANKey, false);
+            Logger.recordOutput("CAN/shooter_" + ShooterConfig.canID, false);
             AlertUtils.makeSystemDisabledAlert("shooter").set(true);
         } else {
             if (Overrides.disableShooterSafety) {
@@ -94,7 +92,7 @@ public final class Launcher extends SubsystemBase {
 
             turretBreaker = RobotContainer.instance().pdh.isBreakerTripped(TurretConfig.channelID);
 
-            Logger.recordOutput(turretCANKey, turretInputs.connected);
+            Logger.recordOutput("CAN/turret_" + TurretConfig.canID, turretInputs.connected);
             turretCANAlert.set(!turretInputs.connected && !turretBreaker);
             if (turretInputs.connected != turretConnectedLast) {
                 if (turretInputs.connected) {
@@ -124,7 +122,7 @@ public final class Launcher extends SubsystemBase {
 
             shooterBreaker = RobotContainer.instance().pdh.isBreakerTripped(ShooterConfig.channelID);
 
-            Logger.recordOutput(shooterCANKey, shooterInputs.connected);
+            Logger.recordOutput("CAN/shooter_" + ShooterConfig.canID, shooterInputs.connected);
             shooterCANAlert.set(!shooterInputs.connected && !shooterBreaker);
             if (shooterInputs.connected != shooterConnectedLast) {
                 if (shooterInputs.connected) {

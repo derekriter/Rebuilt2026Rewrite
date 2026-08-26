@@ -8,6 +8,7 @@
 package frc.robot.subsystems.swerve;
 
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -33,7 +34,6 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.config.SwerveConfig;
-import frc.robot.config.SwerveConfig.CANivoreConfig;
 import frc.robot.util.MotorUtils;
 import java.util.Queue;
 
@@ -48,7 +48,7 @@ public class ModuleIOTalonFX implements IModuleIO {
 
     // Hardware objects
     private final TalonFX driveTalon;
-    private final TalonFX turnTalon;
+    private final TalonFX steerTalon;
     private final CANcoder cancoder;
 
     // Voltage control requests
@@ -71,25 +71,26 @@ public class ModuleIOTalonFX implements IModuleIO {
     private final StatusSignal<Voltage> driveAppliedVolts;
     private final StatusSignal<Current> driveCurrent;
 
-    // Inputs from turn motor
-    private final StatusSignal<Angle> turnAbsolutePosition;
-    private final StatusSignal<Angle> turnPosition;
-    private final Queue<Double> turnPositionQueue;
-    private final StatusSignal<AngularVelocity> turnVelocity;
-    private final StatusSignal<Voltage> turnAppliedVolts;
-    private final StatusSignal<Current> turnCurrent;
+    // Inputs from steer motor
+    private final StatusSignal<Angle> steerPosition;
+    private final Queue<Double> steerPositionQueue;
+    private final StatusSignal<AngularVelocity> steerVelocity;
+    private final StatusSignal<Voltage> steerAppliedVolts;
+    private final StatusSignal<Current> steerCurrent;
+
+    // Inputs from encoder
+    private final StatusSignal<Angle> encoderAbsolutePosition;
 
     // Connection debouncers
     private final Debouncer driveConnectedDebounce = new Debouncer(0.5, Debouncer.DebounceType.kFalling);
-    private final Debouncer turnConnectedDebounce = new Debouncer(0.5, Debouncer.DebounceType.kFalling);
-    private final Debouncer turnEncoderConnectedDebounce = new Debouncer(0.5, Debouncer.DebounceType.kFalling);
+    private final Debouncer steerConnectedDebounce = new Debouncer(0.5, Debouncer.DebounceType.kFalling);
+    private final Debouncer encoderConnectedDebounce = new Debouncer(0.5, Debouncer.DebounceType.kFalling);
 
-    public ModuleIOTalonFX(
-            SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration> constants) {
-        this.constants = constants;
-        driveTalon = new TalonFX(constants.DriveMotorId, CANivoreConfig.bus);
-        turnTalon = new TalonFX(constants.SteerMotorId, CANivoreConfig.bus);
-        cancoder = new CANcoder(constants.EncoderId, CANivoreConfig.bus);
+    public ModuleIOTalonFX(int index, CANBus bus) {
+        constants = SwerveConfig.modules[index].constants;
+        driveTalon = new TalonFX(constants.DriveMotorId, bus);
+        steerTalon = new TalonFX(constants.SteerMotorId, bus);
+        cancoder = new CANcoder(constants.EncoderId, bus);
 
         // Configure drive motor
         var driveConfig = constants.DriveMotorInitialConfigs;
@@ -107,26 +108,26 @@ public class ModuleIOTalonFX implements IModuleIO {
         MotorUtils.tryUntilOk(5, () -> driveTalon.setPosition(0.0, 0.25));
 
         // Configure turn motor
-        var turnConfig = new TalonFXConfiguration();
-        turnConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        turnConfig.Slot0 = constants.SteerMotorGains;
-        turnConfig.Feedback.FeedbackRemoteSensorID = constants.EncoderId;
-        turnConfig.Feedback.FeedbackSensorSource = switch (constants.FeedbackSource) {
+        var steerConfig = new TalonFXConfiguration();
+        steerConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        steerConfig.Slot0 = constants.SteerMotorGains;
+        steerConfig.Feedback.FeedbackRemoteSensorID = constants.EncoderId;
+        steerConfig.Feedback.FeedbackSensorSource = switch (constants.FeedbackSource) {
             case RemoteCANcoder -> FeedbackSensorSourceValue.RemoteCANcoder;
             case FusedCANcoder -> FeedbackSensorSourceValue.FusedCANcoder;
             case SyncCANcoder -> FeedbackSensorSourceValue.SyncCANcoder;
             default -> throw new RuntimeException(
-                    "You have selected a turn feedback source that is not supported by the default implementation of ModuleIOTalonFX. Please check the AdvantageKit documentation for more information on alternative configurations: https://docs.advantagekit.org/getting-started/template-projects/talonfx-swerve-template#custom-module-implementations");};
-        turnConfig.Feedback.RotorToSensorRatio = constants.SteerMotorGearRatio;
-        turnConfig.MotionMagic.MotionMagicCruiseVelocity = 100.0 / constants.SteerMotorGearRatio;
-        turnConfig.MotionMagic.MotionMagicAcceleration = turnConfig.MotionMagic.MotionMagicCruiseVelocity / 0.100;
-        turnConfig.MotionMagic.MotionMagicExpo_kV = 0.12 * constants.SteerMotorGearRatio;
-        turnConfig.MotionMagic.MotionMagicExpo_kA = 0.1;
-        turnConfig.ClosedLoopGeneral.ContinuousWrap = true;
-        turnConfig.MotorOutput.Inverted = constants.SteerMotorInverted
+                    "You have selected a steer feedback source that is not supported by the default implementation of ModuleIOTalonFX. Please check the AdvantageKit documentation for more information on alternative configurations: https://docs.advantagekit.org/getting-started/template-projects/talonfx-swerve-template#custom-module-implementations");};
+        steerConfig.Feedback.RotorToSensorRatio = constants.SteerMotorGearRatio;
+        steerConfig.MotionMagic.MotionMagicCruiseVelocity = 100.0 / constants.SteerMotorGearRatio;
+        steerConfig.MotionMagic.MotionMagicAcceleration = steerConfig.MotionMagic.MotionMagicCruiseVelocity / 0.100;
+        steerConfig.MotionMagic.MotionMagicExpo_kV = 0.12 * constants.SteerMotorGearRatio;
+        steerConfig.MotionMagic.MotionMagicExpo_kA = 0.1;
+        steerConfig.ClosedLoopGeneral.ContinuousWrap = true;
+        steerConfig.MotorOutput.Inverted = constants.SteerMotorInverted
                 ? InvertedValue.Clockwise_Positive
                 : InvertedValue.CounterClockwise_Positive;
-        MotorUtils.tryUntilOk(5, () -> turnTalon.getConfigurator().apply(turnConfig, 0.25));
+        MotorUtils.tryUntilOk(5, () -> steerTalon.getConfigurator().apply(steerConfig, 0.25));
 
         // Configure CANCoder
         CANcoderConfiguration cancoderConfig = constants.EncoderInitialConfigs;
@@ -137,95 +138,99 @@ public class ModuleIOTalonFX implements IModuleIO {
         cancoder.getConfigurator().apply(cancoderConfig);
 
         // Create timestamp queue
-        timestampQueue = PhoenixOdometryThread.getInstance().makeTimestampQueue();
+        timestampQueue = PhoenixOdometryThread.instance().makeTimestampQueue();
 
         // Create drive status signals
         drivePosition = driveTalon.getPosition();
-        drivePositionQueue = PhoenixOdometryThread.getInstance().registerSignal(drivePosition.clone());
+        drivePositionQueue = PhoenixOdometryThread.instance().registerSignal(drivePosition.clone());
         driveVelocity = driveTalon.getVelocity();
         driveAppliedVolts = driveTalon.getMotorVoltage();
         driveCurrent = driveTalon.getStatorCurrent();
 
-        // Create turn status signals
-        turnAbsolutePosition = cancoder.getAbsolutePosition();
-        turnPosition = turnTalon.getPosition();
-        turnPositionQueue = PhoenixOdometryThread.getInstance().registerSignal(turnPosition.clone());
-        turnVelocity = turnTalon.getVelocity();
-        turnAppliedVolts = turnTalon.getMotorVoltage();
-        turnCurrent = turnTalon.getStatorCurrent();
+        // Create steer status signals
+        steerPosition = steerTalon.getPosition();
+        steerPositionQueue = PhoenixOdometryThread.instance().registerSignal(steerPosition.clone());
+        steerVelocity = steerTalon.getVelocity();
+        steerAppliedVolts = steerTalon.getMotorVoltage();
+        steerCurrent = steerTalon.getStatorCurrent();
+
+        // Create encoder status signals
+        encoderAbsolutePosition = cancoder.getAbsolutePosition();
 
         // Configure periodic frames
-        BaseStatusSignal.setUpdateFrequencyForAll(SwerveConfig.odometryFrequency, drivePosition, turnPosition);
+        BaseStatusSignal.setUpdateFrequencyForAll(SwerveConfig.odometryFrequency, drivePosition, steerPosition);
         BaseStatusSignal.setUpdateFrequencyForAll(
                 50.0,
                 driveVelocity,
                 driveAppliedVolts,
                 driveCurrent,
-                turnAbsolutePosition,
-                turnVelocity,
-                turnAppliedVolts,
-                turnCurrent);
-        ParentDevice.optimizeBusUtilizationForAll(driveTalon, turnTalon);
+                steerVelocity,
+                steerAppliedVolts,
+                steerCurrent,
+                encoderAbsolutePosition);
+        ParentDevice.optimizeBusUtilizationForAll(driveTalon, steerTalon);
     }
 
     @Override
     public void updateInputs(ModuleIOInputs inputs) {
         // Refresh all signals
         var driveStatus = BaseStatusSignal.refreshAll(drivePosition, driveVelocity, driveAppliedVolts, driveCurrent);
-        var turnStatus = BaseStatusSignal.refreshAll(turnPosition, turnVelocity, turnAppliedVolts, turnCurrent);
-        var turnEncoderStatus = BaseStatusSignal.refreshAll(turnAbsolutePosition);
+        var steerStatus = BaseStatusSignal.refreshAll(steerPosition, steerVelocity, steerAppliedVolts, steerCurrent);
+        var cancoderStatus = BaseStatusSignal.refreshAll(encoderAbsolutePosition);
 
         // Update drive inputs
         inputs.driveConnected = driveConnectedDebounce.calculate(driveStatus.isOK());
-        inputs.drivePositionRad = Units.rotationsToRadians(drivePosition.getValueAsDouble());
-        inputs.driveVelocityRadPerSec = Units.rotationsToRadians(driveVelocity.getValueAsDouble());
-        inputs.driveAppliedVolts = driveAppliedVolts.getValueAsDouble();
-        inputs.driveCurrentAmps = driveCurrent.getValueAsDouble();
+        inputs.drivePosition_rad = Units.rotationsToRadians(drivePosition.getValueAsDouble());
+        inputs.driveVelocity_radps = Units.rotationsToRadians(driveVelocity.getValueAsDouble());
+        inputs.driveAppliedVoltage_V = driveAppliedVolts.getValueAsDouble();
+        inputs.driveCurrent_A = driveCurrent.getValueAsDouble();
 
-        // Update turn inputs
-        inputs.turnConnected = turnConnectedDebounce.calculate(turnStatus.isOK());
-        inputs.turnEncoderConnected = turnEncoderConnectedDebounce.calculate(turnEncoderStatus.isOK());
-        inputs.turnAbsolutePosition = Rotation2d.fromRotations(turnAbsolutePosition.getValueAsDouble());
-        inputs.turnPosition = Rotation2d.fromRotations(turnPosition.getValueAsDouble());
-        inputs.turnVelocityRadPerSec = Units.rotationsToRadians(turnVelocity.getValueAsDouble());
-        inputs.turnAppliedVolts = turnAppliedVolts.getValueAsDouble();
-        inputs.turnCurrentAmps = turnCurrent.getValueAsDouble();
+        // Update steer inputs
+        inputs.steerConnected = steerConnectedDebounce.calculate(steerStatus.isOK());
+        inputs.encoderConnected = encoderConnectedDebounce.calculate(cancoderStatus.isOK());
+        inputs.steerPosition = Rotation2d.fromRotations(steerPosition.getValueAsDouble());
+        inputs.steerVelocity_radps = Units.rotationsToRadians(steerVelocity.getValueAsDouble());
+        inputs.steerAppliedVoltage_V = steerAppliedVolts.getValueAsDouble();
+        inputs.steerCurrent_A = steerCurrent.getValueAsDouble();
+
+        // Update encoder inputs
+        inputs.encoderAbsolutePosition = Rotation2d.fromRotations(encoderAbsolutePosition.getValueAsDouble());
 
         // Update odometry inputs
-        inputs.odometryTimestamps =
+        inputs.odometryTimestamps_s =
                 timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
-        inputs.odometryDrivePositionsRad = drivePositionQueue.stream()
+        inputs.odometryDrivePositions_rad = drivePositionQueue.stream()
                 .mapToDouble((Double value) -> Units.rotationsToRadians(value))
                 .toArray();
-        inputs.odometryTurnPositions = turnPositionQueue.stream()
+        inputs.odometrySteerPositions = steerPositionQueue.stream()
                 .map((Double value) -> Rotation2d.fromRotations(value))
                 .toArray(Rotation2d[]::new);
         timestampQueue.clear();
         drivePositionQueue.clear();
-        turnPositionQueue.clear();
+        steerPositionQueue.clear();
     }
 
     @Override
-    public void setDriveOpenLoop(double output) {
+    public void setDriveOpenLoop(double output_V) {
         driveTalon.setControl(
                 switch (constants.DriveMotorClosedLoopOutput) {
-                    case Voltage -> voltageRequest.withOutput(output);
-                    case TorqueCurrentFOC -> torqueCurrentRequest.withOutput(output);
+                    case Voltage -> voltageRequest.withOutput(output_V);
+                    case TorqueCurrentFOC -> torqueCurrentRequest.withOutput(output_V);
                 });
     }
 
     @Override
-    public void setTurnOpenLoop(double output) {
-        turnTalon.setControl(
+    public void setSteerOpenLoop(double output_V) {
+        steerTalon.setControl(
                 switch (constants.SteerMotorClosedLoopOutput) {
-                    case Voltage -> voltageRequest.withOutput(output);
-                    case TorqueCurrentFOC -> torqueCurrentRequest.withOutput(output);
+                    case Voltage -> voltageRequest.withOutput(output_V);
+                    case TorqueCurrentFOC -> torqueCurrentRequest.withOutput(output_V);
                 });
     }
 
     @Override
-    public void setDriveVelocity(double velocityRadPerSec) {
-        double velocityRotPerSec = Units.radiansToRotations(velocityRadPerSec);
+    public void setDriveVelocity(double vel_radps) {
+        double velocityRotPerSec = Units.radiansToRotations(vel_radps);
         driveTalon.setControl(
                 switch (constants.DriveMotorClosedLoopOutput) {
                     case Voltage -> velocityVoltageRequest.withVelocity(velocityRotPerSec);
@@ -234,8 +239,8 @@ public class ModuleIOTalonFX implements IModuleIO {
     }
 
     @Override
-    public void setTurnPosition(Rotation2d rotation) {
-        turnTalon.setControl(
+    public void setSteerPosition(Rotation2d rotation) {
+        steerTalon.setControl(
                 switch (constants.SteerMotorClosedLoopOutput) {
                     case Voltage -> positionVoltageRequest.withPosition(rotation.getRotations());
                     case TorqueCurrentFOC -> positionTorqueCurrentRequest.withPosition(rotation.getRotations());

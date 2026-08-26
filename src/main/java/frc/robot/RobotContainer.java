@@ -25,7 +25,6 @@ import frc.robot.commands.TeleopDrive;
 import frc.robot.config.ControllerConfig;
 import frc.robot.config.LEDsConfig;
 import frc.robot.config.Overrides;
-import frc.robot.config.SwerveConfig;
 import frc.robot.pdh.PDH;
 import frc.robot.subsystems.launcher.Launcher;
 import frc.robot.subsystems.launcher.shooter.IShooterIO;
@@ -76,22 +75,22 @@ public final class RobotContainer {
         switch (Mode.getMode()) {
             case REAL -> {
                 swerve = new Swerve(
-                        new GyroIOPigeon2(),
-                        new ModuleIOTalonFX(SwerveConfig.modules[0].constants),
-                        new ModuleIOTalonFX(SwerveConfig.modules[1].constants),
-                        new ModuleIOTalonFX(SwerveConfig.modules[2].constants),
-                        new ModuleIOTalonFX(SwerveConfig.modules[3].constants));
+                        bus -> new GyroIOPigeon2(bus),
+                        bus -> new ModuleIOTalonFX(0, bus),
+                        bus -> new ModuleIOTalonFX(1, bus),
+                        bus -> new ModuleIOTalonFX(2, bus),
+                        bus -> new ModuleIOTalonFX(3, bus));
                 launcher = new Launcher(
                         Overrides.disableTurret ? null : new TurretIOReal(),
                         Overrides.disableShooter ? null : new ShooterIOReal());
             }
             case SIM -> {
                 swerve = new Swerve(
-                        IGyroIO.blank,
-                        new ModuleIOSim(SwerveConfig.modules[0].constants),
-                        new ModuleIOSim(SwerveConfig.modules[1].constants),
-                        new ModuleIOSim(SwerveConfig.modules[2].constants),
-                        new ModuleIOSim(SwerveConfig.modules[3].constants));
+                        bus -> IGyroIO.blank,
+                        bus -> new ModuleIOSim(0),
+                        bus -> new ModuleIOSim(1),
+                        bus -> new ModuleIOSim(2),
+                        bus -> new ModuleIOSim(3));
 
                 // TODO: Launcher sim io
                 launcher = new Launcher(
@@ -99,7 +98,12 @@ public final class RobotContainer {
                         Overrides.disableShooter ? null : new ShooterIOReal());
             }
             case REPLAY -> {
-                swerve = new Swerve(IGyroIO.blank, IModuleIO.blank, IModuleIO.blank, IModuleIO.blank, IModuleIO.blank);
+                swerve = new Swerve(
+                        bus -> IGyroIO.blank,
+                        bus -> IModuleIO.blank,
+                        bus -> IModuleIO.blank,
+                        bus -> IModuleIO.blank,
+                        bus -> IModuleIO.blank);
                 launcher = new Launcher(
                         Overrides.disableTurret ? null : ITurretIO.blank,
                         Overrides.disableShooter ? null : IShooterIO.blank);
@@ -121,6 +125,10 @@ public final class RobotContainer {
     }
 
     private void setupChoreo() {
+        Logger.recordOutput("Choreo/trajectory", BlankValues.pose2dArray);
+        Logger.recordOutput("Choreo/trajectoryName", BlankValues.string);
+        Logger.recordOutput("Choreo/trajectoryTime", Double.NaN, Seconds.name());
+
         autoFactory = new AutoFactory(
                 swerve::getPose, swerve::setPose, swerve::followTrajectory, true, swerve, (Choreo.TrajectoryLogger<
                                 SwerveSample>)

@@ -117,6 +117,7 @@ public final class Robot extends LoggedRobot {
         RobotContainer.instance().pdh.periodic();
         CommandScheduler.getInstance().run();
         ControllerUtil.periodic(RobotContainer.instance().driver1, RobotContainer.instance().driver2);
+        field.setRobotPose(RobotContainer.instance().swerve.getPose());
 
         brain.pollState();
         brain.determineModes();

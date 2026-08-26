@@ -12,7 +12,6 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
-import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.Pigeon2Configuration;
@@ -271,17 +270,13 @@ public final class SwerveConfig {
     };
 
     public static final class PigeonConfig {
-        public static final String imuName = "pigeon2";
         public static final int canID = 25;
         public static final int channelID = 0; // TODO: pigeon2 channel id
     }
 
     public static final class CANivoreConfig {
-        public static final String busName = "swerveCANivore";
         public static final String busID = "SwerveBus";
         public static final int channelID = 0; // TODO: canivore channel id
-
-        public static final CANBus bus = new CANBus(busID);
     }
 
     public static final double driveBaseRadius_m = Math.max(

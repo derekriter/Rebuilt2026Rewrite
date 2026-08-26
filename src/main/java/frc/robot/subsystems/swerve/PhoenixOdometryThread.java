@@ -14,7 +14,7 @@ import com.ctre.phoenix6.StatusSignal;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.config.SwerveConfig;
-import frc.robot.config.SwerveConfig.CANivoreConfig;
+import frc.robot.util.Console;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
@@ -32,24 +32,30 @@ import java.util.function.DoubleSupplier;
  * time synchronization.
  */
 public class PhoenixOdometryThread extends Thread {
+    private static PhoenixOdometryThread _inst_nl = null;
+    private static boolean isCANFD;
+
+    public static PhoenixOdometryThread instance() {
+        if (_inst_nl == null) {
+            _inst_nl = new PhoenixOdometryThread();
+        }
+        return _inst_nl;
+    }
+
+    public static void seedIsCANFD(boolean _isCANFD) {
+        isCANFD = _isCANFD;
+    }
+
     private final Lock signalsLock = new ReentrantLock(); // Prevents conflicts when registering signals
+
     private BaseStatusSignal[] phoenixSignals = new BaseStatusSignal[0];
     private final List<DoubleSupplier> genericSignals = new ArrayList<>();
     private final List<Queue<Double>> phoenixQueues = new ArrayList<>();
     private final List<Queue<Double>> genericQueues = new ArrayList<>();
     private final List<Queue<Double>> timestampQueues = new ArrayList<>();
 
-    private static boolean isCANFD = CANivoreConfig.bus.isNetworkFD();
-    private static PhoenixOdometryThread instance = null;
-
-    public static PhoenixOdometryThread getInstance() {
-        if (instance == null) {
-            instance = new PhoenixOdometryThread();
-        }
-        return instance;
-    }
-
     private PhoenixOdometryThread() {
+        _inst_nl = this;
         setName("PhoenixOdometryThread");
         setDaemon(true);
     }
@@ -122,7 +128,7 @@ public class PhoenixOdometryThread extends Thread {
                     if (phoenixSignals.length > 0) BaseStatusSignal.refreshAll(phoenixSignals);
                 }
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                Console.reportError(e, true);
             } finally {
                 signalsLock.unlock();
             }
