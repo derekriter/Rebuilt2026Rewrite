@@ -7,6 +7,8 @@ import frc.robot.constants.FieldConstants;
 
 public enum FieldZone {
     BLUE(Meters.zero(), FieldConstants.blueZoneEdge),
+    // NOTE: not technically accurate, as the game manual leaves a gap between the alliance zones and the neutral zone,
+    // however we can effectively consider it the neutral zone for all intents and purposes
     NEUTRAL(FieldConstants.blueZoneEdge, FieldConstants.redZoneEdge),
     RED(FieldConstants.redZoneEdge, FieldConstants.fieldXBound);
 

@@ -7,7 +7,6 @@ import edu.wpi.first.wpilibj.AddressableLED.ColorOrder;
 import edu.wpi.first.wpilibj.util.Color;
 
 public final class LEDsConfig {
-    public static final String systemName = "LEDs";
     public static final int dataPort = 9;
     public static final int channelID = 0; // TODO: LEDs channel id
 

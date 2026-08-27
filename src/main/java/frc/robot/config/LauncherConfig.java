@@ -6,6 +6,7 @@ import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Seconds;
+import static edu.wpi.first.units.Units.Volts;
 
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
@@ -15,20 +16,17 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Time;
-import frc.robot.subsystems.launcher.ShooterTarget;
-import frc.robot.subsystems.launcher.TurretAngle;
+import edu.wpi.first.units.measure.Voltage;
+import frc.robot.subsystems.launcher.shooter.ShooterTarget;
+import frc.robot.subsystems.launcher.turret.TurretAngle;
 
 public final class LauncherConfig {
-    public static final String systemName = "Launcher";
-
     public static final Translation2d launcherOffset = new Translation2d(Inches.of(-6), Inches.of(-6));
     public static final Time ballAirTime = Seconds.of(0.8);
 
     public static final class TurretConfig {
-        public static final String systemName = "turret";
         public static final int canID = 15;
         public static final int channelID = 15;
-        public static final String motorName = "turretMotor";
 
         public static final SparkMaxConfig motorConfig;
         // public static final Temperature tempWarnThreshold = Celsius.of(75);
@@ -40,8 +38,9 @@ public final class LauncherConfig {
         public static final TurretAngle maxLegal = TurretAngle.fromMechanismAngle(Degrees.of(180));
         public static final TurretAngle minLegal = TurretAngle.fromMechanismAngle(Degrees.of(-90));
         public static final TurretAngle forward = TurretAngle.fromMechanismAngle(Degrees.of(0));
+        public static final TurretAngle targetTolerance = TurretAngle.fromMechanismAngle(Degrees.of(2));
 
-        public static final double homingSpeed = -0.2;
+        public static final Voltage homingVoltage = Volts.of(-0.2 * 12);
         public static final TurretAngle homingEndPos = TurretAngle.fromMotorRotations(-39.094849);
         public static final Time homingMinRunTime = Seconds.of(0.2);
         public static final Current homingThresholdCurrent = Amps.of(20);
@@ -53,6 +52,7 @@ public final class LauncherConfig {
             motorConfig.smartCurrentLimit(4);
             motorConfig.idleMode(IdleMode.kCoast);
             motorConfig.inverted(false);
+            motorConfig.voltageCompensation(12);
             motorConfig.closedLoop.outputRange(-1, 1);
             motorConfig.openLoopRampRate(0.1);
             motorConfig.closedLoopRampRate(0.1);
@@ -64,10 +64,8 @@ public final class LauncherConfig {
     }
 
     public static final class ShooterConfig {
-        public static final String systemName = "shooter";
         public static final int canID = 4;
         public static final int channelID = 4;
-        public static final String motorName = "shooterMotor";
 
         public static final SparkFlexConfig motorConfig;
         public static final Temperature tempWarnThreshold = MotorConfig.neoVortexTempWarnThreshold;
@@ -76,12 +74,12 @@ public final class LauncherConfig {
         public static final ShooterTarget targetOffset = ShooterTarget.fromShooterVelocity(RPM.of(100));
         public static final ShooterTarget maxRealTarget = ShooterTarget.fromShooterVelocity(RPM.of(5300));
         public static final ShooterTarget minRealTarget = ShooterTarget.fromDistanceToTarget(Meters.of(1.96));
-        public static final ShooterTarget upwardTolerance = ShooterTarget.fromShooterVelocity(RPM.of(100));
-        public static final ShooterTarget downwardTolerance = ShooterTarget.fromShooterVelocity(RPM.of(100));
+        public static final ShooterTarget targetTolerance = ShooterTarget.fromShooterVelocity(RPM.of(50));
 
         static {
             motorConfig = new SparkFlexConfig();
             motorConfig.smartCurrentLimit(40);
+            motorConfig.voltageCompensation(12);
             motorConfig.idleMode(IdleMode.kCoast);
             motorConfig.inverted(false);
             motorConfig.closedLoop.outputRange(-1, 1);

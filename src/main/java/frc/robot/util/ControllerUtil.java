@@ -1,14 +1,11 @@
 package frc.robot.util;
 
-import static edu.wpi.first.units.Units.Radians;
-
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Pair;
-import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.Timer;
-import frc.robot.telemetry.Telemetry;
+import frc.robot.Robot;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -62,7 +59,7 @@ public class ControllerUtil {
 
             int contrId = contr.getPort();
             if (contrId < 0 || contrId > 5) {
-                Telemetry.reportWarning("Controller list contains controller with invalid port", true);
+                Console.reportWarning("Controller list contains controller with invalid port", true);
                 continue;
             }
 
@@ -102,15 +99,15 @@ public class ControllerUtil {
 
     public static boolean scheduleControllerRumble(int id, double lStrength, double rStrength, double seconds) {
         if (id < 0 || id > 5) {
-            Telemetry.reportError("Invalid controller id", true);
+            Console.reportError("Invalid controller id", true);
             return false;
         }
         if (seconds <= 0) {
-            Telemetry.reportWarning("Cannot schedule a rumble with a length <= 0", true);
+            Console.reportWarning("Cannot schedule a rumble with a length <= 0", true);
             return false;
         }
         if (getActiveRumbleCount(id) >= MAX_RUMBLES) {
-            Telemetry.reportWarning("Max rumble limit hit on controller " + id + ", cancelling requested rumble", true);
+            Console.reportWarning("Max rumble limit hit on controller " + id + ", cancelling requested rumble", true);
             return false;
         }
 
@@ -126,7 +123,7 @@ public class ControllerUtil {
 
     public static void cancelControllerRumbles(int id) {
         if (id < 0 || id > 5) {
-            Telemetry.reportError("Invalid controller id", true);
+            Console.reportError("Invalid controller id", true);
             return;
         }
 
@@ -135,7 +132,7 @@ public class ControllerUtil {
 
     public static int getActiveRumbleCount(int id) {
         if (id < 0 || id > 5) {
-            Telemetry.reportError("Invalid controller id", true);
+            Console.reportError("Invalid controller id", true);
             return 0;
         }
 
@@ -183,7 +180,8 @@ public class ControllerUtil {
     }
 
     public static double applyExponentialDeadband(double raw, double deadband, int power) {
-        return Math.pow(Math.abs(applyLinearDeadband(raw, deadband)), power) * Math.signum(raw);
+        // return Math.pow(Math.abs(applyLinearDeadband(raw, deadband)), power) * Math.signum(raw);
+        return Math.copySign(Math.pow(applyLinearDeadband(raw, deadband), power), raw);
     }
 
     public static Pair<Double, Double> applyExponentialDeadband(double rawX, double rawY, double deadband, int power) {
@@ -196,11 +194,11 @@ public class ControllerUtil {
         else return Pair.of(newR * Math.cos(theta), newR * Math.sin(theta));
     }
 
-    public static Angle getFieldSpaceJoystickAngle(double x, double y) {
-        return Radians.of(getFieldSpaceJoystickAngle_rad(x, y));
+    public static double getOperatorSpaceJoystickAngle_rad(double x, double y) {
+        return Math.atan2(-x, -y);
     }
 
     public static double getFieldSpaceJoystickAngle_rad(double x, double y) {
-        return Math.atan2(-x, -y);
+        return getOperatorSpaceJoystickAngle_rad(x, y) + (Robot.instance().brain.state.isRed ? Math.PI : 0);
     }
 }
