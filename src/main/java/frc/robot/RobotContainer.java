@@ -29,8 +29,10 @@ import frc.robot.pdh.PDH;
 import frc.robot.subsystems.launcher.Launcher;
 import frc.robot.subsystems.launcher.shooter.IShooterIO;
 import frc.robot.subsystems.launcher.shooter.ShooterIOReal;
+import frc.robot.subsystems.launcher.shooter.ShooterIOSim;
 import frc.robot.subsystems.launcher.turret.ITurretIO;
 import frc.robot.subsystems.launcher.turret.TurretIOReal;
+import frc.robot.subsystems.launcher.turret.TurretIOSim;
 import frc.robot.subsystems.led.LEDs;
 import frc.robot.subsystems.swerve.GyroIOPigeon2;
 import frc.robot.subsystems.swerve.IGyroIO;
@@ -92,10 +94,9 @@ public final class RobotContainer {
                         bus -> new ModuleIOSim(2),
                         bus -> new ModuleIOSim(3));
 
-                // TODO: Launcher sim io
                 launcher = new Launcher(
-                        Overrides.disableTurret ? null : new TurretIOReal(),
-                        Overrides.disableShooter ? null : new ShooterIOReal());
+                        Overrides.disableTurret ? null : new TurretIOSim(),
+                        Overrides.disableShooter ? null : new ShooterIOSim());
             }
             case REPLAY -> {
                 swerve = new Swerve(

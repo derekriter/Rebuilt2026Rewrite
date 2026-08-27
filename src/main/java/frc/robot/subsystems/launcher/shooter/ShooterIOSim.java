@@ -2,27 +2,25 @@ package frc.robot.subsystems.launcher.shooter;
 
 public class ShooterIOSim implements IShooterIO {
 
+    public ShooterIOSim() {}
+
     @Override
     public void updateInputs(ShooterIOInputs inputs) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'updateInputs'");
+        inputs.connected = true;
+        inputs.pos_rots = 0;
+        inputs.vel_RPM = 0;
+        inputs.temp_C = 20;
+        inputs.appliedOut_perc = 0;
+        inputs.voltageOut_V = 0;
+        inputs.currentOut_A = 0;
     }
 
     @Override
-    public void setVelocityTarget(double velocity_rpm) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setVelocityTarget'");
-    }
+    public void setVelocityTarget(double velocity_rpm) {}
 
     @Override
-    public void setVoltage(double voltage_volts) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setVoltage'");
-    }
+    public void setVoltage(double voltage_volts) {}
 
     @Override
-    public void stop() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'stop'");
-    }
+    public void stop() {}
 }

@@ -2,33 +2,28 @@ package frc.robot.subsystems.launcher.turret;
 
 public class TurretIOSim implements ITurretIO {
 
+    public TurretIOSim() {}
+
     @Override
     public void updateInputs(TurretIOInputs inputs) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'updateInputs'");
+        inputs.connected = true;
+        inputs.pos_rots = 0;
+        inputs.vel_RPM = 0;
+        inputs.temp_C = 20;
+        inputs.appliedOut_perc = 0;
+        inputs.voltageOut_V = 0;
+        inputs.currentOut_A = 0;
     }
 
     @Override
-    public void setPositionTarget(double target_rots) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setPositionTarget'");
-    }
+    public void setPositionTarget(double target_rots) {}
 
     @Override
-    public void setVoltage(double voltage_volts) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setVoltage'");
-    }
+    public void setVoltage(double voltage_volts) {}
 
     @Override
-    public void stop() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'stop'");
-    }
+    public void stop() {}
 
     @Override
-    public void setEncoderPosition(double position_rots) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setEncoderPosition'");
-    }
+    public void setEncoderPosition(double position_rots) {}
 }
