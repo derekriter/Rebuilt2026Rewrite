@@ -32,6 +32,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
+import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.config.SwerveConfig;
 import frc.robot.util.MotorUtils;
@@ -70,6 +71,7 @@ public class ModuleIOTalonFX implements IModuleIO {
     private final StatusSignal<AngularVelocity> driveVelocity;
     private final StatusSignal<Voltage> driveAppliedVolts;
     private final StatusSignal<Current> driveCurrent;
+    private final StatusSignal<Temperature> driveTemp;
 
     // Inputs from steer motor
     private final StatusSignal<Angle> steerPosition;
@@ -77,6 +79,7 @@ public class ModuleIOTalonFX implements IModuleIO {
     private final StatusSignal<AngularVelocity> steerVelocity;
     private final StatusSignal<Voltage> steerAppliedVolts;
     private final StatusSignal<Current> steerCurrent;
+    private final StatusSignal<Temperature> steerTemp;
 
     // Inputs from encoder
     private final StatusSignal<Angle> encoderAbsolutePosition;
@@ -146,6 +149,7 @@ public class ModuleIOTalonFX implements IModuleIO {
         driveVelocity = driveTalon.getVelocity();
         driveAppliedVolts = driveTalon.getMotorVoltage();
         driveCurrent = driveTalon.getStatorCurrent();
+        driveTemp = driveTalon.getDeviceTemp();
 
         // Create steer status signals
         steerPosition = steerTalon.getPosition();
@@ -153,6 +157,7 @@ public class ModuleIOTalonFX implements IModuleIO {
         steerVelocity = steerTalon.getVelocity();
         steerAppliedVolts = steerTalon.getMotorVoltage();
         steerCurrent = steerTalon.getStatorCurrent();
+        steerTemp = steerTalon.getDeviceTemp();
 
         // Create encoder status signals
         encoderAbsolutePosition = cancoder.getAbsolutePosition();
@@ -164,9 +169,11 @@ public class ModuleIOTalonFX implements IModuleIO {
                 driveVelocity,
                 driveAppliedVolts,
                 driveCurrent,
+                driveTemp,
                 steerVelocity,
                 steerAppliedVolts,
                 steerCurrent,
+                steerTemp,
                 encoderAbsolutePosition);
         ParentDevice.optimizeBusUtilizationForAll(driveTalon, steerTalon);
     }
@@ -174,8 +181,10 @@ public class ModuleIOTalonFX implements IModuleIO {
     @Override
     public void updateInputs(ModuleIOInputs inputs) {
         // Refresh all signals
-        var driveStatus = BaseStatusSignal.refreshAll(drivePosition, driveVelocity, driveAppliedVolts, driveCurrent);
-        var steerStatus = BaseStatusSignal.refreshAll(steerPosition, steerVelocity, steerAppliedVolts, steerCurrent);
+        var driveStatus =
+                BaseStatusSignal.refreshAll(drivePosition, driveVelocity, driveAppliedVolts, driveCurrent, driveTemp);
+        var steerStatus =
+                BaseStatusSignal.refreshAll(steerPosition, steerVelocity, steerAppliedVolts, steerCurrent, steerTemp);
         var cancoderStatus = BaseStatusSignal.refreshAll(encoderAbsolutePosition);
 
         // Update drive inputs
@@ -184,6 +193,7 @@ public class ModuleIOTalonFX implements IModuleIO {
         inputs.driveVelocity_radps = Units.rotationsToRadians(driveVelocity.getValueAsDouble());
         inputs.driveAppliedVoltage_V = driveAppliedVolts.getValueAsDouble();
         inputs.driveCurrent_A = driveCurrent.getValueAsDouble();
+        inputs.driveTemp_C = driveTemp.getValueAsDouble();
 
         // Update steer inputs
         inputs.steerConnected = steerConnectedDebounce.calculate(steerStatus.isOK());
@@ -192,6 +202,7 @@ public class ModuleIOTalonFX implements IModuleIO {
         inputs.steerVelocity_radps = Units.rotationsToRadians(steerVelocity.getValueAsDouble());
         inputs.steerAppliedVoltage_V = steerAppliedVolts.getValueAsDouble();
         inputs.steerCurrent_A = steerCurrent.getValueAsDouble();
+        inputs.steerTemp_C = steerTemp.getValueAsDouble();
 
         // Update encoder inputs
         inputs.encoderAbsolutePosition = Rotation2d.fromRotations(encoderAbsolutePosition.getValueAsDouble());

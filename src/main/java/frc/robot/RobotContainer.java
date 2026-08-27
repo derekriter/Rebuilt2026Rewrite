@@ -254,7 +254,9 @@ public final class RobotContainer {
     }
 
     public Command stopSwerveCmd() {
-        return Commands.startEnd(swerve::stop, () -> {}, swerve).withName("stopSwerveCmd");
+        return Commands.startEnd(swerve::stop, () -> {}, swerve)
+                .ignoringDisable(true)
+                .withName("stopSwerveCmd");
     }
 
     public Command brakeSwerveCmd() {

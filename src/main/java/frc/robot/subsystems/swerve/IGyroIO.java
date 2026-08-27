@@ -22,7 +22,7 @@ public interface IGyroIO {
     public static class GyroIOInputs implements LoggableInputs {
         public boolean connected = false;
         public Rotation2d yawPosition = Rotation2d.kZero;
-        public double yawVelocity_radps = 0.0;
+        public double yawVelocity_radps = 0;
         public double[] odometryYawTimestamps_s = new double[] {};
         public Rotation2d[] odometryYawPositions = new Rotation2d[] {};
 

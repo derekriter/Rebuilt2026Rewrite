@@ -93,6 +93,7 @@ public class ModuleIOSim implements IModuleIO {
         inputs.driveVelocity_radps = driveSim.getAngularVelocityRadPerSec();
         inputs.driveAppliedVoltage_V = driveAppliedVoltage_V;
         inputs.driveCurrent_A = Math.abs(driveSim.getCurrentDrawAmps());
+        inputs.driveTemp_C = 20;
 
         // Update steer inputs
         inputs.steerConnected = true;
@@ -100,6 +101,7 @@ public class ModuleIOSim implements IModuleIO {
         inputs.steerVelocity_radps = steerSim.getAngularVelocityRadPerSec();
         inputs.steerAppliedVoltage_V = steerAppliedVoltage_V;
         inputs.steerCurrent_A = Math.abs(steerSim.getCurrentDrawAmps());
+        inputs.steerTemp_C = 20;
 
         // Update encoder inputs
         inputs.encoderConnected = true;

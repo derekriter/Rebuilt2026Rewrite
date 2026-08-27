@@ -8,6 +8,7 @@
 package frc.robot.subsystems.swerve;
 
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Volts;
@@ -36,16 +37,18 @@ public interface IModuleIO {
 
     public static class ModuleIOInputs implements LoggableInputs {
         public boolean driveConnected = false;
-        public double drivePosition_rad = 0.0;
-        public double driveVelocity_radps = 0.0;
-        public double driveAppliedVoltage_V = 0.0;
+        public double drivePosition_rad = 0;
+        public double driveVelocity_radps = 0;
+        public double driveAppliedVoltage_V = 0;
         public double driveCurrent_A = 0.0;
+        public double driveTemp_C = 0;
 
         public boolean steerConnected = false;
         public Rotation2d steerPosition = Rotation2d.kZero;
-        public double steerVelocity_radps = 0.0;
-        public double steerAppliedVoltage_V = 0.0;
-        public double steerCurrent_A = 0.0;
+        public double steerVelocity_radps = 0;
+        public double steerAppliedVoltage_V = 0;
+        public double steerCurrent_A = 0;
+        public double steerTemp_C = 0;
 
         public boolean encoderConnected = false;
         public Rotation2d encoderAbsolutePosition = Rotation2d.kZero;
@@ -61,12 +64,14 @@ public interface IModuleIO {
             table.put("driveVelocity", driveVelocity_radps, RadiansPerSecond.name());
             table.put("driveAppliedVoltage", driveAppliedVoltage_V, Volts.name());
             table.put("driveCurrent", driveCurrent_A, Amps.name());
+            table.put("driveTemp", driveTemp_C, Celsius.name());
 
             table.put("steerConnected", steerConnected);
             table.put("steerPosition", steerPosition);
             table.put("steerVelocity", steerVelocity_radps, RadiansPerSecond.name());
             table.put("steerAppliedVoltage", steerAppliedVoltage_V, Volts.name());
             table.put("steerCurrent", steerCurrent_A, Amps.name());
+            table.put("steerTemp", steerTemp_C, Celsius.name());
 
             table.put("encoderConnected", encoderConnected);
             table.put("encoderAbsolutePosition", encoderAbsolutePosition);
@@ -83,12 +88,14 @@ public interface IModuleIO {
             driveVelocity_radps = table.get("driveVelocity", driveVelocity_radps);
             driveAppliedVoltage_V = table.get("driveAppliedVoltage", driveAppliedVoltage_V);
             driveCurrent_A = table.get("driveCurrent", driveCurrent_A);
+            driveTemp_C = table.get("driveTemp", driveTemp_C);
 
             steerConnected = table.get("steerConnected", steerConnected);
             steerPosition = table.get("steerPosition", steerPosition);
             steerVelocity_radps = table.get("steerVelocity", steerVelocity_radps);
             steerAppliedVoltage_V = table.get("steerAppliedVoltage", steerAppliedVoltage_V);
             steerCurrent_A = table.get("steerCurrent", steerCurrent_A);
+            steerTemp_C = table.get("steerTemp", steerTemp_C);
 
             encoderConnected = table.get("encoderConnected", encoderConnected);
             encoderAbsolutePosition = table.get("encoderAbsolutePosition", encoderAbsolutePosition);
