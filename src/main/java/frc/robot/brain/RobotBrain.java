@@ -1,10 +1,11 @@
 package frc.robot.brain;
 
+import static edu.wpi.first.units.Units.Seconds;
+
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -13,13 +14,13 @@ import frc.robot.Robot;
 import frc.robot.RobotContainer;
 import frc.robot.config.ControllerConfig;
 import frc.robot.config.Overrides;
-import frc.robot.telemetry.Telemetry;
-import frc.robot.telemetry.writer.compound.RobotStateWriter;
+import frc.robot.util.Console;
 import java.util.Optional;
+import org.littletonrobotics.conduit.ConduitApi;
+import org.littletonrobotics.junction.Logger;
 
 public class RobotBrain {
 
-    private static final RobotStateWriter robotStateWriter = Telemetry.makeRobotStateWriter("RobotBrain", "robotState");
     private static final Alert driver1MissingAlert = new Alert(
             String.format("Driver 1 controller not connected to port %d", ControllerConfig.driver1Port),
             AlertType.kWarning);
@@ -42,13 +43,11 @@ public class RobotBrain {
     public void pollState() {
         pollBasicInfo();
 
-        RobotContainer.instance().pdh.update();
         RobotContainer.instance().launcher.report(state.launcherReport);
         RobotContainer.instance().swerve.report(state.swerveReport);
-        RobotContainer.instance().leds.update();
 
-        state.fieldZone = FieldZone.fromRobotX(
-                RobotContainer.instance().swerve.getState().Pose.getX());
+        state.fieldZone =
+                FieldZone.fromRobotX(RobotContainer.instance().swerve.getPose().getX());
 
         if (state.opMode == OpMode.TELEOP) {
             pollTeleopData();
@@ -93,7 +92,7 @@ public class RobotBrain {
         }
 
         state.modeTime_s = modeTimer.get();
-        state.isBrownedOut = RobotController.isBrownedOut();
+        state.isBrownedOut = ConduitApi.getInstance().getBrownedOut();
     }
 
     private void pollTeleopData() {
@@ -190,14 +189,43 @@ public class RobotBrain {
         }
     }
 
-    public void telemeterize() {
-        robotStateWriter.set(state);
+    public void log() {
+        Logger.recordOutput("RobotBrain/RobotState/opMode", state.opMode.name());
+        Logger.recordOutput("RobotBrain/RobotState/isReal", state.isReal);
+        Logger.recordOutput("RobotBrain/RobotState/isDSAttached", state.isDSAttached);
+        Logger.recordOutput("RobotBrain/RobotState/isBrownedOut", state.isBrownedOut);
+
+        Logger.recordOutput("RobotBrain/RobotState/isRed", state.isRed);
+        Logger.recordOutput("RobotBrain/RobotState/autoWinnerIsKnown", state.autoWinnerIsKnown);
+        Logger.recordOutput("RobotBrain/RobotState/didWinAuto", state.didWinAuto);
+
+        Logger.recordOutput("RobotBrain/RobotState/modeTime", state.modeTime_s, Seconds.name());
+        Logger.recordOutput("RobotBrain/RobotState/phase", state.phase.name());
+        Logger.recordOutput("RobotBrain/RobotState/timeLeftInPhase", state.timeLeftInPhase_s, Seconds.name());
+        Logger.recordOutput("RobotBrain/RobotState/fieldZone", state.fieldZone.name());
+        Logger.recordOutput("RobotBrain/RobotState/isHubActive", state.isHubActive);
+
+        Logger.recordOutput(
+                "RobotBrain/RobotState/LauncherReport/turretOperational", state.launcherReport.turretOperational);
+        Logger.recordOutput(
+                "RobotBrain/RobotState/LauncherReport/turretIsAtTarget", state.launcherReport.turretIsAtTarget);
+        Logger.recordOutput(
+                "RobotBrain/RobotState/LauncherReport/shooterOperational", state.launcherReport.shooterOperational);
+        Logger.recordOutput(
+                "RobotBrain/RobotState/LauncherReport/shooterIsAtTarget", state.launcherReport.shooterIsAtTarget);
+        Logger.recordOutput("RobotBrain/RobotState/isTurretHomed", state.isTurretHomed);
+        Logger.recordOutput("RobotBrain/RobotState/SwerveReport/isOperational", state.swerveReport.isOperational);
+
+        Logger.recordOutput("RobotBrain/RobotState/targetingMode", state.targetingMode.name());
+        Logger.recordOutput("RobotBrain/RobotState/overrideTurret", state.overrideTurret);
+        Logger.recordOutput("RobotBrain/RobotState/ledsMode", state.ledsMode.name());
+        Logger.recordOutput("RobotBrain/RobotState/driveMode", state.driveMode.name());
 
         driver1MissingAlert.set(!RobotContainer.instance().driver1.isConnected());
         driver2MissingAlert.set(!RobotContainer.instance().driver2.isConnected());
 
         if (state.isBrownedOut && !lastState.map(s -> s.isBrownedOut).orElse(false)) {
-            Telemetry.reportWarning("Brown out detected", false);
+            Console.reportWarning("Brown out detected", false);
         }
     }
 
@@ -264,7 +292,7 @@ public class RobotBrain {
                             RobotContainer.instance().swerve,
                             RobotContainer.instance().brakeSwerveCmd());
                     CommandScheduler.getInstance()
-                            .schedule(RobotContainer.instance().getAutonCommand());
+                            .schedule(RobotContainer.instance().autonCmd());
                 }
                 case TELEOP -> changeSubsystemDefaultCommand(
                         RobotContainer.instance().swerve,

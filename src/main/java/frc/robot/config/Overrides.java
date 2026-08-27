@@ -1,6 +1,6 @@
 package frc.robot.config;
 
-import frc.robot.telemetry.Telemetry;
+import org.littletonrobotics.junction.Logger;
 
 public final class Overrides {
     public static final boolean disableShooterSafety = false;
@@ -16,24 +16,17 @@ public final class Overrides {
     public static final boolean disableSwerveSafety = false;
 
     public static void telemeterizeOverrides() {
-        Telemetry.makeBoolWriterInitialEx("Overrides", "disableShooterSafety", null, disableShooterSafety, false, true)
-                .close();
-        Telemetry.makeBoolWriterInitialEx("Overrides", "disableShooter", null, disableShooter, false, true)
-                .close();
+        Logger.recordOutput("Overrides/disableShooterSafety", disableShooterSafety);
+        Logger.recordOutput("Overrides/disableShooter", disableShooter);
 
-        Telemetry.makeBoolWriterInitialEx("Overrides", "disableTurretSafety", null, disableTurretSafety, false, true)
-                .close();
-        Telemetry.makeBoolWriterInitialEx("Overrides", "disableTurret", null, disableTurret, false, true)
-                .close();
+        Logger.recordOutput("Overrides/disableTurretSafety", disableTurretSafety);
+        Logger.recordOutput("Overrides/disableTurret", disableTurret);
 
-        Telemetry.makeBoolWriterInitialEx("Overrides", "disablePDHMonitoring", null, disablePDHMonitoring, false, true)
-                .close();
+        Logger.recordOutput("Overrides/disablePDHMonitoring", disablePDHMonitoring);
 
-        Telemetry.makeBoolWriterInitialEx("Overrides", "disabledLEDs", null, disableLEDs, false, true)
-                .close();
+        Logger.recordOutput("Overrides/disableLEDs", disableLEDs);
 
-        Telemetry.makeBoolWriterInitialEx("Overrides", "disableSwerveSafety", null, disableSwerveSafety, false, true)
-                .close();
+        Logger.recordOutput("Overrides/disableSwerveSafety", disableSwerveSafety);
     }
 
     private Overrides() {}

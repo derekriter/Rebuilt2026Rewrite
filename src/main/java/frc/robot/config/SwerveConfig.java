@@ -1,6 +1,7 @@
 package frc.robot.config;
 
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Hertz;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.KilogramSquareMeters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
@@ -11,7 +12,6 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
-import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.Pigeon2Configuration;
@@ -30,9 +30,9 @@ import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.Frequency;
 import edu.wpi.first.units.measure.LinearAcceleration;
 import edu.wpi.first.units.measure.LinearVelocity;
-import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Time;
 import java.util.Optional;
 
@@ -118,14 +118,14 @@ public final class SwerveConfig {
             .withKP(100)
             .withKI(0)
             .withKD(0.5)
-            .withKS(0.2)
-            .withKV(2.66)
+            .withKS(0.1)
+            .withKV(1.91)
             .withKA(0)
             .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign);
     // When using closed-loop control, the drive motor uses the control
     // output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
     private static final Slot0Configs driveGains =
-            new Slot0Configs().withKP(0.1).withKI(0).withKD(0).withKS(0.2).withKV(0.124);
+            new Slot0Configs().withKP(0.1).withKI(0).withKD(0).withKS(0).withKV(0.124);
 
     // Initial configs for the drive and steer motors and the azimuth encoder; these cannot be null.
     // Some configs will be overwritten; check the `with*InitialConfigs()` API documentation.
@@ -167,16 +167,12 @@ public final class SwerveConfig {
     public static final AngularAcceleration teleopAngularAcceleration = RotationsPerSecondPerSecond.of(12);
 
     public static final Time simLoopPeriod = Milliseconds.of(4);
+    public static final Frequency odometryFrequency = Hertz.of(250);
 
     public static final SwerveDrivetrainConstants drivetrainConstants = new SwerveDrivetrainConstants()
             .withCANBusName(CANivoreConfig.busID)
             .withPigeon2Id(PigeonConfig.canID)
             .withPigeon2Configs(pigeonConfigs.orElse(null));
-
-    public static final Temperature driveTempWarnThreshold = MotorConfig.krakenX60TempWarnThreshold;
-    public static final Temperature driveThermalShutdownThreshold = MotorConfig.krakenX60ThermalShutdownThreshold;
-    public static final Temperature steerTempWarnThreshold = MotorConfig.falcon500TempWarnThreshold;
-    public static final Temperature steerThermalShutdownThreshold = MotorConfig.falcon500ThermalShutdownThreshold;
 
     private static final SwerveModuleConstantsFactory<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
             moduleConstantsFactory = new SwerveModuleConstantsFactory<
@@ -187,8 +183,8 @@ public final class SwerveConfig {
                     .withWheelRadius(Inches.of(2.005))
                     .withSteerMotorGains(steerGains)
                     .withDriveMotorGains(driveGains)
-                    .withSteerMotorClosedLoopOutput(ClosedLoopOutputType.Voltage)
-                    .withDriveMotorClosedLoopOutput(ClosedLoopOutputType.Voltage)
+                    .withSteerMotorClosedLoopOutput(ClosedLoopOutputType.TorqueCurrentFOC)
+                    .withDriveMotorClosedLoopOutput(ClosedLoopOutputType.TorqueCurrentFOC)
                     .withSlipCurrent(slipCurrent)
                     .withSpeedAt12Volts(speedAt12Volts)
                     .withDriveMotorType(DriveMotorArrangement.TalonFX_Integrated)
@@ -207,11 +203,11 @@ public final class SwerveConfig {
                 "fl",
                 Inches.of(10.875),
                 Inches.of(10.875),
-                "flDriveMotor",
+                "flDrive",
                 10,
                 10,
                 false,
-                "flSteerMotor",
+                "flSteer",
                 11,
                 11,
                 true,
@@ -224,11 +220,11 @@ public final class SwerveConfig {
                 "fr",
                 Inches.of(10.875),
                 Inches.of(-10.875),
-                "frDriveMotor",
+                "frDrive",
                 19,
                 19,
                 true,
-                "frSteerMotor",
+                "frSteer",
                 18,
                 18,
                 true,
@@ -241,11 +237,11 @@ public final class SwerveConfig {
                 "bl",
                 Inches.of(-10.875),
                 Inches.of(10.875),
-                "blDriveMotor",
+                "blDrive",
                 2,
                 2,
                 false,
-                "blSteerMotor",
+                "blSteer",
                 1,
                 1,
                 true,
@@ -258,11 +254,11 @@ public final class SwerveConfig {
                 "br",
                 Inches.of(-10.875),
                 Inches.of(-10.875),
-                "brDriveMotor",
+                "brDrive",
                 9,
                 9,
                 true,
-                "brSteerMotor",
+                "brSteer",
                 8,
                 8,
                 true,
@@ -274,18 +270,22 @@ public final class SwerveConfig {
     };
 
     public static final class PigeonConfig {
-        public static final String imuName = "pigeon2";
         public static final int canID = 25;
         public static final int channelID = 0; // TODO: pigeon2 channel id
     }
 
     public static final class CANivoreConfig {
-        public static final String busName = "swerveCANivore";
         public static final String busID = "SwerveBus";
         public static final int channelID = 0; // TODO: canivore channel id
-
-        public static final CANBus bus = new CANBus(busID);
     }
+
+    public static final double driveBaseRadius_m = Math.max(
+            Math.max(
+                    Math.hypot(modules[0].constants.LocationX, modules[0].constants.LocationY),
+                    Math.hypot(modules[1].constants.LocationX, modules[1].constants.LocationY)),
+            Math.max(
+                    Math.hypot(modules[2].constants.LocationX, modules[2].constants.LocationY),
+                    Math.hypot(modules[3].constants.LocationX, modules[3].constants.LocationY)));
 
     private SwerveConfig() {}
 }

@@ -1,28 +1,26 @@
 package frc.robot;
 
-import choreo.auto.AutoChooser;
 import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
-import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
-import com.ctre.phoenix6.swerve.SwerveRequest.ApplyRobotSpeeds;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.telemetry.Telemetry;
+import frc.robot.util.Console;
+import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 public final class Autos {
 
-    public static AutoChooser createAutos(AutoFactory factory) {
-        AutoChooser chooser = new AutoChooser();
+    public static LoggedDashboardChooser<Command> createAutos(AutoFactory factory) {
+        LoggedDashboardChooser<Command> chooser = new LoggedDashboardChooser<>("autoChooser");
+        chooser.addDefaultOption("None", null);
 
-        chooser.addCmd("Left Trench, Pickup, Shoot, Climb", () -> trench_pickup_shoot_climb(factory, true));
-        chooser.addCmd("Right Trench, Pickup, Shoot, Climb", () -> trench_pickup_shoot_climb(factory, false));
-        chooser.addCmd("Left Trench, Pickup, Depot", () -> L_trench_pickup_depot(factory));
-        chooser.addCmd(
-                "Left Trench, Pickup, Shoot, Pickup, Shoot", () -> trench_pickup_shoot_pickup_shoot(factory, true));
-        chooser.addCmd(
-                "Right Trench, Pickup, Shoot, Pickup, Shoot", () -> trench_pickup_shoot_pickup_shoot(factory, false));
+        chooser.addOption("Left Trench, Pickup, Shoot, Climb", trench_pickup_shoot_climb(factory, true));
+        chooser.addOption("Right Trench, Pickup, Shoot, Climb", trench_pickup_shoot_climb(factory, false));
+        chooser.addOption("Left Trench, Pickup, Depot", L_trench_pickup_depot(factory));
+        chooser.addOption("Left Trench, Pickup, Shoot, Pickup, Shoot", trench_pickup_shoot_pickup_shoot(factory, true));
+        chooser.addOption(
+                "Right Trench, Pickup, Shoot, Pickup, Shoot", trench_pickup_shoot_pickup_shoot(factory, false));
 
         return chooser;
     }
@@ -43,25 +41,22 @@ public final class Autos {
     }
 
     private static Command shootCmd() {
-        return Commands.startRun(() -> Telemetry.println("shoot"), () -> {}).withName("shootCmd");
+        return Commands.startRun(() -> Console.println("shoot"), () -> {}).withName("shootCmd");
     }
 
     private static Command alignWithTowerCmd() {
-        ApplyRobotSpeeds towardsReq = new ApplyRobotSpeeds()
-                .withDriveRequestType(DriveRequestType.Velocity)
-                .withSpeeds(ChassisSpeeds.discretize(new ChassisSpeeds(0, -0.5, 0), 0.02));
-        ApplyRobotSpeeds finalAlignReq = new ApplyRobotSpeeds()
-                .withDriveRequestType(DriveRequestType.Velocity)
-                .withSpeeds(ChassisSpeeds.discretize(new ChassisSpeeds(-0.5, 0, 0), 0.02));
-
         return Commands.sequence(
                         Commands.runOnce(
-                                () -> RobotContainer.instance().swerve.setControl(towardsReq),
+                                () -> RobotContainer.instance()
+                                        .swerve
+                                        .runRobotRelativeVelocity(new ChassisSpeeds(0, -0.5, 0)),
                                 RobotContainer.instance().swerve),
                         Commands.waitUntil(() -> /*RobotContainer.instance().climb.canSeeTower()*/ true)
                                 .withTimeout(5),
                         Commands.runEnd(
-                                        () -> RobotContainer.instance().swerve.setControl(finalAlignReq),
+                                        () -> RobotContainer.instance()
+                                                .swerve
+                                                .runRobotRelativeVelocity(new ChassisSpeeds(-0.5, 0, 0)),
                                         () -> RobotContainer.instance().swerve.stop(),
                                         RobotContainer.instance().swerve)
                                 .withTimeout(0.25))
