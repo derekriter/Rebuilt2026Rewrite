@@ -11,11 +11,11 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.brain.RobotBrain;
 import frc.robot.brain.RobotState;
-import frc.robot.config.LauncherConfig.ShooterConfig;
-import frc.robot.config.LauncherConfig.TurretConfig;
-import frc.robot.config.Overrides;
-import frc.robot.config.PDHConfig;
 import frc.robot.constants.BuildConstants;
+import frc.robot.constants.LauncherConstants.ShooterConstants;
+import frc.robot.constants.LauncherConstants.TurretConstants;
+import frc.robot.constants.Overrides;
+import frc.robot.constants.PDHConstants;
 import frc.robot.util.ControllerUtil;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -96,9 +96,9 @@ public final class Robot extends LoggedRobot {
         }
 
         Logger.registerURCL(URCL.startExternal(Map.ofEntries(
-                Map.entry(TurretConfig.canID, "turretMotor"),
-                Map.entry(ShooterConfig.canID, "shooterMotor"),
-                Map.entry(PDHConfig.canID, "PDH"))));
+                Map.entry(TurretConstants.canID, "turretMotor"),
+                Map.entry(ShooterConstants.canID, "shooterMotor"),
+                Map.entry(PDHConstants.canID, "PDH"))));
         StatusLogger.disableAutoLogging();
 
         DriverStation.silenceJoystickConnectionWarning(true);

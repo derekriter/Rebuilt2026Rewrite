@@ -7,8 +7,8 @@ import edu.wpi.first.wpilibj.LEDPattern;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotContainer;
-import frc.robot.config.LEDsConfig;
-import frc.robot.config.Overrides;
+import frc.robot.constants.LEDsConstants;
+import frc.robot.constants.Overrides;
 import frc.robot.util.AlertUtils;
 import frc.robot.util.Console;
 import org.littletonrobotics.junction.Logger;
@@ -29,11 +29,11 @@ public class LEDs extends SubsystemBase {
             leds_nl = null;
             buffer_nl = null;
         } else {
-            leds_nl = new AddressableLED(LEDsConfig.dataPort);
-            buffer_nl = new AddressableLEDBuffer(LEDsConfig.ledCount);
+            leds_nl = new AddressableLED(LEDsConstants.dataPort);
+            buffer_nl = new AddressableLEDBuffer(LEDsConstants.ledCount);
 
             leds_nl.setLength(buffer_nl.getLength());
-            leds_nl.setColorOrder(LEDsConfig.colorOrder);
+            leds_nl.setColorOrder(LEDsConstants.colorOrder);
 
             leds_nl.setData(buffer_nl);
             leds_nl.start();
@@ -54,15 +54,15 @@ public class LEDs extends SubsystemBase {
                 needsUpdate = false;
             }
 
-            boolean breakerTripped = RobotContainer.instance().pdh.isBreakerTripped(LEDsConfig.channelID);
+            boolean breakerTripped = RobotContainer.instance().pdh.isBreakerTripped(LEDsConstants.channelID);
 
             Logger.recordOutput("LEDs/breakerTripped", breakerTripped);
             breakerAlert.set(breakerTripped);
             if (breakerTripped != breakerLast) {
                 if (breakerTripped) {
-                    Console.reportBreakerTripNoCAN("LEDs", LEDsConfig.channelID);
+                    Console.reportBreakerTripNoCAN("LEDs", LEDsConstants.channelID);
                 } else {
-                    Console.reportBreakerResetNoCAN("LEDs", LEDsConfig.channelID);
+                    Console.reportBreakerResetNoCAN("LEDs", LEDsConstants.channelID);
                 }
             }
 

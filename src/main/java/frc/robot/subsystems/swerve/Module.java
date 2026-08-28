@@ -13,7 +13,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import frc.robot.RobotContainer;
-import frc.robot.config.SwerveConfig;
+import frc.robot.constants.SwerveConstants;
 import frc.robot.subsystems.swerve.IModuleIO.ModuleIOInputs;
 import frc.robot.util.AlertUtils;
 import frc.robot.util.Console;
@@ -24,7 +24,7 @@ public class Module {
     private final ModuleIOInputs inputs = new ModuleIOInputs();
     private final int index;
     private final String moduleName;
-    private final SwerveConfig.ModuleConfig config;
+    private final SwerveConstants.ModuleInfo config;
 
     private final Alert driveCANAlert;
     private final Alert driveBreakerAlert;
@@ -49,7 +49,7 @@ public class Module {
     public Module(IModuleIO _io, int _index) {
         io = _io;
         index = _index;
-        config = SwerveConfig.modules[index];
+        config = SwerveConstants.modules[index];
         moduleName = String.format("%d_%sModule", _index, config.prefix.toUpperCase());
 
         driveCANAlert = AlertUtils.makeCANFailureAlert(config.driveMotorName);

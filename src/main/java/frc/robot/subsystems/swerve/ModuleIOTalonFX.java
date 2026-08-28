@@ -34,7 +34,7 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
-import frc.robot.config.SwerveConfig;
+import frc.robot.constants.SwerveConstants;
 import frc.robot.util.MotorUtils;
 import java.util.Queue;
 
@@ -90,7 +90,7 @@ public class ModuleIOTalonFX implements IModuleIO {
     private final Debouncer encoderConnectedDebounce = new Debouncer(0.5, Debouncer.DebounceType.kFalling);
 
     public ModuleIOTalonFX(int index, CANBus bus) {
-        constants = SwerveConfig.modules[index].constants;
+        constants = SwerveConstants.modules[index].constants;
         driveTalon = new TalonFX(constants.DriveMotorId, bus);
         steerTalon = new TalonFX(constants.SteerMotorId, bus);
         cancoder = new CANcoder(constants.EncoderId, bus);
@@ -163,7 +163,7 @@ public class ModuleIOTalonFX implements IModuleIO {
         encoderAbsolutePosition = cancoder.getAbsolutePosition();
 
         // Configure periodic frames
-        BaseStatusSignal.setUpdateFrequencyForAll(SwerveConfig.odometryFrequency, drivePosition, steerPosition);
+        BaseStatusSignal.setUpdateFrequencyForAll(SwerveConstants.odometryFrequency, drivePosition, steerPosition);
         BaseStatusSignal.setUpdateFrequencyForAll(
                 50.0,
                 driveVelocity,

@@ -1,4 +1,4 @@
-package frc.robot.config;
+package frc.robot.constants;
 
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Degrees;
@@ -20,11 +20,11 @@ import edu.wpi.first.units.measure.Voltage;
 import frc.robot.subsystems.launcher.shooter.ShooterTarget;
 import frc.robot.subsystems.launcher.turret.TurretAngle;
 
-public final class LauncherConfig {
+public final class LauncherConstants {
     public static final Translation2d launcherOffset = new Translation2d(Inches.of(-6), Inches.of(-6));
     public static final Time ballAirTime = Seconds.of(0.8);
 
-    public static final class TurretConfig {
+    public static final class TurretConstants {
         public static final int canID = 15;
         public static final int channelID = 15;
 
@@ -60,16 +60,16 @@ public final class LauncherConfig {
             motorConfig.closedLoop.pid(0.1, 0, 0.1);
         }
 
-        private TurretConfig() {}
+        private TurretConstants() {}
     }
 
-    public static final class ShooterConfig {
+    public static final class ShooterConstants {
         public static final int canID = 4;
         public static final int channelID = 4;
 
         public static final SparkFlexConfig motorConfig;
-        public static final Temperature tempWarnThreshold = MotorConfig.neoVortexTempWarnThreshold;
-        public static final Temperature thermalShutdownThreshold = MotorConfig.neoVortexThermalShutdownThreshold;
+        public static final Temperature tempWarnThreshold = MotorConstants.neoVortexTempWarnThreshold;
+        public static final Temperature thermalShutdownThreshold = MotorConstants.neoVortexThermalShutdownThreshold;
 
         public static final ShooterTarget targetOffset = ShooterTarget.fromShooterVelocity(RPM.of(100));
         public static final ShooterTarget maxRealTarget = ShooterTarget.fromShooterVelocity(RPM.of(5300));
@@ -88,8 +88,8 @@ public final class LauncherConfig {
             motorConfig.closedLoop.feedForward.sv(0.11245, 12.071 / 6756d);
         }
 
-        private ShooterConfig() {}
+        private ShooterConstants() {}
     }
 
-    private LauncherConfig() {}
+    private LauncherConstants() {}
 }

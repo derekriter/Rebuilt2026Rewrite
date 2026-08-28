@@ -17,8 +17,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
-import frc.robot.config.SwerveConfig;
-import frc.robot.config.SwerveConfig.PigeonConfig;
+import frc.robot.constants.SwerveConstants;
+import frc.robot.constants.SwerveConstants.PigeonConfig;
 import java.util.Queue;
 
 /** IO implementation for Pigeon 2. */
@@ -36,14 +36,14 @@ public class GyroIOPigeon2 implements IGyroIO {
         yaw = pigeon.getYaw();
         yawVelocity = pigeon.getAngularVelocityZWorld();
 
-        if (SwerveConfig.drivetrainConstants.Pigeon2Configs != null) {
-            pigeon.getConfigurator().apply(SwerveConfig.drivetrainConstants.Pigeon2Configs);
+        if (SwerveConstants.drivetrainConstants.Pigeon2Configs != null) {
+            pigeon.getConfigurator().apply(SwerveConstants.drivetrainConstants.Pigeon2Configs);
         } else {
             pigeon.getConfigurator().apply(new Pigeon2Configuration());
         }
 
         pigeon.getConfigurator().setYaw(0.0);
-        yaw.setUpdateFrequency(SwerveConfig.odometryFrequency);
+        yaw.setUpdateFrequency(SwerveConstants.odometryFrequency);
         yawVelocity.setUpdateFrequency(50.0);
         pigeon.optimizeBusUtilization();
         yawTimestampQueue = PhoenixOdometryThread.instance().makeTimestampQueue();

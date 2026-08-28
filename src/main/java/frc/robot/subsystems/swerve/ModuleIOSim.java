@@ -18,7 +18,7 @@ import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
-import frc.robot.config.SwerveConfig;
+import frc.robot.constants.SwerveConstants;
 
 /**
  * Physics sim implementation of module IO. The sim models are configured using a set of module
@@ -50,7 +50,7 @@ public class ModuleIOSim implements IModuleIO {
 
     public ModuleIOSim(int index) {
         SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration> constants =
-                SwerveConfig.modules[index].constants;
+                SwerveConstants.modules[index].constants;
 
         // Create drive and turn sim models
         driveSim = new DCMotorSim(

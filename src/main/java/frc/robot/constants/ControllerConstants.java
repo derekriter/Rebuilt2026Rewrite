@@ -1,6 +1,6 @@
-package frc.robot.config;
+package frc.robot.constants;
 
-public final class ControllerConfig {
+public final class ControllerConstants {
 
     public static final int driver1Port = 0;
     public static final int driver2Port = 1;
@@ -13,5 +13,5 @@ public final class ControllerConfig {
     public static final int joystickExponent = 3;
     public static final double triggerThreshold = 0.5;
 
-    private ControllerConfig() {}
+    private ControllerConstants() {}
 }

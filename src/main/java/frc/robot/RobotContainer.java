@@ -22,9 +22,9 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.AimAtTarget;
 import frc.robot.commands.HomeLauncher;
 import frc.robot.commands.TeleopDrive;
-import frc.robot.config.ControllerConfig;
-import frc.robot.config.LEDsConfig;
-import frc.robot.config.Overrides;
+import frc.robot.constants.ControllerConstants;
+import frc.robot.constants.LEDsConstants;
+import frc.robot.constants.Overrides;
 import frc.robot.pdh.PDH;
 import frc.robot.subsystems.launcher.Launcher;
 import frc.robot.subsystems.launcher.shooter.IShooterIO;
@@ -63,9 +63,9 @@ public final class RobotContainer {
     public final Launcher launcher;
     public final LEDs leds = new LEDs();
 
-    public final CommandXboxController driver1Cmd = new CommandXboxController(ControllerConfig.driver1Port);
+    public final CommandXboxController driver1Cmd = new CommandXboxController(ControllerConstants.driver1Port);
     public final XboxController driver1 = driver1Cmd.getHID();
-    public final CommandXboxController driver2Cmd = new CommandXboxController(ControllerConfig.driver2Port);
+    public final CommandXboxController driver2Cmd = new CommandXboxController(ControllerConstants.driver2Port);
     public final XboxController driver2 = driver2Cmd.getHID();
 
     private AutoFactory autoFactory;
@@ -191,14 +191,14 @@ public final class RobotContainer {
     }
 
     public Command idleLEDsCmd() {
-        LEDPattern breathe = LEDPattern.solid(LEDsConfig.chargeGold).breathe(Seconds.of(2));
+        LEDPattern breathe = LEDPattern.solid(LEDsConstants.chargeGold).breathe(Seconds.of(2));
         return Commands.runEnd(() -> leds.applyPattern(breathe), leds::clear, leds)
                 .ignoringDisable(true)
                 .withName("idleLEDsCmd");
     }
 
     public Command autonLEDsCmd() {
-        return Commands.startEnd(() -> leds.applyPattern(LEDPattern.solid(LEDsConfig.chargeGold)), leds::clear, leds)
+        return Commands.startEnd(() -> leds.applyPattern(LEDPattern.solid(LEDsConstants.chargeGold)), leds::clear, leds)
                 .ignoringDisable(true)
                 .withName("autonLEDsCmd");
     }
@@ -218,7 +218,7 @@ public final class RobotContainer {
 
     public Command endgameLEDsCmd() {
         LEDPattern rainbow =
-                LEDPattern.rainbow(255, 128).scrollAtAbsoluteSpeed(MetersPerSecond.of(4), LEDsConfig.ledSpacing);
+                LEDPattern.rainbow(255, 128).scrollAtAbsoluteSpeed(MetersPerSecond.of(4), LEDsConstants.ledSpacing);
         return Commands.runEnd(() -> leds.applyPattern(rainbow), leds::clear, leds)
                 .ignoringDisable(true)
                 .withName("endgameLEDsCmd");
@@ -232,7 +232,8 @@ public final class RobotContainer {
     }
 
     public Command hubActiveLEDsCmd() {
-        return Commands.startEnd(() -> leds.applyPattern(LEDPattern.solid(LEDsConfig.chargeGreen)), leds::clear, leds)
+        return Commands.startEnd(
+                        () -> leds.applyPattern(LEDPattern.solid(LEDsConstants.chargeGreen)), leds::clear, leds)
                 .ignoringDisable(true)
                 .withName("hubActiveLEDsCmd");
     }

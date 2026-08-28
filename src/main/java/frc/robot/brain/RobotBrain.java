@@ -12,8 +12,8 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
-import frc.robot.config.ControllerConfig;
-import frc.robot.config.Overrides;
+import frc.robot.constants.ControllerConstants;
+import frc.robot.constants.Overrides;
 import frc.robot.util.Console;
 import java.util.Optional;
 import org.littletonrobotics.conduit.ConduitApi;
@@ -22,10 +22,10 @@ import org.littletonrobotics.junction.Logger;
 public class RobotBrain {
 
     private static final Alert driver1MissingAlert = new Alert(
-            String.format("Driver 1 controller not connected to port %d", ControllerConfig.driver1Port),
+            String.format("Driver 1 controller not connected to port %d", ControllerConstants.driver1Port),
             AlertType.kWarning);
     private static final Alert driver2MissingAlert = new Alert(
-            String.format("Driver 2 controller not connected to port %d", ControllerConfig.driver2Port),
+            String.format("Driver 2 controller not connected to port %d", ControllerConstants.driver2Port),
             AlertType.kWarning);
 
     public RobotState state;
@@ -54,9 +54,9 @@ public class RobotBrain {
         }
 
         boolean driver2IsMovingJoysticks =
-                Math.abs(RobotContainer.instance().driver2.getLeftX()) > ControllerConfig.overrideTurretThreshold
+                Math.abs(RobotContainer.instance().driver2.getLeftX()) > ControllerConstants.overrideTurretThreshold
                         || Math.abs(RobotContainer.instance().driver2.getRightX())
-                                > ControllerConfig.overrideTurretThreshold;
+                                > ControllerConstants.overrideTurretThreshold;
         boolean driver2IsPressingJoysticks = RobotContainer.instance().driver1.getLeftStickButton()
                 || RobotContainer.instance().driver2.getRightStickButton();
         state.overrideTurret = (lastState.map(ls -> ls.overrideTurret).orElse(false) || driver2IsMovingJoysticks)

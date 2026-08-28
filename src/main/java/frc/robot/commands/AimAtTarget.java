@@ -6,7 +6,7 @@ import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.RobotContainer;
-import frc.robot.config.ControllerConfig;
+import frc.robot.constants.ControllerConstants;
 import frc.robot.constants.FieldConstants;
 import frc.robot.subsystems.launcher.LaunchCalculator;
 import frc.robot.subsystems.launcher.Launcher;
@@ -72,7 +72,7 @@ public class AimAtTarget extends Command {
             launcher.setTurretVoltage(-ControllerUtil.applyLinearDeadband(
                             RobotContainer.instance().driver2.getLeftX()
                                     + RobotContainer.instance().driver2.getRightX(),
-                            ControllerConfig.overrideTurretDeadband)
+                            ControllerConstants.overrideTurretDeadband)
                     * 1.2);
         } else {
             launcher.setTurretAngle(target.getFirst());

@@ -35,10 +35,10 @@ import frc.robot.Mode;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
 import frc.robot.brain.OpMode;
-import frc.robot.config.Overrides;
-import frc.robot.config.SwerveConfig;
-import frc.robot.config.SwerveConfig.CANivoreConfig;
-import frc.robot.config.SwerveConfig.PigeonConfig;
+import frc.robot.constants.Overrides;
+import frc.robot.constants.SwerveConstants;
+import frc.robot.constants.SwerveConstants.CANivoreConfig;
+import frc.robot.constants.SwerveConstants.PigeonConfig;
 import frc.robot.subsystems.swerve.IGyroIO.GyroIOInputs;
 import frc.robot.util.AlertUtils;
 import frc.robot.util.BlankValues;
@@ -81,11 +81,11 @@ public class Swerve extends SubsystemBase {
             new SwerveDrivePoseEstimator(kinematics, rawGyroRotation, lastModulePositions, Pose2d.kZero);
 
     private final PIDController trajXController = new PIDController(
-            SwerveConfig.autonTranslationP, SwerveConfig.autonTranslationI, SwerveConfig.autonTranslationD);
+            SwerveConstants.autonTranslationP, SwerveConstants.autonTranslationI, SwerveConstants.autonTranslationD);
     private final PIDController trajYController = new PIDController(
-            SwerveConfig.autonTranslationP, SwerveConfig.autonTranslationI, SwerveConfig.autonTranslationD);
+            SwerveConstants.autonTranslationP, SwerveConstants.autonTranslationI, SwerveConstants.autonTranslationD);
     private final PIDController trajThetaController =
-            new PIDController(SwerveConfig.headingP, SwerveConfig.headingI, SwerveConfig.headingD);
+            new PIDController(SwerveConstants.headingP, SwerveConstants.headingI, SwerveConstants.headingD);
     private boolean inTrajFollowingMode = false;
     private SwerveSample lastTrajSample_nl = null;
 
@@ -259,7 +259,7 @@ public class Swerve extends SubsystemBase {
         // Calculate module setpoints
         ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(speeds, 0.02);
         SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(discreteSpeeds);
-        SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, SwerveConfig.speedAt12Volts);
+        SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, SwerveConstants.speedAt12Volts);
 
         // Log unoptimized setpoints and setpoint speeds
         Logger.recordOutput("Swerve/targetStates", setpointStates);
@@ -389,21 +389,25 @@ public class Swerve extends SubsystemBase {
 
     /** Returns the maximum linear speed in meters per sec. */
     public double getMaxLinearSpeed_mps() {
-        return SwerveConfig.speedAt12Volts.in(MetersPerSecond);
+        return SwerveConstants.speedAt12Volts.in(MetersPerSecond);
     }
 
     /** Returns the maximum angular speed in radians per sec. */
     public double getMaxAngularSpeed_radps() {
-        return getMaxLinearSpeed_mps() / SwerveConfig.driveBaseRadius_m;
+        return getMaxLinearSpeed_mps() / SwerveConstants.driveBaseRadius_m;
     }
 
     /** Returns an array of module translations. */
     public static Translation2d[] getModuleTranslations() {
         return new Translation2d[] {
-            new Translation2d(SwerveConfig.modules[0].constants.LocationX, SwerveConfig.modules[0].constants.LocationY),
-            new Translation2d(SwerveConfig.modules[1].constants.LocationX, SwerveConfig.modules[1].constants.LocationY),
-            new Translation2d(SwerveConfig.modules[2].constants.LocationX, SwerveConfig.modules[2].constants.LocationY),
-            new Translation2d(SwerveConfig.modules[3].constants.LocationX, SwerveConfig.modules[3].constants.LocationY)
+            new Translation2d(
+                    SwerveConstants.modules[0].constants.LocationX, SwerveConstants.modules[0].constants.LocationY),
+            new Translation2d(
+                    SwerveConstants.modules[1].constants.LocationX, SwerveConstants.modules[1].constants.LocationY),
+            new Translation2d(
+                    SwerveConstants.modules[2].constants.LocationX, SwerveConstants.modules[2].constants.LocationY),
+            new Translation2d(
+                    SwerveConstants.modules[3].constants.LocationX, SwerveConstants.modules[3].constants.LocationY)
         };
     }
 }

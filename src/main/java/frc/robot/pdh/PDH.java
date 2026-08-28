@@ -1,10 +1,10 @@
 package frc.robot.pdh;
 
-import static frc.robot.config.PDHConfig.*;
+import static frc.robot.constants.PDHConstants.*;
 
 import edu.wpi.first.hal.PowerDistributionFaults;
 import edu.wpi.first.wpilibj.Alert;
-import frc.robot.config.Overrides;
+import frc.robot.constants.Overrides;
 import frc.robot.util.AlertUtils;
 import frc.robot.util.Console;
 import java.util.Arrays;
