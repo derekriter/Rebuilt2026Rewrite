@@ -1,75 +1,43 @@
-package frc.robot;
+package frc.robot.auto;
+
+import static frc.robot.auto.AutoCommands.*;
+import static frc.robot.auto.generated.ChoreoTraj.*;
 
 import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.util.Console;
+import frc.robot.RobotContainer;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 public final class Autos {
 
-    public static LoggedDashboardChooser<Command> createAutos(AutoFactory factory) {
-        LoggedDashboardChooser<Command> chooser = new LoggedDashboardChooser<>("autoChooser");
+    private static void addAutoProgram(LoggedDashboardChooser<AutoProgram> chooser, AutoProgram prog) {
+        chooser.addOption(prog.getName(), prog);
+    }
+
+    public static LoggedDashboardChooser<AutoProgram> createAutos(AutoFactory factory) {
+        LoggedDashboardChooser<AutoProgram> chooser = new LoggedDashboardChooser<>("autoChooser");
         chooser.addDefaultOption("None", null);
 
-        chooser.addOption("Left Trench, Pickup, Shoot, Climb", trench_pickup_shoot_climb(factory, true));
-        chooser.addOption("Right Trench, Pickup, Shoot, Climb", trench_pickup_shoot_climb(factory, false));
-        chooser.addOption("Left Trench, Pickup, Depot", L_trench_pickup_depot(factory));
-        chooser.addOption("Left Trench, Pickup, Shoot, Pickup, Shoot", trench_pickup_shoot_pickup_shoot(factory, true));
-        chooser.addOption(
-                "Right Trench, Pickup, Shoot, Pickup, Shoot", trench_pickup_shoot_pickup_shoot(factory, false));
+        addAutoProgram(chooser, trench_pickup_shoot_climb(factory, true, false));
+        addAutoProgram(chooser, trench_pickup_shoot_climb(factory, false, false));
+        addAutoProgram(chooser, L_trench_pickup_depot(factory, false));
+        addAutoProgram(chooser, trench_pickup_shoot_pickup_shoot(factory, true, false));
+        addAutoProgram(chooser, trench_pickup_shoot_pickup_shoot(factory, false, false));
+
+        addAutoProgram(chooser, new AutoProgram(true, "testDebugCmd", Commands.none(), null));
 
         return chooser;
     }
 
-    private static Command waitForReadyToShootCmd(double timeout_s) {
-        return Commands.waitUntil(() -> Robot.instance().brain.state.launcherReport.shooterIsAtTarget
-                        && Robot.instance().brain.state.launcherReport.turretIsAtTarget)
-                .withTimeout(timeout_s)
-                .withName("waitForReadyToShootCmd");
-    }
+    private static AutoProgram trench_pickup_shoot_climb(AutoFactory factory, boolean isLeft, boolean isDebug) {
+        String name = (isLeft ? "Left" : "Right") + " Trench, Pickup, Shoot, Climb";
+        AutoRoutine routine = factory.newRoutine(name);
 
-    private static Command waitUntilInFZoneCmd() {
-        return Commands.waitUntil(() -> Robot.instance().brain.isInFZone()).withName("waitUntilInFZoneCmd");
-    }
-
-    private static Command shootCmd(double timeout_s) {
-        return shootCmd().withTimeout(timeout_s);
-    }
-
-    private static Command shootCmd() {
-        return Commands.startRun(() -> Console.println("shoot"), () -> {}).withName("shootCmd");
-    }
-
-    private static Command alignWithTowerCmd() {
-        return Commands.sequence(
-                        Commands.runOnce(
-                                () -> RobotContainer.instance()
-                                        .swerve
-                                        .runRobotRelativeVelocity(new ChassisSpeeds(0, -0.5, 0)),
-                                RobotContainer.instance().swerve),
-                        Commands.waitUntil(() -> /*RobotContainer.instance().climb.canSeeTower()*/ true)
-                                .withTimeout(5),
-                        Commands.runEnd(
-                                        () -> RobotContainer.instance()
-                                                .swerve
-                                                .runRobotRelativeVelocity(new ChassisSpeeds(-0.5, 0, 0)),
-                                        () -> RobotContainer.instance().swerve.stop(),
-                                        RobotContainer.instance().swerve)
-                                .withTimeout(0.25))
-                .withName("alignWithTowerCmd");
-    }
-
-    private static Command trench_pickup_shoot_climb(AutoFactory factory, boolean isLeft) {
-        AutoRoutine routine = factory.newRoutine((isLeft ? "Left" : "Right") + " Trench, Pickup, Shoot, Climb");
-
-        String prefix = isLeft ? "L_" : "R_";
-        AutoTrajectory trench_collect1 = routine.trajectory("L_trench_collect1");
-        AutoTrajectory collect1_shoot = routine.trajectory(prefix + "collect1_shoot");
-        AutoTrajectory shoot_climb = routine.trajectory(prefix + "shoot_climb");
+        AutoTrajectory trench_collect1 = L_trench_collect1.asAutoTraj(routine);
+        AutoTrajectory collect1_shoot = (isLeft ? L_collect1_shoot : R_collect1_shoot).asAutoTraj(routine);
+        AutoTrajectory shoot_climb = (isLeft ? L_shoot_climb : R_shoot_climb).asAutoTraj(routine);
         if (!isLeft) {
             trench_collect1 = trench_collect1.mirrorY();
         }
@@ -107,17 +75,17 @@ public final class Autos {
                 );
         //spotless:on
 
-        return routine.cmd();
+        return new AutoProgram(isDebug, name, routine, trench_collect1, collect1_shoot, shoot_climb);
     }
 
-    private static Command trench_pickup_shoot_pickup_shoot(AutoFactory factory, boolean isLeft) {
-        AutoRoutine routine = factory.newRoutine((isLeft ? "Left" : "Right") + " Trench, Pickup, Shoot, Pickup, Shoot");
+    private static AutoProgram trench_pickup_shoot_pickup_shoot(AutoFactory factory, boolean isLeft, boolean isDebug) {
+        String name = (isLeft ? "Left" : "Right") + " Trench, Pickup, Shoot, Pickup, Shoot";
+        AutoRoutine routine = factory.newRoutine(name);
 
-        String prefix = isLeft ? "L_" : "R_";
         AutoTrajectory trench_collect1 = routine.trajectory("L_trench_collect1");
-        AutoTrajectory collect1_shoot = routine.trajectory(prefix + "collect1_shoot");
-        AutoTrajectory shoot_collect2 = routine.trajectory(prefix + "shoot_collect2");
-        AutoTrajectory collect2_shoot = routine.trajectory(prefix + "collect2_shoot");
+        AutoTrajectory collect1_shoot = (isLeft ? L_collect1_shoot : R_collect1_shoot).asAutoTraj(routine);
+        AutoTrajectory shoot_collect2 = (isLeft ? L_shoot_collect2 : R_shoot_collect2).asAutoTraj(routine);
+        AutoTrajectory collect2_shoot = (isLeft ? L_collect2_shoot : R_collect2_shoot).asAutoTraj(routine);
         if (!isLeft) {
             trench_collect1 = trench_collect1.mirrorY();
         }
@@ -156,14 +124,15 @@ public final class Autos {
                 );
         //spotless:on
 
-        return routine.cmd();
+        return new AutoProgram(isDebug, name, routine, trench_collect1, collect1_shoot, shoot_collect2, collect2_shoot);
     }
 
-    private static Command L_trench_pickup_depot(AutoFactory factory) {
-        AutoRoutine routine = factory.newRoutine("Left Trench, Pickup, Depot");
+    private static AutoProgram L_trench_pickup_depot(AutoFactory factory, boolean isDebug) {
+        String name = "Left Trench, Pickup, Depot";
+        AutoRoutine routine = factory.newRoutine(name);
 
-        AutoTrajectory trench_collect1 = routine.trajectory("L_trench_collect1");
-        AutoTrajectory collect1_depot = routine.trajectory("L_collect1_depot");
+        AutoTrajectory trench_collect1 = L_trench_collect1.asAutoTraj(routine);
+        AutoTrajectory collect1_depot = L_collect1_depot.asAutoTraj(routine);
 
         // spotless:off
         routine.active()
@@ -187,7 +156,7 @@ public final class Autos {
                 );
         //spotless:on
 
-        return routine.cmd();
+        return new AutoProgram(isDebug, name, routine, trench_collect1, collect1_depot);
     }
 
     private Autos() {}

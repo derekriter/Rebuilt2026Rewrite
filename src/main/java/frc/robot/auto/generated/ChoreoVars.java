@@ -1,5 +1,5 @@
 // spotless:off
-package frc.robot.choreo.generated;
+package frc.robot.auto.generated;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.Units;

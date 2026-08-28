@@ -13,12 +13,16 @@ import choreo.trajectory.SwerveSample;
 import choreo.trajectory.Trajectory;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.LEDPattern;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.auto.AutoProgram;
+import frc.robot.auto.Autos;
 import frc.robot.commands.AimAtTarget;
 import frc.robot.commands.HomeLauncher;
 import frc.robot.commands.TeleopDrive;
@@ -69,7 +73,9 @@ public final class RobotContainer {
     public final XboxController driver2 = driver2Cmd.getHID();
 
     private AutoFactory autoFactory;
-    private LoggedDashboardChooser<Command> autoChooser;
+    private LoggedDashboardChooser<AutoProgram> autoChooser;
+    private Alert debugAutoOnFieldAlert =
+            new Alert("A debug auto has been selected while the FMS is collected", AlertType.kWarning);
 
     private RobotContainer() {
         _inst_nl = this;
@@ -152,13 +158,29 @@ public final class RobotContainer {
         autoChooser = Autos.createAutos(autoFactory);
     }
 
+    public LoggedDashboardChooser<AutoProgram> getAutoChooser() {
+        return autoChooser;
+    }
+
+    public void showAutonPath() {
+        AutoProgram prog_nl = autoChooser.get();
+
+        if (prog_nl == null) {
+            AutoProgram.clearPathDisplay();
+            debugAutoOnFieldAlert.set(false);
+        } else {
+            prog_nl.displayPath();
+            debugAutoOnFieldAlert.set(Robot.instance().brain.state.isFMSAttached && prog_nl.getIsDebug());
+        }
+    }
+
     public Command autonCmd() {
-        Command cmd = autoChooser.get();
-        if (cmd == null) {
+        AutoProgram prog = autoChooser.get();
+        if (prog == null) {
             return Commands.runOnce(() -> Console.println("No autonomous selected"))
                     .withName("Fallback auton");
         } else {
-            return cmd;
+            return prog.getCommand();
         }
     }
 

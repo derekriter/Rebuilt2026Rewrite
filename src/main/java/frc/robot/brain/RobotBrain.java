@@ -65,6 +65,7 @@ public class RobotBrain {
 
     private void pollBasicInfo() {
         state.isDSAttached = DriverStation.isDSAttached();
+        state.isFMSAttached = DriverStation.isFMSAttached();
         if (lastState.isEmpty() || state.isDSAttached != lastState.get().isDSAttached) {
             state.isRed = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red;
         }
@@ -79,8 +80,12 @@ public class RobotBrain {
             state.opMode = OpMode.DISABLED;
         }
 
-        if (lastState.isEmpty() || state.opMode != lastState.get().opMode) {
+        boolean changedMode = lastState.isEmpty() || state.opMode != lastState.get().opMode;
+
+        if (changedMode || state.opMode == OpMode.DISABLED) {
             state.isRed = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red;
+        }
+        if (changedMode) {
             state.autoWinnerIsKnown = false;
 
             modeTimer.restart();
@@ -193,6 +198,7 @@ public class RobotBrain {
         Logger.recordOutput("RobotBrain/RobotState/opMode", state.opMode.name());
         Logger.recordOutput("RobotBrain/RobotState/isReal", state.isReal);
         Logger.recordOutput("RobotBrain/RobotState/isDSAttached", state.isDSAttached);
+        Logger.recordOutput("RobotBrain/RobotState/isFMSAttached", state.isFMSAttached);
         Logger.recordOutput("RobotBrain/RobotState/isBrownedOut", state.isBrownedOut);
 
         Logger.recordOutput("RobotBrain/RobotState/isRed", state.isRed);
