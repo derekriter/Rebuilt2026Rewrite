@@ -70,6 +70,9 @@ public final class Launcher extends SubsystemBase {
             if (Overrides.disableTurretSafety) {
                 AlertUtils.makeSafetyDisabledAlert("turret").set(true);
             }
+
+            Logger.recordOutput("Launcher/Turret/motorTarget", Double.NaN, Rotations);
+            Logger.recordOutput("Launcher/Turret/mechTarget", Double.NaN, Degrees);
         }
 
         // ===Shooter===
@@ -81,6 +84,9 @@ public final class Launcher extends SubsystemBase {
             if (Overrides.disableShooterSafety) {
                 AlertUtils.makeSafetyDisabledAlert("shooter").set(true);
             }
+
+            Logger.recordOutput("Launcher/Shooter/velTarget", Double.NaN, RPM);
+            Logger.recordOutput("Launcher/Shooter/distTarget", Double.NaN, Meters);
         }
     }
 

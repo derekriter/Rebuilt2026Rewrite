@@ -5,10 +5,7 @@
 package frc.robot;
 
 import com.revrobotics.util.StatusLogger;
-import edu.wpi.first.cameraserver.CameraServer;
-import edu.wpi.first.cscore.CvSource;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -21,7 +18,6 @@ import frc.robot.constants.LauncherConstants.TurretConstants;
 import frc.robot.constants.Overrides;
 import frc.robot.constants.PDHConstants;
 import frc.robot.util.ControllerUtil;
-import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Map;
@@ -34,8 +30,6 @@ import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import org.littletonrobotics.urcl.URCL;
-import org.opencv.core.Mat;
-import org.opencv.imgcodecs.Imgcodecs;
 
 public final class Robot extends LoggedRobot {
 
@@ -51,8 +45,6 @@ public final class Robot extends LoggedRobot {
 
     public final RobotBrain brain;
     public final Field2d field;
-    public final CvSource setupImageFeed;
-    public final Mat setupImage;
 
     private boolean showingAutoPath = false;
     private boolean showingAutoPathLast = false;
@@ -72,11 +64,7 @@ public final class Robot extends LoggedRobot {
         RobotContainer.instance().getAutoChooser().onChange(prog_nl -> {
             autoPathNeedsUpdate = true;
         });
-
-        setupImageFeed = CameraServer.putVideo("setupImage", 320, 240);
-        setupImage =
-                Imgcodecs.imread(Paths.get(Filesystem.getDeployDirectory().getAbsolutePath(), "setupImages/test.jpg")
-                        .toString());
+        AutoProgram.createSetupReference();
     }
 
     private void initLogging() {
@@ -130,8 +118,6 @@ public final class Robot extends LoggedRobot {
 
     @Override
     public void robotPeriodic() {
-        setupImageFeed.putFrame(setupImage);
-
         /*
          * Run command scheduler
          * First runs subsystem periodics, then scheduled commands
@@ -166,7 +152,7 @@ public final class Robot extends LoggedRobot {
                                     || brain.state.isFMSAttached != brain.lastState.get().isFMSAttached);
 
             if (autoPathNeedsUpdate) {
-                RobotContainer.instance().showAutonPath();
+                RobotContainer.instance().showAutonInfo();
             }
         } else if (showingAutoPathLast) {
             AutoProgram.clearPathDisplay();

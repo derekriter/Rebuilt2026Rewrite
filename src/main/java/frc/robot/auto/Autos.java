@@ -26,8 +26,6 @@ public final class Autos {
         addAutoProgram(chooser, trench_pickup_shoot_pickup_shoot(factory, true, false));
         addAutoProgram(chooser, trench_pickup_shoot_pickup_shoot(factory, false, false));
 
-        addAutoProgram(chooser, new AutoProgram(true, "testDebugCmd", Commands.none(), null));
-
         return chooser;
     }
 
@@ -75,7 +73,14 @@ public final class Autos {
                 );
         //spotless:on
 
-        return new AutoProgram(isDebug, name, routine, trench_collect1, collect1_shoot, shoot_climb);
+        return new AutoProgram(
+                isDebug,
+                name,
+                isLeft ? SetupReference.LEFT_TRENCH : SetupReference.RIGHT_TRENCH,
+                routine,
+                trench_collect1,
+                collect1_shoot,
+                shoot_climb);
     }
 
     private static AutoProgram trench_pickup_shoot_pickup_shoot(AutoFactory factory, boolean isLeft, boolean isDebug) {
@@ -124,7 +129,15 @@ public final class Autos {
                 );
         //spotless:on
 
-        return new AutoProgram(isDebug, name, routine, trench_collect1, collect1_shoot, shoot_collect2, collect2_shoot);
+        return new AutoProgram(
+                isDebug,
+                name,
+                isLeft ? SetupReference.LEFT_TRENCH : SetupReference.RIGHT_TRENCH,
+                routine,
+                trench_collect1,
+                collect1_shoot,
+                shoot_collect2,
+                collect2_shoot);
     }
 
     private static AutoProgram L_trench_pickup_depot(AutoFactory factory, boolean isDebug) {
@@ -156,7 +169,7 @@ public final class Autos {
                 );
         //spotless:on
 
-        return new AutoProgram(isDebug, name, routine, trench_collect1, collect1_depot);
+        return new AutoProgram(isDebug, name, SetupReference.LEFT_TRENCH, routine, trench_collect1, collect1_depot);
     }
 
     private Autos() {}

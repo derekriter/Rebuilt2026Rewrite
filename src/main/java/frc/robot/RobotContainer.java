@@ -162,14 +162,16 @@ public final class RobotContainer {
         return autoChooser;
     }
 
-    public void showAutonPath() {
+    public void showAutonInfo() {
         AutoProgram prog_nl = autoChooser.get();
 
         if (prog_nl == null) {
             AutoProgram.clearPathDisplay();
+            AutoProgram.clearSetupReference();
             debugAutoOnFieldAlert.set(false);
         } else {
             prog_nl.displayPath();
+            prog_nl.displaySetupReference();
             debugAutoOnFieldAlert.set(Robot.instance().brain.state.isFMSAttached && prog_nl.getIsDebug());
         }
     }
