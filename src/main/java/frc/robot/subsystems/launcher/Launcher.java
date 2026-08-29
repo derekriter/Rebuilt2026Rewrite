@@ -167,10 +167,12 @@ public final class Launcher extends SubsystemBase {
         }
 
         Command currentCommand = getCurrentCommand();
-        Logger.recordOutput("Launcher/currentCommand", currentCommand == null ? null : currentCommand.getName());
+        Logger.recordOutput(
+                "Launcher/currentCommand", currentCommand == null ? BlankValues.string : currentCommand.getName());
 
         Command defaultCommand = getDefaultCommand();
-        Logger.recordOutput("Launcher/defaultCommand", defaultCommand == null ? null : defaultCommand.getName());
+        Logger.recordOutput(
+                "Launcher/defaultCommand", defaultCommand == null ? BlankValues.string : defaultCommand.getName());
 
         Translation2d launcherTranslation = getLauncherTranslation();
         Rotation2d robotRotation = RobotContainer.instance().swerve.getRotation();
