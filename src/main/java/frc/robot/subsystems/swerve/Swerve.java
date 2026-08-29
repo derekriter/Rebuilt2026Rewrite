@@ -215,10 +215,12 @@ public class Swerve extends SubsystemBase {
         Logger.recordOutput("Swerve/inTrajFollowingMode", inTrajFollowingMode);
 
         Command currentCommand = getCurrentCommand();
-        Logger.recordOutput("Swerve/currentCommand", currentCommand == null ? null : currentCommand.getName());
+        Logger.recordOutput(
+                "Swerve/currentCommand", currentCommand == null ? BlankValues.string : currentCommand.getName());
 
         Command defaultCommand = getDefaultCommand();
-        Logger.recordOutput("Swerve/defaultCommand", defaultCommand == null ? null : defaultCommand.getName());
+        Logger.recordOutput(
+                "Swerve/defaultCommand", defaultCommand == null ? BlankValues.string : defaultCommand.getName());
 
         canBusBreakerLast = canBusBreaker;
         gyroConnectedLast = gyroInputs.connected;

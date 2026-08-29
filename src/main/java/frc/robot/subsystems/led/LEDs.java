@@ -10,6 +10,7 @@ import frc.robot.RobotContainer;
 import frc.robot.constants.LEDsConstants;
 import frc.robot.constants.Overrides;
 import frc.robot.util.AlertUtils;
+import frc.robot.util.BlankValues;
 import frc.robot.util.Console;
 import org.littletonrobotics.junction.Logger;
 
@@ -43,10 +44,12 @@ public class LEDs extends SubsystemBase {
     @Override
     public void periodic() {
         Command currentCommand = getCurrentCommand();
-        Logger.recordOutput("LEDs/currentCommand", currentCommand == null ? null : currentCommand.getName());
+        Logger.recordOutput(
+                "LEDs/currentCommand", currentCommand == null ? BlankValues.string : currentCommand.getName());
 
         Command defaultCommand = getDefaultCommand();
-        Logger.recordOutput("LEDs/defaultCommand", defaultCommand == null ? null : defaultCommand.getName());
+        Logger.recordOutput(
+                "LEDs/defaultCommand", defaultCommand == null ? BlankValues.string : defaultCommand.getName());
 
         if (leds_nl != null) {
             if (needsUpdate) {

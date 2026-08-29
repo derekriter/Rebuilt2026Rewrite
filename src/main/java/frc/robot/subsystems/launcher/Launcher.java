@@ -70,6 +70,9 @@ public final class Launcher extends SubsystemBase {
             if (Overrides.disableTurretSafety) {
                 AlertUtils.makeSafetyDisabledAlert("turret").set(true);
             }
+
+            Logger.recordOutput("Launcher/Turret/motorTarget", Double.NaN, Rotations);
+            Logger.recordOutput("Launcher/Turret/mechTarget", Double.NaN, Degrees);
         }
 
         // ===Shooter===
@@ -81,6 +84,9 @@ public final class Launcher extends SubsystemBase {
             if (Overrides.disableShooterSafety) {
                 AlertUtils.makeSafetyDisabledAlert("shooter").set(true);
             }
+
+            Logger.recordOutput("Launcher/Shooter/velTarget", Double.NaN, RPM);
+            Logger.recordOutput("Launcher/Shooter/distTarget", Double.NaN, Meters);
         }
     }
 
@@ -167,10 +173,12 @@ public final class Launcher extends SubsystemBase {
         }
 
         Command currentCommand = getCurrentCommand();
-        Logger.recordOutput("Launcher/currentCommand", currentCommand == null ? null : currentCommand.getName());
+        Logger.recordOutput(
+                "Launcher/currentCommand", currentCommand == null ? BlankValues.string : currentCommand.getName());
 
         Command defaultCommand = getDefaultCommand();
-        Logger.recordOutput("Launcher/defaultCommand", defaultCommand == null ? null : defaultCommand.getName());
+        Logger.recordOutput(
+                "Launcher/defaultCommand", defaultCommand == null ? BlankValues.string : defaultCommand.getName());
 
         Translation2d launcherTranslation = getLauncherTranslation();
         Rotation2d robotRotation = RobotContainer.instance().swerve.getRotation();

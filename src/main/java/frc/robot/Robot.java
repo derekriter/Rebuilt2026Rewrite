@@ -64,6 +64,7 @@ public final class Robot extends LoggedRobot {
         RobotContainer.instance().getAutoChooser().onChange(prog_nl -> {
             autoPathNeedsUpdate = true;
         });
+        AutoProgram.createSetupReference();
     }
 
     private void initLogging() {
@@ -151,7 +152,7 @@ public final class Robot extends LoggedRobot {
                                     || brain.state.isFMSAttached != brain.lastState.get().isFMSAttached);
 
             if (autoPathNeedsUpdate) {
-                RobotContainer.instance().showAutonPath();
+                RobotContainer.instance().showAutonInfo();
             }
         } else if (showingAutoPathLast) {
             AutoProgram.clearPathDisplay();

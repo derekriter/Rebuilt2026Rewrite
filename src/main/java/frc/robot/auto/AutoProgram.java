@@ -2,6 +2,8 @@ package frc.robot.auto;
 
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
+import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.first.cscore.CvSource;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -18,12 +20,24 @@ import java.util.List;
 
 public class AutoProgram {
 
+    private static CvSource setupRefFeed;
+
+    public static void createSetupReference() {
+        setupRefFeed = CameraServer.putVideo(
+                "setupReference", SetupReference.NONE.image.width(), SetupReference.NONE.image.height());
+    }
+
     public static void clearPathDisplay() {
         try {
             Robot.instance().field.getObject("traj").setTrajectory(BlankValues.trajectory);
         } catch (Throwable e) {
             Console.reportError(e, true);
         }
+    }
+
+    public static void clearSetupReference() {
+        setupRefFeed.setResolution(SetupReference.NONE.image.width(), SetupReference.NONE.image.height());
+        setupRefFeed.putFrame(SetupReference.NONE.image);
     }
 
     private static Trajectory getWPITrajFromChoreoAutoTraj(AutoTrajectory autoTraj) {
@@ -66,8 +80,9 @@ public class AutoProgram {
     private final Command cmd;
     private final Trajectory path_nl;
     private final Trajectory flipped_path_nl;
+    private final SetupReference reference;
 
-    public AutoProgram(boolean _isDebug, String _name, Command _cmd, Trajectory _path_nl) {
+    public AutoProgram(boolean _isDebug, String _name, SetupReference _ref, Command _cmd, Trajectory _path_nl) {
         isDebug = _isDebug;
         if (isDebug) {
             name = "[DEBUG] " + _name;
@@ -75,6 +90,7 @@ public class AutoProgram {
             name = _name;
         }
         cmd = _cmd.withName(name);
+        reference = _ref;
 
         path_nl = _path_nl;
         if (path_nl == null) {
@@ -84,7 +100,8 @@ public class AutoProgram {
         }
     }
 
-    public AutoProgram(boolean _isDebug, String _name, AutoRoutine routine, AutoTrajectory... trajs) {
+    public AutoProgram(
+            boolean _isDebug, String _name, SetupReference _ref, AutoRoutine routine, AutoTrajectory... trajs) {
         isDebug = _isDebug;
         if (isDebug) {
             name = "[DEBUG] " + _name;
@@ -92,6 +109,7 @@ public class AutoProgram {
             name = _name;
         }
         cmd = routine.cmd().withName(name);
+        reference = _ref;
 
         Trajectory workingPath_nl = null;
         for (AutoTrajectory t : trajs) {
@@ -119,6 +137,10 @@ public class AutoProgram {
         return isDebug;
     }
 
+    public SetupReference getSetupReference() {
+        return reference;
+    }
+
     public Command getCommand() {
         return cmd;
     }
@@ -131,5 +153,10 @@ public class AutoProgram {
         } else {
             Robot.instance().field.getObject("traj").setTrajectory(chosenPath_nl);
         }
+    }
+
+    public void displaySetupReference() {
+        setupRefFeed.setResolution(reference.image.width(), reference.image.height());
+        setupRefFeed.putFrame(reference.image);
     }
 }
