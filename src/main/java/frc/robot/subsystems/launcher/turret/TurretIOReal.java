@@ -1,6 +1,6 @@
 package frc.robot.subsystems.launcher.turret;
 
-import static frc.robot.config.LauncherConfig.TurretConfig.*;
+import static frc.robot.constants.LauncherConstants.TurretConstants.*;
 
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;

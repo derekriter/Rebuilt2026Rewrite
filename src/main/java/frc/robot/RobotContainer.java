@@ -13,18 +13,22 @@ import choreo.trajectory.SwerveSample;
 import choreo.trajectory.Trajectory;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.LEDPattern;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.auto.AutoProgram;
+import frc.robot.auto.Autos;
 import frc.robot.commands.AimAtTarget;
 import frc.robot.commands.HomeLauncher;
 import frc.robot.commands.TeleopDrive;
-import frc.robot.config.ControllerConfig;
-import frc.robot.config.LEDsConfig;
-import frc.robot.config.Overrides;
+import frc.robot.constants.ControllerConstants;
+import frc.robot.constants.LEDsConstants;
+import frc.robot.constants.Overrides;
 import frc.robot.pdh.PDH;
 import frc.robot.subsystems.launcher.Launcher;
 import frc.robot.subsystems.launcher.shooter.IShooterIO;
@@ -63,13 +67,15 @@ public final class RobotContainer {
     public final Launcher launcher;
     public final LEDs leds = new LEDs();
 
-    public final CommandXboxController driver1Cmd = new CommandXboxController(ControllerConfig.driver1Port);
+    public final CommandXboxController driver1Cmd = new CommandXboxController(ControllerConstants.driver1Port);
     public final XboxController driver1 = driver1Cmd.getHID();
-    public final CommandXboxController driver2Cmd = new CommandXboxController(ControllerConfig.driver2Port);
+    public final CommandXboxController driver2Cmd = new CommandXboxController(ControllerConstants.driver2Port);
     public final XboxController driver2 = driver2Cmd.getHID();
 
     private AutoFactory autoFactory;
-    private LoggedDashboardChooser<Command> autoChooser;
+    private LoggedDashboardChooser<AutoProgram> autoChooser;
+    private Alert debugAutoOnFieldAlert =
+            new Alert("A debug auto has been selected while the FMS is collected", AlertType.kWarning);
 
     private RobotContainer() {
         _inst_nl = this;
@@ -152,13 +158,31 @@ public final class RobotContainer {
         autoChooser = Autos.createAutos(autoFactory);
     }
 
+    public LoggedDashboardChooser<AutoProgram> getAutoChooser() {
+        return autoChooser;
+    }
+
+    public void showAutonInfo() {
+        AutoProgram prog_nl = autoChooser.get();
+
+        if (prog_nl == null) {
+            AutoProgram.clearPathDisplay();
+            AutoProgram.clearSetupReference();
+            debugAutoOnFieldAlert.set(false);
+        } else {
+            prog_nl.displayPath();
+            prog_nl.displaySetupReference();
+            debugAutoOnFieldAlert.set(Robot.instance().brain.state.isFMSAttached && prog_nl.getIsDebug());
+        }
+    }
+
     public Command autonCmd() {
-        Command cmd = autoChooser.get();
-        if (cmd == null) {
+        AutoProgram prog = autoChooser.get();
+        if (prog == null) {
             return Commands.runOnce(() -> Console.println("No autonomous selected"))
                     .withName("Fallback auton");
         } else {
-            return cmd;
+            return prog.getCommand();
         }
     }
 
@@ -191,14 +215,14 @@ public final class RobotContainer {
     }
 
     public Command idleLEDsCmd() {
-        LEDPattern breathe = LEDPattern.solid(LEDsConfig.chargeGold).breathe(Seconds.of(2));
+        LEDPattern breathe = LEDPattern.solid(LEDsConstants.chargeGold).breathe(Seconds.of(2));
         return Commands.runEnd(() -> leds.applyPattern(breathe), leds::clear, leds)
                 .ignoringDisable(true)
                 .withName("idleLEDsCmd");
     }
 
     public Command autonLEDsCmd() {
-        return Commands.startEnd(() -> leds.applyPattern(LEDPattern.solid(LEDsConfig.chargeGold)), leds::clear, leds)
+        return Commands.startEnd(() -> leds.applyPattern(LEDPattern.solid(LEDsConstants.chargeGold)), leds::clear, leds)
                 .ignoringDisable(true)
                 .withName("autonLEDsCmd");
     }
@@ -218,7 +242,7 @@ public final class RobotContainer {
 
     public Command endgameLEDsCmd() {
         LEDPattern rainbow =
-                LEDPattern.rainbow(255, 128).scrollAtAbsoluteSpeed(MetersPerSecond.of(4), LEDsConfig.ledSpacing);
+                LEDPattern.rainbow(255, 128).scrollAtAbsoluteSpeed(MetersPerSecond.of(4), LEDsConstants.ledSpacing);
         return Commands.runEnd(() -> leds.applyPattern(rainbow), leds::clear, leds)
                 .ignoringDisable(true)
                 .withName("endgameLEDsCmd");
@@ -232,7 +256,8 @@ public final class RobotContainer {
     }
 
     public Command hubActiveLEDsCmd() {
-        return Commands.startEnd(() -> leds.applyPattern(LEDPattern.solid(LEDsConfig.chargeGreen)), leds::clear, leds)
+        return Commands.startEnd(
+                        () -> leds.applyPattern(LEDPattern.solid(LEDsConstants.chargeGreen)), leds::clear, leds)
                 .ignoringDisable(true)
                 .withName("hubActiveLEDsCmd");
     }

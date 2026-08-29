@@ -13,8 +13,8 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.RobotContainer;
-import frc.robot.config.ControllerConfig;
-import frc.robot.config.SwerveConfig;
+import frc.robot.constants.ControllerConstants;
+import frc.robot.constants.SwerveConstants;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.util.ControllerUtil;
 import org.littletonrobotics.junction.Logger;
@@ -24,14 +24,14 @@ public class TeleopDrive extends Command {
     private final Swerve swerve;
 
     private final SlewRateLimiter xSlew =
-            new SlewRateLimiter(SwerveConfig.teleopTranslationAcceleration.in(MetersPerSecondPerSecond));
+            new SlewRateLimiter(SwerveConstants.teleopTranslationAcceleration.in(MetersPerSecondPerSecond));
     private final SlewRateLimiter ySlew =
-            new SlewRateLimiter(SwerveConfig.teleopTranslationAcceleration.in(MetersPerSecondPerSecond));
+            new SlewRateLimiter(SwerveConstants.teleopTranslationAcceleration.in(MetersPerSecondPerSecond));
     private final SlewRateLimiter omegaSlew =
-            new SlewRateLimiter(SwerveConfig.teleopAngularAcceleration.in(RadiansPerSecondPerSecond));
+            new SlewRateLimiter(SwerveConstants.teleopAngularAcceleration.in(RadiansPerSecondPerSecond));
 
     private final PIDController headingController =
-            new PIDController(SwerveConfig.headingP, SwerveConfig.headingI, SwerveConfig.headingD);
+            new PIDController(SwerveConstants.headingP, SwerveConstants.headingI, SwerveConstants.headingD);
 
     public TeleopDrive(Swerve _swerve) {
         swerve = _swerve;
@@ -51,7 +51,7 @@ public class TeleopDrive extends Command {
         // XboxController driver2 = RobotContainer.instance().driver2;
 
         double speedShifter =
-                ControllerUtil.isPastDeadband(driver1.getRightTriggerAxis(), ControllerConfig.triggerThreshold)
+                ControllerUtil.isPastDeadband(driver1.getRightTriggerAxis(), ControllerConstants.triggerThreshold)
                         ? 0.25
                         : 1;
         Logger.recordOutput("TeleopDrive/speedShifter", speedShifter);
@@ -75,8 +75,8 @@ public class TeleopDrive extends Command {
         Pair<Double, Double> cubicLeft = ControllerUtil.applyExponentialDeadband(
                 driver1.getLeftX(),
                 driver1.getLeftY(),
-                ControllerConfig.driveJoystickDeadband,
-                ControllerConfig.joystickExponent);
+                ControllerConstants.driveJoystickDeadband,
+                ControllerConstants.joystickExponent);
 
         double omegaDirection = 0;
         if (driver1.getPOV() == 90) {
@@ -85,11 +85,15 @@ public class TeleopDrive extends Command {
             omegaDirection = 1;
         }
 
-        double commonXVel_mps = xSlew.calculate(
-                SwerveConfig.maxTranslationVel.in(MetersPerSecond) * -cubicLeft.getSecond() * speedShifter * slowDown);
-        double commonYVel_mps = ySlew.calculate(
-                SwerveConfig.maxTranslationVel.in(MetersPerSecond) * -cubicLeft.getFirst() * speedShifter * slowDown);
-        double commmonMaxAngularRate_radps = SwerveConfig.maxAngularVel.in(RadiansPerSecond) * speedShifter;
+        double commonXVel_mps = xSlew.calculate(SwerveConstants.maxTranslationVel.in(MetersPerSecond)
+                * -cubicLeft.getSecond()
+                * speedShifter
+                * slowDown);
+        double commonYVel_mps = ySlew.calculate(SwerveConstants.maxTranslationVel.in(MetersPerSecond)
+                * -cubicLeft.getFirst()
+                * speedShifter
+                * slowDown);
+        double commmonMaxAngularRate_radps = SwerveConstants.maxAngularVel.in(RadiansPerSecond) * speedShifter;
         double ommegaControl_radps = omegaSlew.calculate(commmonMaxAngularRate_radps * omegaDirection);
 
         Logger.recordOutput("TeleopDrive/commonXVel", commonXVel_mps, MetersPerSecond.name());
@@ -106,7 +110,7 @@ public class TeleopDrive extends Command {
             if (driver1.getLeftBumperButton()) {
                 // snake orientation
                 if (ControllerUtil.isPastDeadband(
-                        driver1.getLeftX(), driver1.getLeftY(), ControllerConfig.driveJoystickDeadband)) {
+                        driver1.getLeftX(), driver1.getLeftY(), ControllerConstants.driveJoystickDeadband)) {
                     double heading_rad =
                             ControllerUtil.getFieldSpaceJoystickAngle_rad(driver1.getLeftX(), driver1.getLeftY());
                     Logger.recordOutput("TeleopDrive/headingDirection", heading_rad, Radians.name());
@@ -125,7 +129,7 @@ public class TeleopDrive extends Command {
 
                 headingController.reset();
             } else if (ControllerUtil.isPastDeadband(
-                    driver1.getRightX(), driver1.getRightY(), ControllerConfig.turnJoystickDeadband)) {
+                    driver1.getRightX(), driver1.getRightY(), ControllerConstants.turnJoystickDeadband)) {
                 // joystick orientation
                 double heading_rad =
                         ControllerUtil.getFieldSpaceJoystickAngle_rad(driver1.getRightX(), driver1.getRightY());
@@ -144,7 +148,7 @@ public class TeleopDrive extends Command {
                     Math.min(Math.abs(targetOmega_radps), commmonMaxAngularRate_radps), targetOmega_radps);
             Logger.recordOutput("TeleopDrive/targetOmega", targetOmega_radps, RadiansPerSecond.name());
 
-            if (ControllerUtil.isPastDeadband(driver1.getLeftTriggerAxis(), ControllerConfig.triggerThreshold)) {
+            if (ControllerUtil.isPastDeadband(driver1.getLeftTriggerAxis(), ControllerConstants.triggerThreshold)) {
                 // robot centric
                 swerve.runRobotRelativeVelocity(new ChassisSpeeds(commonXVel_mps, commonYVel_mps, targetOmega_radps));
             } else {

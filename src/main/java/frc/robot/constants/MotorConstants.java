@@ -1,10 +1,10 @@
-package frc.robot.config;
+package frc.robot.constants;
 
 import static edu.wpi.first.units.Units.Celsius;
 
 import edu.wpi.first.units.measure.Temperature;
 
-public final class MotorConfig {
+public final class MotorConstants {
 
     /*
     NOTES:
@@ -48,5 +48,5 @@ public final class MotorConfig {
     public static Temperature krakenX60TempWarnThreshold = Celsius.of(80);
     public static Temperature krakenX60ThermalShutdownThreshold = Celsius.of(90);
 
-    private MotorConfig() {}
+    private MotorConstants() {}
 }

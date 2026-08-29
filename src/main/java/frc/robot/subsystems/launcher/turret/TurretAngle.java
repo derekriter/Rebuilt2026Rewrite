@@ -6,7 +6,7 @@ import static edu.wpi.first.units.Units.Rotations;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.MutAngle;
-import frc.robot.config.LauncherConfig.TurretConfig;
+import frc.robot.constants.LauncherConstants.TurretConstants;
 
 public final class TurretAngle {
 
@@ -52,39 +52,39 @@ public final class TurretAngle {
 
     // conversions
     public static Angle mechAngleToMotorAngle(Angle mechAngle) {
-        return mechAngle.div(TurretConfig.mechRotsPerMotorRots);
+        return mechAngle.div(TurretConstants.mechRotsPerMotorRots);
     }
 
     public static double mechAngleToMotorAngle_ul(double mechAngle_ul) {
-        return mechAngle_ul / TurretConfig.mechRotsPerMotorRots;
+        return mechAngle_ul / TurretConstants.mechRotsPerMotorRots;
     }
 
     public static Angle motorAngleToMechAngle(Angle motorAngle) {
-        return motorAngle.times(TurretConfig.mechRotsPerMotorRots);
+        return motorAngle.times(TurretConstants.mechRotsPerMotorRots);
     }
 
     public static double motorAngleToMechAngle_ul(double motorAngle_ul) {
-        return motorAngle_ul * TurretConfig.mechRotsPerMotorRots;
+        return motorAngle_ul * TurretConstants.mechRotsPerMotorRots;
     }
 
     // tests + operators
     public boolean isWrapped() {
-        return mechAngle.lt(TurretConfig.breakAngle.mechAngle)
-                && mechAngle.gte(TurretConfig.breakAngle.mechAngle.minus(Rotations.of(1)));
+        return mechAngle.lt(TurretConstants.breakAngle.mechAngle)
+                && mechAngle.gte(TurretConstants.breakAngle.mechAngle.minus(Rotations.of(1)));
     }
 
     public void wrap() {
         if (isWrapped()) return;
 
         double deg = mechAngle.in(Degrees);
-        double breakDeg = TurretConfig.breakAngle.mechAngle.in(Degrees);
+        double breakDeg = TurretConstants.breakAngle.mechAngle.in(Degrees);
 
         // https://www.desmos.com/calculator/1wz1yp45dl
         mechAngle.mut_replace(deg - breakDeg - 360 * Math.floor((deg - breakDeg) / 360d) - 360 + breakDeg, Degrees);
     }
 
     public boolean isLegal() {
-        return mechAngle.lte(TurretConfig.maxLegal.mechAngle) && mechAngle.gte(TurretConfig.minLegal.mechAngle);
+        return mechAngle.lte(TurretConstants.maxLegal.mechAngle) && mechAngle.gte(TurretConstants.minLegal.mechAngle);
     }
 
     public void clampToLegalRange() {
@@ -95,7 +95,9 @@ public final class TurretAngle {
 
         mechAngle.mut_replace(
                 MathUtil.clamp(
-                        deg, TurretConfig.minLegal.mechAngle.in(Degrees), TurretConfig.maxLegal.mechAngle.in(Degrees)),
+                        deg,
+                        TurretConstants.minLegal.mechAngle.in(Degrees),
+                        TurretConstants.maxLegal.mechAngle.in(Degrees)),
                 Degrees);
     }
 }

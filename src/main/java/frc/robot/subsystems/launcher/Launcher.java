@@ -15,10 +15,10 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotContainer;
-import frc.robot.config.LauncherConfig;
-import frc.robot.config.LauncherConfig.ShooterConfig;
-import frc.robot.config.LauncherConfig.TurretConfig;
-import frc.robot.config.Overrides;
+import frc.robot.constants.LauncherConstants;
+import frc.robot.constants.LauncherConstants.ShooterConstants;
+import frc.robot.constants.LauncherConstants.TurretConstants;
+import frc.robot.constants.Overrides;
 import frc.robot.subsystems.launcher.shooter.IShooterIO;
 import frc.robot.subsystems.launcher.shooter.IShooterIO.ShooterIOInputs;
 import frc.robot.subsystems.launcher.shooter.ShooterTarget;
@@ -64,23 +64,29 @@ public final class Launcher extends SubsystemBase {
         // ===Turret===
         turretIO_nl = _turretIO_nl;
         if (turretIO_nl == null) {
-            Logger.recordOutput("CAN/turret_" + TurretConfig.canID, false);
+            Logger.recordOutput("CAN/turret_" + TurretConstants.canID, false);
             AlertUtils.makeSystemDisabledAlert("turret").set(true);
         } else {
             if (Overrides.disableTurretSafety) {
                 AlertUtils.makeSafetyDisabledAlert("turret").set(true);
             }
+
+            Logger.recordOutput("Launcher/Turret/motorTarget", Double.NaN, Rotations);
+            Logger.recordOutput("Launcher/Turret/mechTarget", Double.NaN, Degrees);
         }
 
         // ===Shooter===
         shooterIO_nl = _shooterIO_nl;
         if (shooterIO_nl == null) {
-            Logger.recordOutput("CAN/shooter_" + ShooterConfig.canID, false);
+            Logger.recordOutput("CAN/shooter_" + ShooterConstants.canID, false);
             AlertUtils.makeSystemDisabledAlert("shooter").set(true);
         } else {
             if (Overrides.disableShooterSafety) {
                 AlertUtils.makeSafetyDisabledAlert("shooter").set(true);
             }
+
+            Logger.recordOutput("Launcher/Shooter/velTarget", Double.NaN, RPM);
+            Logger.recordOutput("Launcher/Shooter/distTarget", Double.NaN, Meters);
         }
     }
 
@@ -90,24 +96,24 @@ public final class Launcher extends SubsystemBase {
             turretIO_nl.updateInputs(turretInputs);
             Logger.processInputs("LauncherInputs/TurretInputs", turretInputs);
 
-            turretBreaker = RobotContainer.instance().pdh.isBreakerTripped(TurretConfig.channelID);
+            turretBreaker = RobotContainer.instance().pdh.isBreakerTripped(TurretConstants.channelID);
 
-            Logger.recordOutput("CAN/turret_" + TurretConfig.canID, turretInputs.connected);
+            Logger.recordOutput("CAN/turret_" + TurretConstants.canID, turretInputs.connected);
             turretCANAlert.set(!turretInputs.connected && !turretBreaker);
             if (turretInputs.connected != turretConnectedLast) {
                 if (turretInputs.connected) {
-                    Console.reportCANConnect("turret", TurretConfig.canID, TurretConfig.channelID);
+                    Console.reportCANConnect("turret", TurretConstants.canID, TurretConstants.channelID);
                 } else {
-                    Console.reportCANDisconnect("turret", TurretConfig.canID, TurretConfig.channelID);
+                    Console.reportCANDisconnect("turret", TurretConstants.canID, TurretConstants.channelID);
                 }
             }
             Logger.recordOutput("Launcher/Turret/breakerTripped", turretBreaker);
             turretBreakerAlert.set(turretBreaker);
             if (turretBreaker != turretBreakerLast) {
                 if (turretBreaker) {
-                    Console.reportBreakerTrip("turret", TurretConfig.canID, TurretConfig.channelID);
+                    Console.reportBreakerTrip("turret", TurretConstants.canID, TurretConstants.channelID);
                 } else {
-                    Console.reportBreakerReset("turret", TurretConfig.canID, TurretConfig.channelID);
+                    Console.reportBreakerReset("turret", TurretConstants.canID, TurretConstants.channelID);
                 }
             }
             Logger.recordOutput("Launcher/Turret/atHomingLimit", isTurretAtHomingLimit());
@@ -120,30 +126,30 @@ public final class Launcher extends SubsystemBase {
             shooterIO_nl.updateInputs(shooterInputs);
             Logger.processInputs("LauncherInputs/ShooterInputs", shooterInputs);
 
-            shooterBreaker = RobotContainer.instance().pdh.isBreakerTripped(ShooterConfig.channelID);
+            shooterBreaker = RobotContainer.instance().pdh.isBreakerTripped(ShooterConstants.channelID);
 
-            Logger.recordOutput("CAN/shooter_" + ShooterConfig.canID, shooterInputs.connected);
+            Logger.recordOutput("CAN/shooter_" + ShooterConstants.canID, shooterInputs.connected);
             shooterCANAlert.set(!shooterInputs.connected && !shooterBreaker);
             if (shooterInputs.connected != shooterConnectedLast) {
                 if (shooterInputs.connected) {
-                    Console.reportCANConnect("shooter", ShooterConfig.canID, ShooterConfig.channelID);
+                    Console.reportCANConnect("shooter", ShooterConstants.canID, ShooterConstants.channelID);
                 } else {
-                    Console.reportCANDisconnect("shooter", ShooterConfig.canID, ShooterConfig.channelID);
+                    Console.reportCANDisconnect("shooter", ShooterConstants.canID, ShooterConstants.channelID);
                 }
             }
             Logger.recordOutput("Launcher/Shooter/breakerTripped", shooterBreaker);
             shooterBreakerAlert.set(shooterBreaker);
             if (shooterBreaker != shooterBreakerLast) {
                 if (shooterBreaker) {
-                    Console.reportBreakerTrip("shooter", ShooterConfig.canID, ShooterConfig.channelID);
+                    Console.reportBreakerTrip("shooter", ShooterConstants.canID, ShooterConstants.channelID);
                 } else {
-                    Console.reportBreakerReset("shooter", ShooterConfig.canID, ShooterConfig.channelID);
+                    Console.reportBreakerReset("shooter", ShooterConstants.canID, ShooterConstants.channelID);
                 }
             }
 
             if (!Overrides.disableShooterSafety && shooterInputs.connected) {
-                boolean gettingToasty = shooterInputs.temp_C >= ShooterConfig.tempWarnThreshold.in(Celsius);
-                boolean overheating = shooterInputs.temp_C >= ShooterConfig.thermalShutdownThreshold.in(Celsius);
+                boolean gettingToasty = shooterInputs.temp_C >= ShooterConstants.tempWarnThreshold.in(Celsius);
+                boolean overheating = shooterInputs.temp_C >= ShooterConstants.thermalShutdownThreshold.in(Celsius);
                 shooterThermalShutdown = (overheating || shooterThermalShutdown) && gettingToasty;
 
                 shooterTempWarnAlert.set(gettingToasty && !shooterThermalShutdown);
@@ -153,11 +159,11 @@ public final class Launcher extends SubsystemBase {
 
             if (shooterThermalShutdown != shooterThermalShutdownLast) {
                 if (shooterThermalShutdown) {
-                    Console.reportThermalShutdownTrigger("shooter", ShooterConfig.canID, ShooterConfig.channelID);
+                    Console.reportThermalShutdownTrigger("shooter", ShooterConstants.canID, ShooterConstants.channelID);
 
                     stopShooter();
                 } else {
-                    Console.reportThermalShutdownRelease("shooter", ShooterConfig.canID, ShooterConfig.channelID);
+                    Console.reportThermalShutdownRelease("shooter", ShooterConstants.canID, ShooterConstants.channelID);
                 }
             }
 
@@ -167,10 +173,12 @@ public final class Launcher extends SubsystemBase {
         }
 
         Command currentCommand = getCurrentCommand();
-        Logger.recordOutput("Launcher/currentCommand", currentCommand == null ? null : currentCommand.getName());
+        Logger.recordOutput(
+                "Launcher/currentCommand", currentCommand == null ? BlankValues.string : currentCommand.getName());
 
         Command defaultCommand = getDefaultCommand();
-        Logger.recordOutput("Launcher/defaultCommand", defaultCommand == null ? null : defaultCommand.getName());
+        Logger.recordOutput(
+                "Launcher/defaultCommand", defaultCommand == null ? BlankValues.string : defaultCommand.getName());
 
         Translation2d launcherTranslation = getLauncherTranslation();
         Rotation2d robotRotation = RobotContainer.instance().swerve.getRotation();
@@ -243,7 +251,7 @@ public final class Launcher extends SubsystemBase {
 
     private Translation2d getLauncherTranslation() {
         Pose2d robotPose = RobotContainer.instance().swerve.getPose();
-        return robotPose.getTranslation().plus(LauncherConfig.launcherOffset.rotateBy(robotPose.getRotation()));
+        return robotPose.getTranslation().plus(LauncherConstants.launcherOffset.rotateBy(robotPose.getRotation()));
     }
 
     public void setTurretAngle(TurretAngle ang) {
@@ -282,14 +290,14 @@ public final class Launcher extends SubsystemBase {
     public boolean isTurretAtHomingLimit() {
         if (turretIO_nl == null || !turretInputs.connected) return false;
 
-        return turretInputs.currentOut_A > TurretConfig.homingThresholdCurrent.in(Amps)
-                || Math.abs(turretInputs.vel_RPM) < TurretConfig.homingThresholdVel.in(RPM);
+        return turretInputs.currentOut_A > TurretConstants.homingThresholdCurrent.in(Amps)
+                || Math.abs(turretInputs.vel_RPM) < TurretConstants.homingThresholdVel.in(RPM);
     }
 
     public void setAsTurretHomingPosition() {
         if (turretIO_nl == null) return;
 
-        turretIO_nl.setEncoderPosition(TurretConfig.homingEndPos.asMotorRotations());
+        turretIO_nl.setEncoderPosition(TurretConstants.homingEndPos.asMotorRotations());
     }
 
     public boolean isTurretAtTarget() {
@@ -297,7 +305,7 @@ public final class Launcher extends SubsystemBase {
         if (Double.isNaN(lastTurretTarget_rot)) return false;
 
         return MathUtil.isNear(
-                lastTurretTarget_rot, turretInputs.pos_rots, TurretConfig.targetTolerance.asMotorRotations());
+                lastTurretTarget_rot, turretInputs.pos_rots, TurretConstants.targetTolerance.asMotorRotations());
     }
 
     public void setShooterTarget(ShooterTarget trg) {
@@ -338,6 +346,6 @@ public final class Launcher extends SubsystemBase {
         if (Double.isNaN(lastShooterTarget_RPM)) return false;
 
         return MathUtil.isNear(
-                lastShooterTarget_RPM, shooterInputs.vel_RPM, ShooterConfig.targetTolerance.asShooterRPM());
+                lastShooterTarget_RPM, shooterInputs.vel_RPM, ShooterConstants.targetTolerance.asShooterRPM());
     }
 }

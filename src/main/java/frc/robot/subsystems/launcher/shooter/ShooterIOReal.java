@@ -1,6 +1,6 @@
 package frc.robot.subsystems.launcher.shooter;
 
-import static frc.robot.config.LauncherConfig.ShooterConfig.*;
+import static frc.robot.constants.LauncherConstants.ShooterConstants.*;
 
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;

@@ -9,13 +9,14 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.auto.AutoProgram;
 import frc.robot.brain.RobotBrain;
 import frc.robot.brain.RobotState;
-import frc.robot.config.LauncherConfig.ShooterConfig;
-import frc.robot.config.LauncherConfig.TurretConfig;
-import frc.robot.config.Overrides;
-import frc.robot.config.PDHConfig;
 import frc.robot.constants.BuildConstants;
+import frc.robot.constants.LauncherConstants.ShooterConstants;
+import frc.robot.constants.LauncherConstants.TurretConstants;
+import frc.robot.constants.Overrides;
+import frc.robot.constants.PDHConstants;
 import frc.robot.util.ControllerUtil;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -45,6 +46,10 @@ public final class Robot extends LoggedRobot {
     public final RobotBrain brain;
     public final Field2d field;
 
+    private boolean showingAutoPath = false;
+    private boolean showingAutoPathLast = false;
+    private boolean autoPathNeedsUpdate = false;
+
     private Robot() {
         _inst_nl = this;
 
@@ -55,6 +60,11 @@ public final class Robot extends LoggedRobot {
         brain = new RobotBrain();
         field = new Field2d();
         SmartDashboard.putData("field", field);
+
+        RobotContainer.instance().getAutoChooser().onChange(prog_nl -> {
+            autoPathNeedsUpdate = true;
+        });
+        AutoProgram.createSetupReference();
     }
 
     private void initLogging() {
@@ -96,9 +106,9 @@ public final class Robot extends LoggedRobot {
         }
 
         Logger.registerURCL(URCL.startExternal(Map.ofEntries(
-                Map.entry(TurretConfig.canID, "turretMotor"),
-                Map.entry(ShooterConfig.canID, "shooterMotor"),
-                Map.entry(PDHConfig.canID, "PDH"))));
+                Map.entry(TurretConstants.canID, "turretMotor"),
+                Map.entry(ShooterConstants.canID, "shooterMotor"),
+                Map.entry(PDHConstants.canID, "PDH"))));
         StatusLogger.disableAutoLogging();
 
         DriverStation.silenceJoystickConnectionWarning(true);
@@ -124,11 +134,32 @@ public final class Robot extends LoggedRobot {
         brain.log();
         brain.scheduleCommands();
 
+        handleAutoPath();
+
         // update lastState in brain
         if (brain.lastState.isEmpty()) {
             brain.lastState = Optional.of(new RobotState());
         }
         brain.lastState.get().copyFrom(brain.state);
+    }
+
+    private void handleAutoPath() {
+        if (showingAutoPath) {
+            autoPathNeedsUpdate = autoPathNeedsUpdate
+                    || !showingAutoPathLast
+                    || brain.lastState.isPresent()
+                            && (brain.state.isRed != brain.lastState.get().isRed
+                                    || brain.state.isFMSAttached != brain.lastState.get().isFMSAttached);
+
+            if (autoPathNeedsUpdate) {
+                RobotContainer.instance().showAutonInfo();
+            }
+        } else if (showingAutoPathLast) {
+            AutoProgram.clearPathDisplay();
+        }
+
+        showingAutoPathLast = showingAutoPath;
+        autoPathNeedsUpdate = false;
     }
 
     @Override
@@ -138,7 +169,9 @@ public final class Robot extends LoggedRobot {
     public void simulationPeriodic() {}
 
     @Override
-    public void disabledInit() {}
+    public void disabledInit() {
+        showingAutoPath = true;
+    }
 
     @Override
     public void disabledPeriodic() {}
@@ -147,7 +180,9 @@ public final class Robot extends LoggedRobot {
     public void disabledExit() {}
 
     @Override
-    public void autonomousInit() {}
+    public void autonomousInit() {
+        showingAutoPath = true;
+    }
 
     @Override
     public void autonomousPeriodic() {}
@@ -156,7 +191,9 @@ public final class Robot extends LoggedRobot {
     public void autonomousExit() {}
 
     @Override
-    public void teleopInit() {}
+    public void teleopInit() {
+        showingAutoPath = false;
+    }
 
     @Override
     public void teleopPeriodic() {}
@@ -165,7 +202,9 @@ public final class Robot extends LoggedRobot {
     public void teleopExit() {}
 
     @Override
-    public void testInit() {}
+    public void testInit() {
+        showingAutoPath = false;
+    }
 
     @Override
     public void testPeriodic() {}

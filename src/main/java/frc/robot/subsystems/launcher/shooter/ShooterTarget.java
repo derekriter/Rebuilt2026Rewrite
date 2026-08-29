@@ -7,7 +7,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.MutAngularVelocity;
-import frc.robot.config.LauncherConfig.ShooterConfig;
+import frc.robot.constants.LauncherConstants.ShooterConstants;
 
 public final class ShooterTarget {
 
@@ -57,7 +57,7 @@ public final class ShooterTarget {
     }
 
     public static double velToDistance_m(double vel_rpm) {
-        return Math.max((vel_rpm - ShooterConfig.targetOffset.asShooterRPM() - 1614) / 381.0d, 0);
+        return Math.max((vel_rpm - ShooterConstants.targetOffset.asShooterRPM() - 1614) / 381.0d, 0);
     }
 
     public static AngularVelocity distanceToVel(Distance dist) {
@@ -65,12 +65,12 @@ public final class ShooterTarget {
     }
 
     public static double distanceToVel_rpm(double dist_m) {
-        return 381 * dist_m + 1614 + ShooterConfig.targetOffset.asShooterRPM();
+        return 381 * dist_m + 1614 + ShooterConstants.targetOffset.asShooterRPM();
     }
 
     // tests + operators
     public boolean isLegal() {
-        return vel.gte(ShooterConfig.minRealTarget.vel) && vel.lte(ShooterConfig.maxRealTarget.vel);
+        return vel.gte(ShooterConstants.minRealTarget.vel) && vel.lte(ShooterConstants.maxRealTarget.vel);
     }
 
     public void clampToLegalRange() {
@@ -78,7 +78,9 @@ public final class ShooterTarget {
 
         vel.mut_replace(
                 MathUtil.clamp(
-                        vel.in(RPM), ShooterConfig.minRealTarget.vel.in(RPM), ShooterConfig.maxRealTarget.vel.in(RPM)),
+                        vel.in(RPM),
+                        ShooterConstants.minRealTarget.vel.in(RPM),
+                        ShooterConstants.maxRealTarget.vel.in(RPM)),
                 RPM);
     }
 

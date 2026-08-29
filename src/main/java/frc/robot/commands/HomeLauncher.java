@@ -5,7 +5,7 @@ import static edu.wpi.first.units.Units.Volts;
 
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.config.LauncherConfig.TurretConfig;
+import frc.robot.constants.LauncherConstants.TurretConstants;
 import frc.robot.subsystems.launcher.Launcher;
 import org.littletonrobotics.junction.Logger;
 
@@ -21,7 +21,7 @@ public class HomeLauncher extends Command {
 
     @Override
     public void initialize() {
-        launcher.setTurretVoltage(TurretConfig.homingVoltage.in(Volts));
+        launcher.setTurretVoltage(TurretConstants.homingVoltage.in(Volts));
         startTimer.restart();
     }
 
@@ -42,8 +42,8 @@ public class HomeLauncher extends Command {
 
     @Override
     public boolean isFinished() {
-        return startTimer.hasElapsed(TurretConfig.homingMinRunTime) && launcher.isTurretAtHomingLimit()
-                || startTimer.hasElapsed(TurretConfig.homingTimeout);
+        return startTimer.hasElapsed(TurretConstants.homingMinRunTime) && launcher.isTurretAtHomingLimit()
+                || startTimer.hasElapsed(TurretConstants.homingTimeout);
     }
 
     @Override

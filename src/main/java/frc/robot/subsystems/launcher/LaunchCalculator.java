@@ -7,7 +7,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import frc.robot.config.LauncherConfig;
+import frc.robot.constants.LauncherConstants;
 import frc.robot.subsystems.launcher.shooter.ShooterTarget;
 import frc.robot.subsystems.launcher.turret.TurretAngle;
 
@@ -29,13 +29,13 @@ public final class LaunchCalculator {
     }
 
     private static Translation2d getLauncherLocOnField(Pose2d robotPose) {
-        return robotPose.getTranslation().plus(LauncherConfig.launcherOffset.rotateBy(robotPose.getRotation()));
+        return robotPose.getTranslation().plus(LauncherConstants.launcherOffset.rotateBy(robotPose.getRotation()));
     }
 
     private static Translation2d calcPointCompensation(ChassisSpeeds robotRelativeSpeeds, Rotation2d robotRot) {
         Translation2d velCompensation = new Translation2d(
-                        robotRelativeSpeeds.vxMetersPerSecond * LauncherConfig.ballAirTime.in(Seconds),
-                        robotRelativeSpeeds.vyMetersPerSecond * LauncherConfig.ballAirTime.in(Seconds))
+                        robotRelativeSpeeds.vxMetersPerSecond * LauncherConstants.ballAirTime.in(Seconds),
+                        robotRelativeSpeeds.vyMetersPerSecond * LauncherConstants.ballAirTime.in(Seconds))
                 .rotateBy(robotRot)
                 .unaryMinus();
 

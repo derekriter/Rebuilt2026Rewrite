@@ -1,5 +1,5 @@
 // spotless:off
-package frc.robot.choreo.generated;
+package frc.robot.auto.generated;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -24,11 +24,25 @@ public record ChoreoTraj(
     Pose2d initialPoseBlue,
     Pose2d endPoseBlue
 ) {
+    public static final ChoreoTraj L_collect1_depot = new ChoreoTraj(
+        "L_collect1_depot",
+        OptionalInt.empty(),
+        3.40935,
+        new Pose2d(7.67, 4, Rotation2d.fromRadians(-1.5708)),
+        new Pose2d(0.61401, 5.96052, Rotation2d.fromRadians(3.14159))
+    );
     public static final ChoreoTraj L_collect1_shoot = new ChoreoTraj(
         "L_collect1_shoot",
         OptionalInt.empty(),
         2.17003,
         new Pose2d(7.67, 4, Rotation2d.fromRadians(-1.5708)),
+        new Pose2d(2.325, 6.144, Rotation2d.fromRadians(-1.0472))
+    );
+    public static final ChoreoTraj L_collect2_shoot = new ChoreoTraj(
+        "L_collect2_shoot",
+        OptionalInt.empty(),
+        2.33624,
+        new Pose2d(6.281, 3, Rotation2d.fromRadians(-1.5708)),
         new Pose2d(2.325, 6.144, Rotation2d.fromRadians(-1.0472))
     );
     public static final ChoreoTraj L_shoot_climb = new ChoreoTraj(
@@ -38,19 +52,19 @@ public record ChoreoTraj(
         new Pose2d(2.325, 6.144, Rotation2d.fromRadians(-1.0472)),
         new Pose2d(1.03, 4.8, Rotation2d.fromRadians(0))
     );
+    public static final ChoreoTraj L_shoot_collect2 = new ChoreoTraj(
+        "L_shoot_collect2",
+        OptionalInt.empty(),
+        3.28711,
+        new Pose2d(2.325, 6.144, Rotation2d.fromRadians(-1.0472)),
+        new Pose2d(6.281, 3, Rotation2d.fromRadians(-1.5708))
+    );
     public static final ChoreoTraj L_trench_collect1 = new ChoreoTraj(
         "L_trench_collect1",
         OptionalInt.empty(),
         2.57265,
         new Pose2d(4.35, 7.63, Rotation2d.fromRadians(0)),
         new Pose2d(7.67, 4, Rotation2d.fromRadians(-1.5708))
-    );
-    public static final ChoreoTraj R_shoot_climb = new ChoreoTraj(
-        "R_shoot_climb",
-        OptionalInt.empty(),
-        0.81574,
-        new Pose2d(2.325, 1.92533, Rotation2d.fromRadians(0)),
-        new Pose2d(1.08, 2.691, Rotation2d.fromRadians(3.14159))
     );
     public static final ChoreoTraj R_collect1_shoot = new ChoreoTraj(
         "R_collect1_shoot",
@@ -59,26 +73,19 @@ public record ChoreoTraj(
         new Pose2d(7.67, 4.06933, Rotation2d.fromRadians(1.5708)),
         new Pose2d(2.325, 1.92533, Rotation2d.fromRadians(0))
     );
-    public static final ChoreoTraj L_collect1_depot = new ChoreoTraj(
-        "L_collect1_depot",
+    public static final ChoreoTraj R_collect2_shoot = new ChoreoTraj(
+        "R_collect2_shoot",
         OptionalInt.empty(),
-        3.40935,
-        new Pose2d(7.67, 4, Rotation2d.fromRadians(-1.5708)),
-        new Pose2d(0.61401, 5.96052, Rotation2d.fromRadians(3.14159))
+        2.31795,
+        new Pose2d(6.281, 5.06933, Rotation2d.fromRadians(1.5708)),
+        new Pose2d(2.325, 1.92533, Rotation2d.fromRadians(0))
     );
-    public static final ChoreoTraj L_shoot_collect2 = new ChoreoTraj(
-        "L_shoot_collect2",
+    public static final ChoreoTraj R_shoot_climb = new ChoreoTraj(
+        "R_shoot_climb",
         OptionalInt.empty(),
-        3.28711,
-        new Pose2d(2.325, 6.144, Rotation2d.fromRadians(-1.0472)),
-        new Pose2d(6.281, 3, Rotation2d.fromRadians(-1.5708))
-    );
-    public static final ChoreoTraj L_collect2_shoot = new ChoreoTraj(
-        "L_collect2_shoot",
-        OptionalInt.empty(),
-        2.33624,
-        new Pose2d(6.281, 3, Rotation2d.fromRadians(-1.5708)),
-        new Pose2d(2.325, 6.144, Rotation2d.fromRadians(-1.0472))
+        0.81574,
+        new Pose2d(2.325, 1.92533, Rotation2d.fromRadians(0)),
+        new Pose2d(1.08, 2.691, Rotation2d.fromRadians(3.14159))
     );
     public static final ChoreoTraj R_shoot_collect2 = new ChoreoTraj(
         "R_shoot_collect2",
@@ -87,29 +94,22 @@ public record ChoreoTraj(
         new Pose2d(2.325, 1.92533, Rotation2d.fromRadians(0)),
         new Pose2d(6.281, 5.06933, Rotation2d.fromRadians(1.5708))
     );
-    public static final ChoreoTraj R_collect2_shoot = new ChoreoTraj(
-        "R_collect2_shoot",
-        OptionalInt.empty(),
-        2.31795,
-        new Pose2d(6.281, 5.06933, Rotation2d.fromRadians(1.5708)),
-        new Pose2d(2.325, 1.92533, Rotation2d.fromRadians(0))
-    );
 
     /**
      * A map between trajectory names and their corresponding data.
      * This allows for trajectory data to be looked up with strings during runtime.
      */
     public static final Map<String, ChoreoTraj> ALL_TRAJECTORIES = Map.ofEntries(
-        Map.entry("L_collect1_shoot", L_collect1_shoot),
-        Map.entry("L_shoot_climb", L_shoot_climb),
-        Map.entry("L_trench_collect1", L_trench_collect1),
-        Map.entry("R_shoot_climb", R_shoot_climb),
-        Map.entry("R_collect1_shoot", R_collect1_shoot),
         Map.entry("L_collect1_depot", L_collect1_depot),
-        Map.entry("L_shoot_collect2", L_shoot_collect2),
+        Map.entry("L_collect1_shoot", L_collect1_shoot),
         Map.entry("L_collect2_shoot", L_collect2_shoot),
-        Map.entry("R_shoot_collect2", R_shoot_collect2),
-        Map.entry("R_collect2_shoot", R_collect2_shoot)
+        Map.entry("L_shoot_climb", L_shoot_climb),
+        Map.entry("L_shoot_collect2", L_shoot_collect2),
+        Map.entry("L_trench_collect1", L_trench_collect1),
+        Map.entry("R_collect1_shoot", R_collect1_shoot),
+        Map.entry("R_collect2_shoot", R_collect2_shoot),
+        Map.entry("R_shoot_climb", R_shoot_climb),
+        Map.entry("R_shoot_collect2", R_shoot_collect2)
     );
 
     /**

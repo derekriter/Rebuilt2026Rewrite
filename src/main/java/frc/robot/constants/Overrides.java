@@ -1,4 +1,4 @@
-package frc.robot.config;
+package frc.robot.constants;
 
 import org.littletonrobotics.junction.Logger;
 
