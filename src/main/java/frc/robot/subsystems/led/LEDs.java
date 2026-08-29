@@ -4,6 +4,7 @@ import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.LEDPattern;
+import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotContainer;
@@ -38,6 +39,7 @@ public class LEDs extends SubsystemBase {
 
             leds_nl.setData(buffer_nl);
             leds_nl.start();
+            Logger.recordOutput("LEDs/led0", buffer_nl.getLength() > 0 ? buffer_nl.getLED(0) : Color.kBlack);
         }
     }
 
@@ -55,6 +57,8 @@ public class LEDs extends SubsystemBase {
             if (needsUpdate) {
                 leds_nl.setData(buffer_nl);
                 needsUpdate = false;
+
+                Logger.recordOutput("LEDs/led0", buffer_nl.getLength() > 0 ? buffer_nl.getLED(0) : Color.kBlack);
             }
 
             boolean breakerTripped = RobotContainer.instance().pdh.isBreakerTripped(LEDsConstants.channelID);
