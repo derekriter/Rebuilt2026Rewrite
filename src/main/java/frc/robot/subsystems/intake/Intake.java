@@ -1,11 +1,7 @@
 package frc.robot.subsystems.intake;
 
 import static edu.wpi.first.units.Units.Celsius;
-import static edu.wpi.first.units.Units.RPM;
-import static edu.wpi.first.units.Units.Seconds;
 
-import edu.wpi.first.math.filter.Debouncer;
-import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -29,7 +25,6 @@ public class Intake extends SubsystemBase {
             rollerBreakerAlert = AlertUtils.makeBreakerTripAlert("roller"),
             rollerTempWarnAlert = AlertUtils.makeTempWarnAlert("roller"),
             rollerThermalShutdownAlert = AlertUtils.makeThermalShutdownAlert("roller"),
-            rollerStallAlert = AlertUtils.makeStallAlert("roller"),
             leftDeployerBreakerAlert = AlertUtils.makeBreakerTripAlert("leftDeployer"),
             rightDeployerBreakerAlert = AlertUtils.makeBreakerTripAlert("rightDeployer");
 
@@ -38,9 +33,6 @@ public class Intake extends SubsystemBase {
     private boolean rollerBreakerLast = false;
     private boolean rollerThermalShutdown = false;
     private boolean rollerThermalShutdownLast = false;
-    private final Debouncer rollerStallDebouncer =
-            new Debouncer(RollerConstants.stallDebounceDuration.in(Seconds), DebounceType.kRising);
-    private boolean rollerStalling = false;
 
     private boolean leftDeployerBreaker = false;
     private boolean leftDeployerBreakerLast = false;
@@ -73,9 +65,6 @@ public class Intake extends SubsystemBase {
             // roller
             {
                 rollerBreaker = RobotContainer.instance().pdh.isBreakerTripped(RollerConstants.channelID);
-                rollerStalling = rollerStallDebouncer.calculate(
-                        inputs.rollerStatorCurrent_A >= RollerConstants.motorConfig.CurrentLimits.StatorCurrentLimit
-                                && inputs.rollerVel_rpm <= RollerConstants.stallMaxVel.in(RPM));
 
                 Logger.recordOutput("CAN/roller_" + RollerConstants.canID, inputs.rollerConnected);
                 rollerCANAlert.set(!inputs.rollerConnected && !rollerBreaker);
@@ -95,8 +84,6 @@ public class Intake extends SubsystemBase {
                         Console.reportBreakerReset("roller", RollerConstants.canID, RollerConstants.channelID);
                     }
                 }
-                Logger.recordOutput("Intake/Roller/stalling", rollerStalling);
-                rollerStallAlert.set(rollerStalling);
 
                 if (!Overrides.disableIntakeSafety && inputs.rollerConnected) {
                     boolean gettingToasty = inputs.rollerTemp_C >= RollerConstants.tempWarnThreshold.in(Celsius);
@@ -172,15 +159,12 @@ public class Intake extends SubsystemBase {
     public void report(IntakeReport report) {
         if (Overrides.disableIntakeSafety) {
             report.rollerOperational = true;
-            report.rollerStalling = false;
             report.deployerOperational = true;
         } else if (io_nl == null) {
             report.rollerOperational = false;
-            report.rollerStalling = false;
             report.deployerOperational = false;
         } else {
             report.rollerOperational = inputs.rollerConnected && !rollerBreaker && !rollerThermalShutdown;
-            report.rollerStalling = rollerStalling;
             report.deployerOperational = !leftDeployerBreaker && !rightDeployerBreaker;
         }
         report.hasDeployed = hasDeployed;
@@ -209,9 +193,5 @@ public class Intake extends SubsystemBase {
 
     public boolean isDeployed() {
         return hasDeployed;
-    }
-
-    public boolean isRollerStalling() {
-        return rollerStalling;
     }
 }

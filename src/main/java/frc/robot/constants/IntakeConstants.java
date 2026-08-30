@@ -1,15 +1,11 @@
 package frc.robot.constants;
 
-import static edu.wpi.first.units.Units.RPM;
-import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Temperature;
-import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.units.measure.Voltage;
 
 public final class IntakeConstants {
@@ -24,9 +20,6 @@ public final class IntakeConstants {
         public static final Voltage intakeVoltage = Volts.of(12);
         public static final Voltage shootVoltage = Volts.of(12);
         public static final Voltage reverseVoltage = Volts.of(-4);
-
-        public static final Time stallDebounceDuration = Seconds.of(1);
-        public static final AngularVelocity stallMaxVel = RPM.of(50);
 
         static {
             motorConfig = new TalonFXConfiguration();

@@ -3,7 +3,6 @@ package frc.robot.brain;
 public enum LEDsMode {
     IDLE,
     DISCONNECTED,
-    WARNING,
     ERROR,
     OK,
     AUTON,

@@ -187,7 +187,7 @@ public class RobotBrain {
                 }
 
                 state.driveMode = DriveMode.TELEOP;
-                state.shouldDeployIntake = !state.intakeReport.hasDeployed;
+                state.shouldDeployIntake = !state.intakeReport.hasDeployed && deployerCanRun;
             }
             case AUTON -> {
                 if (Overrides.disableShooter || Overrides.disableTurret) {
@@ -234,7 +234,6 @@ public class RobotBrain {
         Logger.recordOutput("RobotBrain/RobotState/SwerveReport/isOperational", state.swerveReport.isOperational);
         Logger.recordOutput(
                 "RobotBrain/RobotState/IntakeReport/rollerOperational", state.intakeReport.rollerOperational);
-        Logger.recordOutput("RobotBrain/RobotState/IntakeReport/rollerStalling", state.intakeReport.rollerStalling);
         Logger.recordOutput(
                 "RobotBrain/RobotState/IntakeReport/deployerOperational", state.intakeReport.deployerOperational);
         Logger.recordOutput("RobotBrain/RobotState/IntakeReport/hasDeployed", state.intakeReport.hasDeployed);
@@ -288,9 +287,6 @@ public class RobotBrain {
                 case OK -> changeSubsystemDefaultCommand(
                         RobotContainer.instance().leds,
                         RobotContainer.instance().okLEDsCmd());
-                case WARNING -> changeSubsystemDefaultCommand(
-                        RobotContainer.instance().leds,
-                        RobotContainer.instance().warningLEDsCmd());
                 case ERROR -> changeSubsystemDefaultCommand(
                         RobotContainer.instance().leds,
                         RobotContainer.instance().errorLEDsCmd());

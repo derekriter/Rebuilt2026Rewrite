@@ -135,9 +135,7 @@ public final class RobotContainer {
     private void setupControls() {
         driver1Cmd.b().onTrue(seedSwerveOrientationCmd());
 
-        driver2Cmd.x().onTrue(Commands.runOnce(() -> {
-            Robot.instance().brain.state.isTurretHomed = false;
-        }));
+        driver2Cmd.x().onTrue(homeLauncherCmd());
         driver2Cmd.leftTrigger().and(driver2Cmd.rightTrigger().negate()).whileTrue(intakeCmd());
         driver2Cmd
                 .leftBumper()
@@ -226,40 +224,33 @@ public final class RobotContainer {
     public Command disconnLEDsCmd() {
         return Commands.startEnd(() -> leds.applyPattern(LEDPattern.solid(Color.kRed)), leds::clear, leds)
                 .ignoringDisable(true)
-                .withName("disconnLEDsCmd");
+                .withName("disconnLEDs");
     }
 
     public Command idleLEDsCmd() {
         LEDPattern breathe = LEDPattern.solid(LEDsConstants.chargeGold).breathe(Seconds.of(2));
         return Commands.runEnd(() -> leds.applyPattern(breathe), leds::clear, leds)
                 .ignoringDisable(true)
-                .withName("idleLEDsCmd");
+                .withName("idleLEDs");
     }
 
     public Command autonLEDsCmd() {
         return Commands.startEnd(() -> leds.applyPattern(LEDPattern.solid(LEDsConstants.chargeGold)), leds::clear, leds)
                 .ignoringDisable(true)
-                .withName("autonLEDsCmd");
+                .withName("autonLEDs");
     }
 
     public Command okLEDsCmd() {
         return Commands.startEnd(() -> leds.applyPattern(LEDPattern.solid(Color.kWhite)), leds::clear, leds)
                 .ignoringDisable(true)
-                .withName("okLEDsCmd");
-    }
-
-    public Command warningLEDsCmd() {
-        LEDPattern blink = LEDPattern.solid(LEDsConstants.orange).blink(Seconds.of(1 / 4.0));
-        return Commands.runEnd(() -> leds.applyPattern(blink), leds::clear, leds)
-                .ignoringDisable(true)
-                .withName("warningLEDsCmd");
+                .withName("okLEDs");
     }
 
     public Command errorLEDsCmd() {
         LEDPattern blink = LEDPattern.solid(Color.kRed).blink(Seconds.of(1 / 8.0));
         return Commands.runEnd(() -> leds.applyPattern(blink), leds::clear, leds)
                 .ignoringDisable(true)
-                .withName("errorLEDsCmd");
+                .withName("errorLEDs");
     }
 
     public Command endgameLEDsCmd() {
@@ -267,27 +258,27 @@ public final class RobotContainer {
                 LEDPattern.rainbow(255, 128).scrollAtAbsoluteSpeed(MetersPerSecond.of(4), LEDsConstants.ledSpacing);
         return Commands.runEnd(() -> leds.applyPattern(rainbow), leds::clear, leds)
                 .ignoringDisable(true)
-                .withName("endgameLEDsCmd");
+                .withName("endgameLEDs");
     }
 
     public Command shiftWarningLEDsCmd() {
         LEDPattern blink = LEDPattern.solid(Color.kBlue).blink(Seconds.of(1 / 4.0));
         return Commands.runEnd(() -> leds.applyPattern(blink), leds::clear, leds)
                 .ignoringDisable(true)
-                .withName("shiftWarningLEDsCmd");
+                .withName("shiftWarningLEDs");
     }
 
     public Command hubActiveLEDsCmd() {
         return Commands.startEnd(
                         () -> leds.applyPattern(LEDPattern.solid(LEDsConstants.chargeGreen)), leds::clear, leds)
                 .ignoringDisable(true)
-                .withName("hubActiveLEDsCmd");
+                .withName("hubActiveLEDs");
     }
 
     public Command hubInactiveLEDsCmd() {
         return Commands.startEnd(() -> leds.applyPattern(LEDPattern.solid(Color.kDimGray)), leds::clear, leds)
                 .ignoringDisable(true)
-                .withName("hubInactiveLEDsCmd");
+                .withName("hubInactiveLEDs");
     }
 
     public Command seedSwerveOrientationCmd() {
@@ -297,21 +288,21 @@ public final class RobotContainer {
                                 Robot.instance().brain.state.isRed ? Rotation2d.k180deg : Rotation2d.kZero)),
                         swerve)
                 .ignoringDisable(true)
-                .withName("seedSwerveOrientationCmd");
+                .withName("seedSwerveOrientation");
     }
 
     public Command stopSwerveCmd() {
         return Commands.startEnd(swerve::stop, () -> {}, swerve)
                 .ignoringDisable(true)
-                .withName("stopSwerveCmd");
+                .withName("stopSwerve");
     }
 
     public Command brakeSwerveCmd() {
-        return Commands.startEnd(swerve::stopWithX, () -> {}, swerve).withName("brakeSwerveCmd");
+        return Commands.startEnd(swerve::stopWithX, () -> {}, swerve).withName("brakeSwerve");
     }
 
     public Command deployIntakeCmd() {
-        return Commands.runOnce(intake::deploy, intake).withName("deployIntakeCmd");
+        return Commands.runOnce(intake::deploy, intake).withName("deployIntake");
     }
 
     public Command intakeCmd() {
@@ -319,7 +310,7 @@ public final class RobotContainer {
                         () -> intake.setRollerVoltage(RollerConstants.intakeVoltage.in(Volts)),
                         intake::stopRoller,
                         intake)
-                .withName("intakeCmd");
+                .withName("intake");
     }
 
     public Command reverseIntakeCmd() {
@@ -327,18 +318,18 @@ public final class RobotContainer {
                         () -> intake.setRollerVoltage(RollerConstants.reverseVoltage.in(Volts)),
                         intake::stopRoller,
                         intake)
-                .withName("reverseIntakeCmd");
+                .withName("reverseIntake");
     }
 
     public Command climbUpPosCmd() {
         return Commands.startRun(() -> Console.println("climb up"), () -> {} /*, climb*/)
                 .withTimeout(1.6)
-                .withName("climbUpPosCmd");
+                .withName("climbUpPos");
     }
 
     public Command climbHangingPosCmd() {
         return Commands.startRun(() -> Console.println("climb hanging"), () -> {} /*, climb*/)
                 .withTimeout(1.4)
-                .withName("climbHangingPosCmd");
+                .withName("climbHangingPos");
     }
 }

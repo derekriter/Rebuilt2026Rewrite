@@ -13,11 +13,11 @@ public final class AutoCommands {
         return Commands.waitUntil(() -> Robot.instance().brain.state.launcherReport.shooterIsAtTarget
                         && Robot.instance().brain.state.launcherReport.turretIsAtTarget)
                 .withTimeout(timeout_s)
-                .withName("waitForReadyToShootCmd");
+                .withName("waitForReadyToShoot");
     }
 
     public static Command waitUntilInFZoneCmd() {
-        return Commands.waitUntil(() -> Robot.instance().brain.isInFZone()).withName("waitUntilInFZoneCmd");
+        return Commands.waitUntil(() -> Robot.instance().brain.isInFZone()).withName("waitUntilInFZone");
     }
 
     public static Command shootCmd(double timeout_s) {
@@ -25,7 +25,7 @@ public final class AutoCommands {
     }
 
     public static Command shootCmd() {
-        return Commands.startRun(() -> Console.println("shoot"), () -> {}).withName("shootCmd");
+        return Commands.startRun(() -> Console.println("shoot"), () -> {}).withName("shoot");
     }
 
     public static Command alignWithTowerCmd() {
@@ -44,7 +44,7 @@ public final class AutoCommands {
                                         () -> RobotContainer.instance().swerve.stop(),
                                         RobotContainer.instance().swerve)
                                 .withTimeout(0.25))
-                .withName("alignWithTowerCmd");
+                .withName("alignWithTower");
     }
 
     private AutoCommands() {}
