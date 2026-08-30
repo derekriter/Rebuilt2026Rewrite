@@ -6,6 +6,7 @@ package frc.robot;
 
 import com.revrobotics.util.StatusLogger;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -49,6 +50,7 @@ public final class Robot extends LoggedRobot {
     private boolean showingAutoPath = false;
     private boolean showingAutoPathLast = false;
     private boolean autoPathNeedsUpdate = false;
+    private double lastRefFrameTime_s = 0;
 
     private Robot() {
         _inst_nl = this;
@@ -144,6 +146,13 @@ public final class Robot extends LoggedRobot {
     }
 
     private void handleAutoPath() {
+        double time_s = Timer.getTimestamp();
+
+        if (time_s - lastRefFrameTime_s >= 1) {
+            RobotContainer.instance().pushAutonRefFrame();
+            lastRefFrameTime_s = time_s;
+        }
+
         if (showingAutoPath) {
             autoPathNeedsUpdate = autoPathNeedsUpdate
                     || !showingAutoPathLast
@@ -152,10 +161,12 @@ public final class Robot extends LoggedRobot {
                                     || brain.state.isFMSAttached != brain.lastState.get().isFMSAttached);
 
             if (autoPathNeedsUpdate) {
-                RobotContainer.instance().showAutonInfo();
+                RobotContainer.instance().showAutonPath();
+                RobotContainer.instance().pushAutonRefFrame();
             }
         } else if (showingAutoPathLast) {
             AutoProgram.clearPathDisplay();
+            AutoProgram.clearSetupReference();
         }
 
         showingAutoPathLast = showingAutoPath;
