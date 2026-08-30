@@ -11,8 +11,8 @@ public class TurretIOSim implements ITurretIO {
         inputs.vel_RPM = 0;
         inputs.temp_C = 20;
         inputs.appliedOut_perc = 0;
-        inputs.voltageOut_V = 0;
-        inputs.currentOut_A = 0;
+        inputs.statorVoltage_V = 0;
+        inputs.statorCurrent_A = 0;
     }
 
     @Override
@@ -20,9 +20,6 @@ public class TurretIOSim implements ITurretIO {
 
     @Override
     public void setVoltage(double voltage_volts) {}
-
-    @Override
-    public void stop() {}
 
     @Override
     public void setEncoderPosition(double position_rots) {}

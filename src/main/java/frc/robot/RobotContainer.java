@@ -6,6 +6,7 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
+import static edu.wpi.first.units.Units.Volts;
 
 import choreo.Choreo;
 import choreo.auto.AutoFactory;
@@ -27,9 +28,14 @@ import frc.robot.commands.AimAtTarget;
 import frc.robot.commands.HomeLauncher;
 import frc.robot.commands.TeleopDrive;
 import frc.robot.constants.ControllerConstants;
+import frc.robot.constants.IntakeConstants.RollerConstants;
 import frc.robot.constants.LEDsConstants;
 import frc.robot.constants.Overrides;
 import frc.robot.pdh.PDH;
+import frc.robot.subsystems.intake.IIntakeIO;
+import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.IntakeIOReal;
+import frc.robot.subsystems.intake.IntakeIOSim;
 import frc.robot.subsystems.launcher.Launcher;
 import frc.robot.subsystems.launcher.shooter.IShooterIO;
 import frc.robot.subsystems.launcher.shooter.ShooterIOReal;
@@ -66,6 +72,7 @@ public final class RobotContainer {
     public final Swerve swerve;
     public final Launcher launcher;
     public final LEDs leds = new LEDs();
+    public final Intake intake;
 
     public final CommandXboxController driver1Cmd = new CommandXboxController(ControllerConstants.driver1Port);
     public final XboxController driver1 = driver1Cmd.getHID();
@@ -91,6 +98,7 @@ public final class RobotContainer {
                 launcher = new Launcher(
                         Overrides.disableTurret ? null : new TurretIOReal(),
                         Overrides.disableShooter ? null : new ShooterIOReal());
+                intake = new Intake(Overrides.disableIntake ? null : new IntakeIOReal());
             }
             case SIM -> {
                 swerve = new Swerve(
@@ -99,10 +107,10 @@ public final class RobotContainer {
                         bus -> new ModuleIOSim(1),
                         bus -> new ModuleIOSim(2),
                         bus -> new ModuleIOSim(3));
-
                 launcher = new Launcher(
                         Overrides.disableTurret ? null : new TurretIOSim(),
                         Overrides.disableShooter ? null : new ShooterIOSim());
+                intake = new Intake(Overrides.disableIntake ? null : new IntakeIOSim());
             }
             case REPLAY -> {
                 swerve = new Swerve(
@@ -114,6 +122,7 @@ public final class RobotContainer {
                 launcher = new Launcher(
                         Overrides.disableTurret ? null : ITurretIO.blank,
                         Overrides.disableShooter ? null : IShooterIO.blank);
+                intake = new Intake(Overrides.disableIntake ? null : IIntakeIO.blank);
             }
                 // shouldn't be possible to trigger, but the compiler required it anyway
             default -> throw new Error("Unhandled mode encountered");
@@ -126,9 +135,13 @@ public final class RobotContainer {
     private void setupControls() {
         driver1Cmd.b().onTrue(seedSwerveOrientationCmd());
 
-        driver2Cmd.x().onTrue(Commands.runOnce(() -> {
-            Robot.instance().brain.state.isTurretHomed = false;
-        }));
+        driver2Cmd.x().onTrue(homeLauncherCmd());
+        driver2Cmd.leftTrigger().and(driver2Cmd.rightTrigger().negate()).whileTrue(intakeCmd());
+        driver2Cmd
+                .leftBumper()
+                .and(driver2Cmd.rightTrigger().negate())
+                .and(driver2Cmd.leftTrigger().negate())
+                .whileTrue(reverseIntakeCmd());
     }
 
     private void setupChoreo() {
@@ -211,33 +224,33 @@ public final class RobotContainer {
     public Command disconnLEDsCmd() {
         return Commands.startEnd(() -> leds.applyPattern(LEDPattern.solid(Color.kRed)), leds::clear, leds)
                 .ignoringDisable(true)
-                .withName("disconnLEDsCmd");
+                .withName("disconnLEDs");
     }
 
     public Command idleLEDsCmd() {
         LEDPattern breathe = LEDPattern.solid(LEDsConstants.chargeGold).breathe(Seconds.of(2));
         return Commands.runEnd(() -> leds.applyPattern(breathe), leds::clear, leds)
                 .ignoringDisable(true)
-                .withName("idleLEDsCmd");
+                .withName("idleLEDs");
     }
 
     public Command autonLEDsCmd() {
         return Commands.startEnd(() -> leds.applyPattern(LEDPattern.solid(LEDsConstants.chargeGold)), leds::clear, leds)
                 .ignoringDisable(true)
-                .withName("autonLEDsCmd");
+                .withName("autonLEDs");
     }
 
     public Command okLEDsCmd() {
         return Commands.startEnd(() -> leds.applyPattern(LEDPattern.solid(Color.kWhite)), leds::clear, leds)
                 .ignoringDisable(true)
-                .withName("okLEDsCmd");
+                .withName("okLEDs");
     }
 
     public Command errorLEDsCmd() {
         LEDPattern blink = LEDPattern.solid(Color.kRed).blink(Seconds.of(1 / 8.0));
         return Commands.runEnd(() -> leds.applyPattern(blink), leds::clear, leds)
                 .ignoringDisable(true)
-                .withName("errorLEDsCmd");
+                .withName("errorLEDs");
     }
 
     public Command endgameLEDsCmd() {
@@ -245,27 +258,27 @@ public final class RobotContainer {
                 LEDPattern.rainbow(255, 128).scrollAtAbsoluteSpeed(MetersPerSecond.of(4), LEDsConstants.ledSpacing);
         return Commands.runEnd(() -> leds.applyPattern(rainbow), leds::clear, leds)
                 .ignoringDisable(true)
-                .withName("endgameLEDsCmd");
+                .withName("endgameLEDs");
     }
 
     public Command shiftWarningLEDsCmd() {
         LEDPattern blink = LEDPattern.solid(Color.kBlue).blink(Seconds.of(1 / 4.0));
         return Commands.runEnd(() -> leds.applyPattern(blink), leds::clear, leds)
                 .ignoringDisable(true)
-                .withName("shiftWarningLEDsCmd");
+                .withName("shiftWarningLEDs");
     }
 
     public Command hubActiveLEDsCmd() {
         return Commands.startEnd(
                         () -> leds.applyPattern(LEDPattern.solid(LEDsConstants.chargeGreen)), leds::clear, leds)
                 .ignoringDisable(true)
-                .withName("hubActiveLEDsCmd");
+                .withName("hubActiveLEDs");
     }
 
     public Command hubInactiveLEDsCmd() {
         return Commands.startEnd(() -> leds.applyPattern(LEDPattern.solid(Color.kDimGray)), leds::clear, leds)
                 .ignoringDisable(true)
-                .withName("hubInactiveLEDsCmd");
+                .withName("hubInactiveLEDs");
     }
 
     public Command seedSwerveOrientationCmd() {
@@ -275,43 +288,48 @@ public final class RobotContainer {
                                 Robot.instance().brain.state.isRed ? Rotation2d.k180deg : Rotation2d.kZero)),
                         swerve)
                 .ignoringDisable(true)
-                .withName("seedSwerveOrientationCmd");
+                .withName("seedSwerveOrientation");
     }
 
     public Command stopSwerveCmd() {
         return Commands.startEnd(swerve::stop, () -> {}, swerve)
                 .ignoringDisable(true)
-                .withName("stopSwerveCmd");
+                .withName("stopSwerve");
     }
 
     public Command brakeSwerveCmd() {
-        return Commands.startEnd(swerve::stopWithX, () -> {}, swerve).withName("brakeSwerveCmd");
+        return Commands.startEnd(swerve::stopWithX, () -> {}, swerve).withName("brakeSwerve");
     }
 
     public Command deployIntakeCmd() {
-        return Commands.runOnce(() -> Console.println("deploy intake") /*, intake*/)
-                .withName("deployIntakeCmd");
+        return Commands.runOnce(intake::deploy, intake).withName("deployIntake");
     }
 
-    public Command runIntakeCmd() {
-        return Commands.startRun(() -> Console.println("run intake"), () -> {} /*, intake*/)
-                .withName("runIntakeCmd");
+    public Command intakeCmd() {
+        return Commands.startEnd(
+                        () -> intake.setRollerVoltage(RollerConstants.intakeVoltage.in(Volts)),
+                        intake::stopRoller,
+                        intake)
+                .withName("intake");
     }
 
-    public Command stopIntakeCmd() {
-        return Commands.runOnce(() -> Console.println("stop intake") /*, intake*/)
-                .withName("stopIntakeCmd");
+    public Command reverseIntakeCmd() {
+        return Commands.startEnd(
+                        () -> intake.setRollerVoltage(RollerConstants.reverseVoltage.in(Volts)),
+                        intake::stopRoller,
+                        intake)
+                .withName("reverseIntake");
     }
 
     public Command climbUpPosCmd() {
         return Commands.startRun(() -> Console.println("climb up"), () -> {} /*, climb*/)
                 .withTimeout(1.6)
-                .withName("climbUpPosCmd");
+                .withName("climbUpPos");
     }
 
     public Command climbHangingPosCmd() {
         return Commands.startRun(() -> Console.println("climb hanging"), () -> {} /*, climb*/)
                 .withTimeout(1.4)
-                .withName("climbHangingPosCmd");
+                .withName("climbHangingPos");
     }
 }

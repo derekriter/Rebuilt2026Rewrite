@@ -48,7 +48,7 @@ public final class Autos {
                             RobotContainer.instance().deployIntakeCmd(),
                             Commands.deadline(
                                     trench_collect1.cmd(),
-                                    RobotContainer.instance().runIntakeCmd()
+                                    RobotContainer.instance().intakeCmd()
                             ),
                             Commands.parallel(
                                     Commands.sequence(
@@ -103,7 +103,7 @@ public final class Autos {
                             RobotContainer.instance().deployIntakeCmd(),
                             Commands.deadline(
                                     trench_collect1.cmd(),
-                                    RobotContainer.instance().runIntakeCmd()
+                                    RobotContainer.instance().intakeCmd()
                             ),
                             Commands.parallel(
                                     collect1_shoot.cmd(),
@@ -115,7 +115,7 @@ public final class Autos {
                             ),
                             Commands.deadline(
                                         shoot_collect2.cmd(),
-                                        RobotContainer.instance().runIntakeCmd()
+                                        RobotContainer.instance().intakeCmd()
                             ),
                             Commands.parallel(
                                     collect2_shoot.cmd(),
@@ -155,7 +155,7 @@ public final class Autos {
                             RobotContainer.instance().deployIntakeCmd(),
                             Commands.deadline(
                                     trench_collect1.cmd(),
-                                    RobotContainer.instance().runIntakeCmd()
+                                    RobotContainer.instance().intakeCmd()
                             ),
                             Commands.parallel(
                                     collect1_depot.cmd(),

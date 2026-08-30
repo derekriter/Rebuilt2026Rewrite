@@ -17,7 +17,7 @@ public class ShooterIOReal implements IShooterIO {
         shooter = new SparkFlex(canID, MotorType.kBrushless);
         MotorUtils.safeApplyConfig(
                 shooter,
-                "shooterMotor",
+                "shooter",
                 canID,
                 channelID,
                 motorConfig,
@@ -34,8 +34,8 @@ public class ShooterIOReal implements IShooterIO {
             inputs.vel_RPM = shooter.getEncoder().getVelocity(); // frame 1
             inputs.temp_C = shooter.getMotorTemperature(); // frame 1
             inputs.appliedOut_perc = shooter.getAppliedOutput(); // frame 0
-            inputs.voltageOut_V = shooter.getBusVoltage() * inputs.appliedOut_perc; // frame 0 & 1
-            inputs.currentOut_A = shooter.getOutputCurrent(); // frame 1
+            inputs.statorVoltage_V = shooter.getBusVoltage() * inputs.appliedOut_perc; // frame 0 & 1
+            inputs.statorCurrent_A = shooter.getOutputCurrent(); // frame 1
         }
     }
 
@@ -47,10 +47,5 @@ public class ShooterIOReal implements IShooterIO {
     @Override
     public void setVoltage(double voltage_volts) {
         shooter.setVoltage(voltage_volts);
-    }
-
-    @Override
-    public void stop() {
-        shooter.stopMotor();
     }
 }
