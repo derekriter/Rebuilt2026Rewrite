@@ -13,6 +13,10 @@ public class IntakeIOSim implements IIntakeIO {
         inputs.rollerStatorVoltage_V = 0;
         inputs.rollerStatorCurrent_A = 0;
         inputs.rollerSupplyCurrent_A = 0;
+
+        inputs.leftDeployerPos = 0;
+
+        inputs.rightDeployerPos = 0;
     }
 
     @Override

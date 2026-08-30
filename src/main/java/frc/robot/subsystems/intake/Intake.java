@@ -133,7 +133,7 @@ public class Intake extends SubsystemBase {
             {
                 rightDeployerBreaker = RobotContainer.instance().pdh.isBreakerTripped(RightDeployerConstants.channelID);
 
-                Logger.recordOutput("Intake/LeftDeployer/breakerTripped", rightDeployerBreaker);
+                Logger.recordOutput("Intake/RightDeployer/breakerTripped", rightDeployerBreaker);
                 rightDeployerBreakerAlert.set(rightDeployerBreaker);
                 if (rightDeployerBreaker != rightDeployerBreakerLast) {
                     if (rightDeployerBreaker) {
