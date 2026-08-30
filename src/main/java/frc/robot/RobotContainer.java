@@ -32,6 +32,7 @@ import frc.robot.constants.IntakeConstants.RollerConstants;
 import frc.robot.constants.LEDsConstants;
 import frc.robot.constants.Overrides;
 import frc.robot.pdh.PDH;
+import frc.robot.subsystems.Controller;
 import frc.robot.subsystems.intake.IIntakeIO;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIOReal;
@@ -74,18 +75,22 @@ public final class RobotContainer {
     public final LEDs leds = new LEDs();
     public final Intake intake;
 
-    public final CommandXboxController driver1Cmd = new CommandXboxController(ControllerConstants.driver1Port);
-    public final XboxController driver1 = driver1Cmd.getHID();
-    public final CommandXboxController driver2Cmd = new CommandXboxController(ControllerConstants.driver2Port);
-    public final XboxController driver2 = driver2Cmd.getHID();
+    public final Controller<XboxController, CommandXboxController> driver1, driver2;
 
     private AutoFactory autoFactory;
     private LoggedDashboardChooser<AutoProgram> autoChooser;
-    private Alert debugAutoOnFieldAlert =
+    private final Alert debugAutoOnFieldAlert =
             new Alert("A debug auto has been selected while the FMS is collected", AlertType.kWarning);
 
     private RobotContainer() {
         _inst_nl = this;
+
+        CommandXboxController tempDriver1Cmd = new CommandXboxController(ControllerConstants.driver1Port);
+        driver1 = new Controller<XboxController, CommandXboxController>(
+                "driver1", tempDriver1Cmd.getHID(), tempDriver1Cmd);
+        CommandXboxController tempDriver2Cmd = new CommandXboxController(ControllerConstants.driver2Port);
+        driver2 = new Controller<XboxController, CommandXboxController>(
+                "driver2", tempDriver2Cmd.getHID(), tempDriver2Cmd);
 
         switch (Mode.getMode()) {
             case REAL -> {
@@ -133,14 +138,16 @@ public final class RobotContainer {
     }
 
     private void setupControls() {
-        driver1Cmd.b().onTrue(seedSwerveOrientationCmd());
+        CommandXboxController d1Cmd = driver1.getCommandHID_nl();
+        CommandXboxController d2Cmd = driver2.getCommandHID_nl();
 
-        driver2Cmd.x().onTrue(homeLauncherCmd());
-        driver2Cmd.leftTrigger().and(driver2Cmd.rightTrigger().negate()).whileTrue(intakeCmd());
-        driver2Cmd
-                .leftBumper()
-                .and(driver2Cmd.rightTrigger().negate())
-                .and(driver2Cmd.leftTrigger().negate())
+        d1Cmd.b().onTrue(seedSwerveOrientationCmd());
+
+        d2Cmd.x().onTrue(homeLauncherCmd());
+        d2Cmd.leftTrigger().and(d2Cmd.rightTrigger().negate()).whileTrue(intakeCmd());
+        d2Cmd.leftBumper()
+                .and(d2Cmd.rightTrigger().negate())
+                .and(d2Cmd.leftTrigger().negate())
                 .whileTrue(reverseIntakeCmd());
     }
 

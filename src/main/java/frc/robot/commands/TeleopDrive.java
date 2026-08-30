@@ -15,8 +15,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.RobotContainer;
 import frc.robot.constants.ControllerConstants;
 import frc.robot.constants.SwerveConstants;
+import frc.robot.subsystems.Controller;
 import frc.robot.subsystems.swerve.Swerve;
-import frc.robot.util.ControllerUtil;
 import org.littletonrobotics.junction.Logger;
 
 public class TeleopDrive extends Command {
@@ -47,11 +47,11 @@ public class TeleopDrive extends Command {
 
     @Override
     public void execute() {
-        XboxController driver1 = RobotContainer.instance().driver1;
-        // XboxController driver2 = RobotContainer.instance().driver2;
+        XboxController driver1 = RobotContainer.instance().driver1.getHID();
+        // XboxController driver2 = RobotContainer.instance().driver2.getHID();
 
         double speedShifter =
-                ControllerUtil.isPastDeadband(driver1.getRightTriggerAxis(), ControllerConstants.triggerThreshold)
+                Controller.isPastDeadband(driver1.getRightTriggerAxis(), ControllerConstants.triggerThreshold)
                         ? 0.25
                         : 1;
         Logger.recordOutput("TeleopDrive/speedShifter", speedShifter);
@@ -72,7 +72,7 @@ public class TeleopDrive extends Command {
         }
         Logger.recordOutput("TeleopDrive/slowDown", slowDown);
 
-        Pair<Double, Double> cubicLeft = ControllerUtil.applyExponentialDeadband(
+        Pair<Double, Double> cubicLeft = Controller.applyExponentialDeadband(
                 driver1.getLeftX(),
                 driver1.getLeftY(),
                 ControllerConstants.driveJoystickDeadband,
@@ -109,10 +109,10 @@ public class TeleopDrive extends Command {
             double targetOmega_radps;
             if (driver1.getLeftBumperButton()) {
                 // snake orientation
-                if (ControllerUtil.isPastDeadband(
+                if (Controller.isPastDeadband(
                         driver1.getLeftX(), driver1.getLeftY(), ControllerConstants.driveJoystickDeadband)) {
                     double heading_rad =
-                            ControllerUtil.getFieldSpaceJoystickAngle_rad(driver1.getLeftX(), driver1.getLeftY());
+                            Controller.getFieldSpaceJoystickAngle_rad(driver1.getLeftX(), driver1.getLeftY());
                     Logger.recordOutput("TeleopDrive/headingDirection", heading_rad, Radians.name());
 
                     targetOmega_radps =
@@ -128,11 +128,11 @@ public class TeleopDrive extends Command {
                 Logger.recordOutput("TeleopDrive/headingDirection", Double.NaN, Radians.name());
 
                 headingController.reset();
-            } else if (ControllerUtil.isPastDeadband(
+            } else if (Controller.isPastDeadband(
                     driver1.getRightX(), driver1.getRightY(), ControllerConstants.turnJoystickDeadband)) {
                 // joystick orientation
                 double heading_rad =
-                        ControllerUtil.getFieldSpaceJoystickAngle_rad(driver1.getRightX(), driver1.getRightY());
+                        Controller.getFieldSpaceJoystickAngle_rad(driver1.getRightX(), driver1.getRightY());
                 Logger.recordOutput("TeleopDrive/headingDirection", heading_rad, Radians.name());
 
                 targetOmega_radps =
@@ -148,7 +148,7 @@ public class TeleopDrive extends Command {
                     Math.min(Math.abs(targetOmega_radps), commmonMaxAngularRate_radps), targetOmega_radps);
             Logger.recordOutput("TeleopDrive/targetOmega", targetOmega_radps, RadiansPerSecond.name());
 
-            if (ControllerUtil.isPastDeadband(driver1.getLeftTriggerAxis(), ControllerConstants.triggerThreshold)) {
+            if (Controller.isPastDeadband(driver1.getLeftTriggerAxis(), ControllerConstants.triggerThreshold)) {
                 // robot centric
                 swerve.runRobotRelativeVelocity(new ChassisSpeeds(commonXVel_mps, commonYVel_mps, targetOmega_radps));
             } else {
@@ -160,7 +160,9 @@ public class TeleopDrive extends Command {
     }
 
     @Override
-    public void end(boolean interrupted) {}
+    public void end(boolean interrupted) {
+        swerve.stop();
+    }
 
     @Override
     public boolean isFinished() {

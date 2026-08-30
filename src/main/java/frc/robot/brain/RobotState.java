@@ -31,6 +31,8 @@ public final class RobotState {
     public LEDsMode ledsMode = LEDsMode.DISCONNECTED;
     public DriveMode driveMode = DriveMode.DISABLED;
     public boolean shouldDeployIntake = false;
+    public RumbleMode driver1RumbleMode = RumbleMode.IDLE;
+    public RumbleMode driver2RumbleMode = RumbleMode.IDLE;
 
     public void copyFrom(RobotState ref) {
         opMode = ref.opMode;
@@ -59,5 +61,7 @@ public final class RobotState {
         ledsMode = ref.ledsMode;
         driveMode = ref.driveMode;
         shouldDeployIntake = ref.shouldDeployIntake;
+        driver1RumbleMode = ref.driver1RumbleMode;
+        driver2RumbleMode = ref.driver2RumbleMode;
     }
 }

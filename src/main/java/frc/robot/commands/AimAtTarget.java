@@ -4,16 +4,17 @@ import static edu.wpi.first.units.Units.RPM;
 
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.RobotContainer;
 import frc.robot.constants.ControllerConstants;
 import frc.robot.constants.FieldConstants;
+import frc.robot.subsystems.Controller;
 import frc.robot.subsystems.launcher.LaunchCalculator;
 import frc.robot.subsystems.launcher.Launcher;
 import frc.robot.subsystems.launcher.shooter.ShooterTarget;
 import frc.robot.subsystems.launcher.turret.TurretAngle;
 import frc.robot.subsystems.swerve.Swerve;
-import frc.robot.util.ControllerUtil;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
@@ -65,14 +66,14 @@ public class AimAtTarget extends Command {
 
     @Override
     public void execute() {
+        XboxController d2 = RobotContainer.instance().driver2.getHID();
+
         Pair<TurretAngle, ShooterTarget> target = LaunchCalculator.calcShot(
                 targetSupplier.get(), swerve_noDep.getPose(), swerve_noDep.getMeasuredRobotRelativeSpeeds());
 
         if (overrideTurret.getAsBoolean()) {
-            launcher.setTurretVoltage(-ControllerUtil.applyLinearDeadband(
-                            RobotContainer.instance().driver2.getLeftX()
-                                    + RobotContainer.instance().driver2.getRightX(),
-                            ControllerConstants.overrideTurretDeadband)
+            launcher.setTurretVoltage(-Controller.applyLinearDeadband(
+                            d2.getLeftX() + d2.getRightX(), ControllerConstants.overrideTurretDeadband)
                     * 1.2);
         } else {
             launcher.setTurretAngle(target.getFirst());
@@ -81,7 +82,7 @@ public class AimAtTarget extends Command {
         ShooterTarget st = target.getSecond();
 
         // quicky and hacky compensation button for driver 2
-        double extraRPM = RobotContainer.instance().driver2.getRightBumperButton() ? 100 : 0;
+        double extraRPM = d2.getRightBumperButton() ? 100 : 0;
         Logger.recordOutput("AimAtTarget/extraRPM", extraRPM, RPM.name());
         st.add(ShooterTarget.fromShooterRPM(extraRPM));
 

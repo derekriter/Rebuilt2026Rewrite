@@ -49,6 +49,14 @@ public final class Console {
         println(String.format("Thermal shutdown released on %s (CAN %d, ch %d)", name, canID, channelID));
     }
 
+    public static void reportControllerDisconnect(String name, int port) {
+        reportWarning(String.format("Lost connection to controller %s (port %d)", name, port), false);
+    }
+
+    public static void reportControllerConnect(String name, int port) {
+        println(String.format("Connected to controller %s (port %d)", name, port));
+    }
+
     public static void reportWarning(String msg_nl, boolean printTrace) {
         if (msg_nl == null) msg_nl = "null";
 

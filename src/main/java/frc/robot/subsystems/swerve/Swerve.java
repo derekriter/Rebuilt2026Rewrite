@@ -43,6 +43,7 @@ import frc.robot.subsystems.swerve.IGyroIO.GyroIOInputs;
 import frc.robot.util.AlertUtils;
 import frc.robot.util.BlankValues;
 import frc.robot.util.Console;
+import frc.robot.util.OneToOneFunction;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import org.littletonrobotics.junction.Logger;
@@ -90,18 +91,18 @@ public class Swerve extends SubsystemBase {
     private SwerveSample lastTrajSample_nl = null;
 
     public Swerve(
-            CANBusDependentConstructor<IGyroIO> _gyroIO,
-            CANBusDependentConstructor<IModuleIO> flModuleIO,
-            CANBusDependentConstructor<IModuleIO> frModuleIO,
-            CANBusDependentConstructor<IModuleIO> blModuleIO,
-            CANBusDependentConstructor<IModuleIO> brModuleIO) {
+            OneToOneFunction<CANBus, IGyroIO> _gyroIO,
+            OneToOneFunction<CANBus, IModuleIO> flModuleIO,
+            OneToOneFunction<CANBus, IModuleIO> frModuleIO,
+            OneToOneFunction<CANBus, IModuleIO> blModuleIO,
+            OneToOneFunction<CANBus, IModuleIO> brModuleIO) {
         canBus = new CANBus(CANivoreConfig.busID);
 
-        gyroIO = _gyroIO.construct(canBus);
-        modules[0] = new Module(flModuleIO.construct(canBus), 0);
-        modules[1] = new Module(frModuleIO.construct(canBus), 1);
-        modules[2] = new Module(blModuleIO.construct(canBus), 2);
-        modules[3] = new Module(brModuleIO.construct(canBus), 3);
+        gyroIO = _gyroIO.accept(canBus);
+        modules[0] = new Module(flModuleIO.accept(canBus), 0);
+        modules[1] = new Module(frModuleIO.accept(canBus), 1);
+        modules[2] = new Module(blModuleIO.accept(canBus), 2);
+        modules[3] = new Module(brModuleIO.accept(canBus), 3);
 
         // Usage reporting for swerve template
         HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_AdvantageKit);

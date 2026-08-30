@@ -21,7 +21,7 @@ public final class AutoCommands {
     }
 
     public static Command shootCmd(double timeout_s) {
-        return shootCmd().withTimeout(timeout_s);
+        return shootCmd().withTimeout(timeout_s).withName("shoot");
     }
 
     public static Command shootCmd() {

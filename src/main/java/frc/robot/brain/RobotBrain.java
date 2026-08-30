@@ -2,11 +2,10 @@ package frc.robot.brain;
 
 import static edu.wpi.first.units.Units.Seconds;
 
-import edu.wpi.first.wpilibj.Alert;
-import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -15,19 +14,13 @@ import frc.robot.Robot;
 import frc.robot.RobotContainer;
 import frc.robot.constants.ControllerConstants;
 import frc.robot.constants.Overrides;
+import frc.robot.subsystems.Controller;
 import frc.robot.util.Console;
 import java.util.Optional;
 import org.littletonrobotics.conduit.ConduitApi;
 import org.littletonrobotics.junction.Logger;
 
 public class RobotBrain {
-
-    private static final Alert driver1MissingAlert = new Alert(
-            String.format("Driver 1 controller not connected to port %d", ControllerConstants.driver1Port),
-            AlertType.kWarning);
-    private static final Alert driver2MissingAlert = new Alert(
-            String.format("Driver 2 controller not connected to port %d", ControllerConstants.driver2Port),
-            AlertType.kWarning);
 
     public RobotState state;
     public Optional<RobotState> lastState;
@@ -48,21 +41,11 @@ public class RobotBrain {
         RobotContainer.instance().swerve.report(state.swerveReport);
         RobotContainer.instance().intake.report(state.intakeReport);
 
-        state.fieldZone =
-                FieldZone.fromRobotX(RobotContainer.instance().swerve.getPose().getX());
-
         if (state.opMode == OpMode.TELEOP) {
             pollTeleopData();
         }
 
-        boolean driver2IsMovingJoysticks =
-                Math.abs(RobotContainer.instance().driver2.getLeftX()) > ControllerConstants.overrideTurretThreshold
-                        || Math.abs(RobotContainer.instance().driver2.getRightX())
-                                > ControllerConstants.overrideTurretThreshold;
-        boolean driver2IsPressingJoysticks = RobotContainer.instance().driver1.getLeftStickButton()
-                || RobotContainer.instance().driver2.getRightStickButton();
-        state.overrideTurret = (lastState.map(ls -> ls.overrideTurret).orElse(false) || driver2IsMovingJoysticks)
-                && !driver2IsPressingJoysticks;
+        pollDriverInput();
     }
 
     private void pollBasicInfo() {
@@ -100,6 +83,8 @@ public class RobotBrain {
 
         state.modeTime_s = modeTimer.get();
         state.isBrownedOut = ConduitApi.getInstance().getBrownedOut();
+        state.fieldZone =
+                FieldZone.fromRobotX(RobotContainer.instance().swerve.getPose().getX());
     }
 
     private void pollTeleopData() {
@@ -126,6 +111,22 @@ public class RobotBrain {
         }
     }
 
+    private void pollDriverInput() {
+        XboxController d2 = RobotContainer.instance().driver2.getHID();
+
+        boolean driver2IsMovingJoysticks =
+                Controller.isPastDeadband(d2.getLeftX(), ControllerConstants.overrideTurretThreshold)
+                        || Controller.isPastDeadband(d2.getRightX(), ControllerConstants.overrideTurretThreshold);
+        boolean driver2IsPressingJoysticks = d2.getLeftStickButton() || d2.getRightStickButton();
+
+        if (state.opMode == OpMode.DISABLED) {
+            state.overrideTurret = false;
+        } else {
+            state.overrideTurret = (lastState.map(ls -> ls.overrideTurret).orElse(false) || driver2IsMovingJoysticks)
+                    && !driver2IsPressingJoysticks;
+        }
+    }
+
     @SuppressWarnings("unused")
     public void determineModes() {
         boolean shooterCanRun = !Overrides.disableShooter && state.launcherReport.shooterOperational;
@@ -149,18 +150,29 @@ public class RobotBrain {
 
                 if (hardwareError) {
                     state.ledsMode = LEDsMode.ERROR;
+                    state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.FAST_PULSING;
                 } else if (state.isDSAttached) {
                     state.ledsMode = LEDsMode.IDLE;
+                    state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.IDLE;
                 } else {
                     state.ledsMode = LEDsMode.DISCONNECTED;
+                    state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.IDLE;
                 }
 
                 state.shouldDeployIntake = false;
             }
             case TEST -> {
                 state.targetingMode = TargetingMode.DISABLED;
-                state.ledsMode = hardwareError ? LEDsMode.ERROR : LEDsMode.OK;
                 state.driveMode = DriveMode.TELEOP;
+
+                if (hardwareError) {
+                    state.ledsMode = LEDsMode.ERROR;
+                    state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.FAST_PULSING;
+                } else {
+                    state.ledsMode = LEDsMode.OK;
+                    state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.IDLE;
+                }
+
                 state.shouldDeployIntake = false;
             }
             case TELEOP -> {
@@ -176,14 +188,24 @@ public class RobotBrain {
 
                 if (hardwareError) {
                     state.ledsMode = LEDsMode.ERROR;
+                    state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.FAST_PULSING;
                 } else if (state.phase == TeleopPhase.ENDGAME) {
                     state.ledsMode = LEDsMode.ENDGAME;
+
+                    if (state.modeTime_s - TeleopPhase.SHIFT4.endTime.in(Seconds) <= 5) {
+                        state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.CONTINUOUS;
+                    } else {
+                        state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.IDLE;
+                    }
                 } else if (state.timeLeftInPhase_s <= 3) {
                     state.ledsMode = LEDsMode.SHIFT_WARNING;
+                    state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.KNOCK;
                 } else if (state.isHubActive) {
                     state.ledsMode = LEDsMode.HUB_ACTIVE;
+                    state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.IDLE;
                 } else {
                     state.ledsMode = LEDsMode.HUB_INACTIVE;
+                    state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.IDLE;
                 }
 
                 state.driveMode = DriveMode.TELEOP;
@@ -198,7 +220,14 @@ public class RobotBrain {
                     state.targetingMode = TargetingMode.TARGETING_HUB;
                 }
 
-                state.ledsMode = hardwareError ? LEDsMode.ERROR : LEDsMode.AUTON;
+                if (hardwareError) {
+                    state.ledsMode = LEDsMode.ERROR;
+                    state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.FAST_PULSING;
+                } else {
+                    state.ledsMode = LEDsMode.AUTON;
+                    state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.IDLE;
+                }
+
                 state.driveMode = DriveMode.AUTON;
                 state.shouldDeployIntake = false;
             }
@@ -243,12 +272,11 @@ public class RobotBrain {
         Logger.recordOutput("RobotBrain/RobotState/ledsMode", state.ledsMode.name());
         Logger.recordOutput("RobotBrain/RobotState/driveMode", state.driveMode.name());
         Logger.recordOutput("RobotBrain/RobotState/shouldDeployIntake", state.shouldDeployIntake);
-
-        driver1MissingAlert.set(!RobotContainer.instance().driver1.isConnected());
-        driver2MissingAlert.set(!RobotContainer.instance().driver2.isConnected());
+        Logger.recordOutput("RobotBrain/RobotState/driver1RumbleMode", state.driver1RumbleMode.name());
+        Logger.recordOutput("RobotBrain/RobotState/driver2RumbleMode", state.driver2RumbleMode.name());
 
         if (state.isBrownedOut && !lastState.map(s -> s.isBrownedOut).orElse(false)) {
-            Console.reportWarning("Brown out detected", false);
+            Console.reportWarning("Brown out event triggered on RoboRIO", false);
         }
     }
 
@@ -328,6 +356,26 @@ public class RobotBrain {
                     .schedule(RobotContainer.instance()
                             .deployIntakeCmd()
                             .withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
+        }
+
+        if (lastState.isEmpty() || state.driver1RumbleMode != lastState.get().driver1RumbleMode) {
+            updateRumbleMode(state.driver1RumbleMode, RobotContainer.instance().driver1);
+        }
+        if (lastState.isEmpty() || state.driver2RumbleMode != lastState.get().driver2RumbleMode) {
+            updateRumbleMode(state.driver2RumbleMode, RobotContainer.instance().driver2);
+        }
+    }
+
+    private void updateRumbleMode(RumbleMode newMode, Controller<?, ?> contr) {
+        switch (newMode) {
+            case IDLE -> removeSubsystemDefaultCommand(contr);
+            case CONTINUOUS -> changeSubsystemDefaultCommand(contr, contr.rumbleCmd(1));
+            case KNOCK -> {
+                removeSubsystemDefaultCommand(contr);
+                CommandScheduler.getInstance().schedule(contr.knockCmd(0.75));
+            }
+            case NORMAL_PULSING -> changeSubsystemDefaultCommand(contr, contr.pulseRumbleCmd(0.25, 0.25, 1));
+            case FAST_PULSING -> changeSubsystemDefaultCommand(contr, contr.pulseRumbleCmd(0.17, 0.08, 1));
         }
     }
 
