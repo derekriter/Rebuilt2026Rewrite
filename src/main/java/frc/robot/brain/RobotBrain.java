@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc.robot.Robot;
@@ -45,6 +46,7 @@ public class RobotBrain {
 
         RobotContainer.instance().launcher.report(state.launcherReport);
         RobotContainer.instance().swerve.report(state.swerveReport);
+        RobotContainer.instance().intake.report(state.intakeReport);
 
         state.fieldZone =
                 FieldZone.fromRobotX(RobotContainer.instance().swerve.getPose().getX());
@@ -134,7 +136,11 @@ public class RobotBrain {
 
         boolean swerveError = !state.swerveReport.isOperational;
 
-        boolean hardwareError = shooterError || turretError || swerveError;
+        boolean deployerCanRun = !Overrides.disableIntake;
+        boolean intakeError = !Overrides.disableIntake
+                && !(state.intakeReport.rollerOperational && state.intakeReport.deployerOperational);
+
+        boolean hardwareError = shooterError || turretError || swerveError || intakeError;
 
         switch (state.opMode) {
             case DISABLED -> {
@@ -148,11 +154,14 @@ public class RobotBrain {
                 } else {
                     state.ledsMode = LEDsMode.DISCONNECTED;
                 }
+
+                state.shouldDeployIntake = false;
             }
             case TEST -> {
                 state.targetingMode = TargetingMode.DISABLED;
                 state.ledsMode = hardwareError ? LEDsMode.ERROR : LEDsMode.OK;
                 state.driveMode = DriveMode.TELEOP;
+                state.shouldDeployIntake = false;
             }
             case TELEOP -> {
                 if (!shooterCanRun) {
@@ -178,6 +187,7 @@ public class RobotBrain {
                 }
 
                 state.driveMode = DriveMode.TELEOP;
+                state.shouldDeployIntake = !state.intakeReport.hasDeployed;
             }
             case AUTON -> {
                 if (Overrides.disableShooter || Overrides.disableTurret) {
@@ -190,6 +200,7 @@ public class RobotBrain {
 
                 state.ledsMode = hardwareError ? LEDsMode.ERROR : LEDsMode.AUTON;
                 state.driveMode = DriveMode.AUTON;
+                state.shouldDeployIntake = false;
             }
         }
     }
@@ -221,11 +232,18 @@ public class RobotBrain {
                 "RobotBrain/RobotState/LauncherReport/shooterIsAtTarget", state.launcherReport.shooterIsAtTarget);
         Logger.recordOutput("RobotBrain/RobotState/isTurretHomed", state.isTurretHomed);
         Logger.recordOutput("RobotBrain/RobotState/SwerveReport/isOperational", state.swerveReport.isOperational);
+        Logger.recordOutput(
+                "RobotBrain/RobotState/IntakeReport/rollerOperational", state.intakeReport.rollerOperational);
+        Logger.recordOutput("RobotBrain/RobotState/IntakeReport/rollerStalling", state.intakeReport.rollerStalling);
+        Logger.recordOutput(
+                "RobotBrain/RobotState/IntakeReport/deployerOperational", state.intakeReport.deployerOperational);
+        Logger.recordOutput("RobotBrain/RobotState/IntakeReport/hasDeployed", state.intakeReport.hasDeployed);
 
         Logger.recordOutput("RobotBrain/RobotState/targetingMode", state.targetingMode.name());
         Logger.recordOutput("RobotBrain/RobotState/overrideTurret", state.overrideTurret);
         Logger.recordOutput("RobotBrain/RobotState/ledsMode", state.ledsMode.name());
         Logger.recordOutput("RobotBrain/RobotState/driveMode", state.driveMode.name());
+        Logger.recordOutput("RobotBrain/RobotState/shouldDeployIntake", state.shouldDeployIntake);
 
         driver1MissingAlert.set(!RobotContainer.instance().driver1.isConnected());
         driver2MissingAlert.set(!RobotContainer.instance().driver2.isConnected());
@@ -270,6 +288,9 @@ public class RobotBrain {
                 case OK -> changeSubsystemDefaultCommand(
                         RobotContainer.instance().leds,
                         RobotContainer.instance().okLEDsCmd());
+                case WARNING -> changeSubsystemDefaultCommand(
+                        RobotContainer.instance().leds,
+                        RobotContainer.instance().warningLEDsCmd());
                 case ERROR -> changeSubsystemDefaultCommand(
                         RobotContainer.instance().leds,
                         RobotContainer.instance().errorLEDsCmd());
@@ -304,6 +325,13 @@ public class RobotBrain {
                         RobotContainer.instance().swerve,
                         RobotContainer.instance().teleopDriveCmd());
             }
+        }
+
+        if (state.shouldDeployIntake) {
+            CommandScheduler.getInstance()
+                    .schedule(RobotContainer.instance()
+                            .deployIntakeCmd()
+                            .withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
         }
     }
 

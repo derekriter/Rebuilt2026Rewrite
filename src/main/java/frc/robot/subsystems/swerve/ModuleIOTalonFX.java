@@ -66,23 +66,25 @@ public class ModuleIOTalonFX implements IModuleIO {
     private final Queue<Double> timestampQueue;
 
     // Inputs from drive motor
-    private final StatusSignal<Angle> drivePosition;
+    private final StatusSignal<Angle> drivePosition_rots;
     private final Queue<Double> drivePositionQueue;
-    private final StatusSignal<AngularVelocity> driveVelocity;
-    private final StatusSignal<Voltage> driveAppliedVolts;
-    private final StatusSignal<Current> driveCurrent;
-    private final StatusSignal<Temperature> driveTemp;
+    private final StatusSignal<AngularVelocity> driveVelocity_rps;
+    private final StatusSignal<Temperature> driveTemp_C;
+    private final StatusSignal<Voltage> driveAppliedVoltage_V;
+    private final StatusSignal<Current> driveStatorCurrent_A;
+    private final StatusSignal<Current> driveSupplyCurrent_A;
 
     // Inputs from steer motor
-    private final StatusSignal<Angle> steerPosition;
+    private final StatusSignal<Angle> steerPosition_rots;
     private final Queue<Double> steerPositionQueue;
-    private final StatusSignal<AngularVelocity> steerVelocity;
-    private final StatusSignal<Voltage> steerAppliedVolts;
-    private final StatusSignal<Current> steerCurrent;
-    private final StatusSignal<Temperature> steerTemp;
+    private final StatusSignal<AngularVelocity> steerVelocity_rps;
+    private final StatusSignal<Temperature> steerTemp_C;
+    private final StatusSignal<Voltage> steerAppliedVoltage_V;
+    private final StatusSignal<Current> steerStatorCurrent_A;
+    private final StatusSignal<Current> steerSupplyCurrent_A;
 
     // Inputs from encoder
-    private final StatusSignal<Angle> encoderAbsolutePosition;
+    private final StatusSignal<Angle> encoderAbsolutePosition_rots;
 
     // Connection debouncers
     private final Debouncer driveConnectedDebounce = new Debouncer(0.5, Debouncer.DebounceType.kFalling);
@@ -144,68 +146,83 @@ public class ModuleIOTalonFX implements IModuleIO {
         timestampQueue = PhoenixOdometryThread.instance().makeTimestampQueue();
 
         // Create drive status signals
-        drivePosition = driveTalon.getPosition();
-        drivePositionQueue = PhoenixOdometryThread.instance().registerSignal(drivePosition.clone());
-        driveVelocity = driveTalon.getVelocity();
-        driveAppliedVolts = driveTalon.getMotorVoltage();
-        driveCurrent = driveTalon.getStatorCurrent();
-        driveTemp = driveTalon.getDeviceTemp();
+        drivePosition_rots = driveTalon.getPosition();
+        drivePositionQueue = PhoenixOdometryThread.instance().registerSignal(drivePosition_rots.clone());
+        driveVelocity_rps = driveTalon.getVelocity();
+        driveTemp_C = driveTalon.getDeviceTemp();
+        driveAppliedVoltage_V = driveTalon.getMotorVoltage();
+        driveStatorCurrent_A = driveTalon.getStatorCurrent();
+        driveSupplyCurrent_A = driveTalon.getSupplyCurrent();
 
         // Create steer status signals
-        steerPosition = steerTalon.getPosition();
-        steerPositionQueue = PhoenixOdometryThread.instance().registerSignal(steerPosition.clone());
-        steerVelocity = steerTalon.getVelocity();
-        steerAppliedVolts = steerTalon.getMotorVoltage();
-        steerCurrent = steerTalon.getStatorCurrent();
-        steerTemp = steerTalon.getDeviceTemp();
+        steerPosition_rots = steerTalon.getPosition();
+        steerPositionQueue = PhoenixOdometryThread.instance().registerSignal(steerPosition_rots.clone());
+        steerVelocity_rps = steerTalon.getVelocity();
+        steerTemp_C = steerTalon.getDeviceTemp();
+        steerAppliedVoltage_V = steerTalon.getMotorVoltage();
+        steerStatorCurrent_A = steerTalon.getStatorCurrent();
+        steerSupplyCurrent_A = steerTalon.getSupplyCurrent();
 
         // Create encoder status signals
-        encoderAbsolutePosition = cancoder.getAbsolutePosition();
+        encoderAbsolutePosition_rots = cancoder.getAbsolutePosition();
 
         // Configure periodic frames
-        BaseStatusSignal.setUpdateFrequencyForAll(SwerveConstants.odometryFrequency, drivePosition, steerPosition);
+        BaseStatusSignal.setUpdateFrequencyForAll(
+                SwerveConstants.odometryFrequency, drivePosition_rots, steerPosition_rots);
         BaseStatusSignal.setUpdateFrequencyForAll(
                 50.0,
-                driveVelocity,
-                driveAppliedVolts,
-                driveCurrent,
-                driveTemp,
-                steerVelocity,
-                steerAppliedVolts,
-                steerCurrent,
-                steerTemp,
-                encoderAbsolutePosition);
+                driveVelocity_rps,
+                driveTemp_C,
+                driveAppliedVoltage_V,
+                driveStatorCurrent_A,
+                driveSupplyCurrent_A,
+                steerVelocity_rps,
+                steerTemp_C,
+                steerAppliedVoltage_V,
+                steerStatorCurrent_A,
+                steerSupplyCurrent_A,
+                encoderAbsolutePosition_rots);
         ParentDevice.optimizeBusUtilizationForAll(driveTalon, steerTalon);
     }
 
     @Override
     public void updateInputs(ModuleIOInputs inputs) {
         // Refresh all signals
-        var driveStatus =
-                BaseStatusSignal.refreshAll(drivePosition, driveVelocity, driveAppliedVolts, driveCurrent, driveTemp);
-        var steerStatus =
-                BaseStatusSignal.refreshAll(steerPosition, steerVelocity, steerAppliedVolts, steerCurrent, steerTemp);
-        var cancoderStatus = BaseStatusSignal.refreshAll(encoderAbsolutePosition);
+        var driveStatus = BaseStatusSignal.refreshAll(
+                drivePosition_rots,
+                driveVelocity_rps,
+                driveTemp_C,
+                driveAppliedVoltage_V,
+                driveStatorCurrent_A,
+                driveSupplyCurrent_A);
+        var steerStatus = BaseStatusSignal.refreshAll(
+                steerPosition_rots,
+                steerVelocity_rps,
+                steerTemp_C,
+                steerAppliedVoltage_V,
+                steerStatorCurrent_A,
+                steerSupplyCurrent_A);
+        var cancoderStatus = BaseStatusSignal.refreshAll(encoderAbsolutePosition_rots);
 
         // Update drive inputs
         inputs.driveConnected = driveConnectedDebounce.calculate(driveStatus.isOK());
-        inputs.drivePosition_rad = Units.rotationsToRadians(drivePosition.getValueAsDouble());
-        inputs.driveVelocity_radps = Units.rotationsToRadians(driveVelocity.getValueAsDouble());
-        inputs.driveAppliedVoltage_V = driveAppliedVolts.getValueAsDouble();
-        inputs.driveCurrent_A = driveCurrent.getValueAsDouble();
-        inputs.driveTemp_C = driveTemp.getValueAsDouble();
+        inputs.drivePosition_rad = Units.rotationsToRadians(drivePosition_rots.getValueAsDouble());
+        inputs.driveVelocity_radps = Units.rotationsToRadians(driveVelocity_rps.getValueAsDouble());
+        inputs.driveTemp_C = driveTemp_C.getValueAsDouble();
+        inputs.driveAppliedVoltage_V = driveAppliedVoltage_V.getValueAsDouble();
+        inputs.driveStatorCurrent_A = driveStatorCurrent_A.getValueAsDouble();
 
         // Update steer inputs
         inputs.steerConnected = steerConnectedDebounce.calculate(steerStatus.isOK());
         inputs.encoderConnected = encoderConnectedDebounce.calculate(cancoderStatus.isOK());
-        inputs.steerPosition = Rotation2d.fromRotations(steerPosition.getValueAsDouble());
-        inputs.steerVelocity_radps = Units.rotationsToRadians(steerVelocity.getValueAsDouble());
-        inputs.steerAppliedVoltage_V = steerAppliedVolts.getValueAsDouble();
-        inputs.steerCurrent_A = steerCurrent.getValueAsDouble();
-        inputs.steerTemp_C = steerTemp.getValueAsDouble();
+        inputs.steerPosition = Rotation2d.fromRotations(steerPosition_rots.getValueAsDouble());
+        inputs.steerVelocity_radps = Units.rotationsToRadians(steerVelocity_rps.getValueAsDouble());
+        inputs.steerTemp_C = steerTemp_C.getValueAsDouble();
+        inputs.steerAppliedVoltage_V = steerAppliedVoltage_V.getValueAsDouble();
+        inputs.steerStatorCurrent_A = steerStatorCurrent_A.getValueAsDouble();
 
         // Update encoder inputs
-        inputs.encoderAbsolutePosition = Rotation2d.fromRotations(encoderAbsolutePosition.getValueAsDouble());
+        inputs.encoderAbsolutePosition = Rotation2d.fromRotations(encoderAbsolutePosition_rots.getValueAsDouble());
 
         // Update odometry inputs
         inputs.odometryTimestamps_s =

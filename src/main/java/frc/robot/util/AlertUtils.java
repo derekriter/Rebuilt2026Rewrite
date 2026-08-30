@@ -31,4 +31,8 @@ public class AlertUtils {
     public static Alert makeBreakerTripAlert(String deviceName) {
         return new Alert(String.format("%s breaker tripped", deviceName), AlertType.kError);
     }
+
+    public static Alert makeStallAlert(String deviceName) {
+        return new Alert(String.format("Stall detected on %s", deviceName), AlertType.kWarning);
+    }
 }

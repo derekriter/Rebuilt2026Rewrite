@@ -17,7 +17,7 @@ public class TurretIOReal implements ITurretIO {
         turret = new SparkMax(canID, MotorType.kBrushless);
         MotorUtils.safeApplyConfig(
                 turret,
-                "turretMotor",
+                "turret",
                 canID,
                 channelID,
                 motorConfig,
@@ -35,16 +35,9 @@ public class TurretIOReal implements ITurretIO {
             inputs.vel_RPM = turret.getEncoder().getVelocity(); // frame 1
             inputs.temp_C = turret.getMotorTemperature(); // frame 1
             inputs.appliedOut_perc = turret.getAppliedOutput(); // frame 0
-            inputs.voltageOut_V = turret.getBusVoltage() * inputs.appliedOut_perc; // frame 0 & 1
-            inputs.currentOut_A = turret.getOutputCurrent(); // frame 1
-        } /*else {
-              inputs.pos_rots = Double.NaN;
-              inputs.vel_rpm = Double.NaN;
-              inputs.temp_C = Double.NaN;
-              inputs.appliedOut_perc = Double.NaN;
-              inputs.voltageOut_V = Double.NaN;
-              inputs.currentOut_A = Double.NaN;
-          }*/
+            inputs.statorVoltage_V = turret.getBusVoltage() * inputs.appliedOut_perc; // frame 0 & 1
+            inputs.statorCurrent_A = turret.getOutputCurrent(); // frame 1
+        }
     }
 
     @Override
@@ -55,11 +48,6 @@ public class TurretIOReal implements ITurretIO {
     @Override
     public void setVoltage(double voltage_volts) {
         turret.setVoltage(voltage_volts);
-    }
-
-    @Override
-    public void stop() {
-        turret.stopMotor();
     }
 
     @Override

@@ -22,9 +22,6 @@ public interface ITurretIO {
         public void setVoltage(double voltage_volts) {}
 
         @Override
-        public void stop() {}
-
-        @Override
         public void setEncoderPosition(double position_rots) {}
     };
 
@@ -34,8 +31,8 @@ public interface ITurretIO {
         public double vel_RPM = Double.NaN;
         public double temp_C = Double.NaN;
         public double appliedOut_perc = Double.NaN;
-        public double voltageOut_V = Double.NaN;
-        public double currentOut_A = Double.NaN;
+        public double statorVoltage_V = Double.NaN;
+        public double statorCurrent_A = Double.NaN;
 
         @Override
         public void toLog(LogTable table) {
@@ -44,8 +41,8 @@ public interface ITurretIO {
             table.put("vel", vel_RPM, RPM.name());
             table.put("temp", temp_C, Celsius.name());
             table.put("appliedOut", appliedOut_perc);
-            table.put("voltageOut", voltageOut_V, Volts.name());
-            table.put("currentOut", currentOut_A, Amps.name());
+            table.put("statorVoltage", statorVoltage_V, Volts.name());
+            table.put("statorCurrent", statorCurrent_A, Amps.name());
         }
 
         @Override
@@ -55,8 +52,8 @@ public interface ITurretIO {
             vel_RPM = table.get("vel", vel_RPM);
             temp_C = table.get("temp", temp_C);
             appliedOut_perc = table.get("appliedOut", appliedOut_perc);
-            voltageOut_V = table.get("voltageOut", voltageOut_V);
-            currentOut_A = table.get("currentOut", currentOut_A);
+            statorVoltage_V = table.get("statorVoltage", statorVoltage_V);
+            statorCurrent_A = table.get("statorCurrent", statorCurrent_A);
         }
     }
 
@@ -65,8 +62,6 @@ public interface ITurretIO {
     public void setPositionTarget(double target_rots);
 
     public void setVoltage(double voltage_volts);
-
-    public void stop();
 
     public void setEncoderPosition(double position_rots);
 }

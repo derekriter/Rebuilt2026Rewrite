@@ -54,7 +54,7 @@ public final class Robot extends LoggedRobot {
         _inst_nl = this;
 
         initLogging();
-        Overrides.telemeterizeOverrides();
+        Overrides.logOverrides();
         RobotContainer.instance();
 
         brain = new RobotBrain();

@@ -15,7 +15,10 @@ public final class Overrides {
 
     public static final boolean disableSwerveSafety = false;
 
-    public static void telemeterizeOverrides() {
+    public static final boolean disableIntakeSafety = false;
+    public static final boolean disableIntake = false;
+
+    public static void logOverrides() {
         Logger.recordOutput("Overrides/disableShooterSafety", disableShooterSafety);
         Logger.recordOutput("Overrides/disableShooter", disableShooter);
 
@@ -27,6 +30,9 @@ public final class Overrides {
         Logger.recordOutput("Overrides/disableLEDs", disableLEDs);
 
         Logger.recordOutput("Overrides/disableSwerveSafety", disableSwerveSafety);
+
+        Logger.recordOutput("Overrides/disableIntakeSafety", disableIntakeSafety);
+        Logger.recordOutput("Overrides/disableIntake", disableIntake);
     }
 
     private Overrides() {}

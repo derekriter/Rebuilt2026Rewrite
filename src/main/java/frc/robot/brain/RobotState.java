@@ -1,5 +1,6 @@
 package frc.robot.brain;
 
+import frc.robot.subsystems.intake.IntakeReport;
 import frc.robot.subsystems.launcher.LauncherReport;
 import frc.robot.subsystems.swerve.SwerveReport;
 
@@ -23,11 +24,13 @@ public final class RobotState {
     public LauncherReport launcherReport = new LauncherReport();
     public boolean isTurretHomed = false;
     public SwerveReport swerveReport = new SwerveReport();
+    public IntakeReport intakeReport = new IntakeReport();
 
     public TargetingMode targetingMode = TargetingMode.DISABLED;
     public boolean overrideTurret = false;
     public LEDsMode ledsMode = LEDsMode.DISCONNECTED;
     public DriveMode driveMode = DriveMode.DISABLED;
+    public boolean shouldDeployIntake = false;
 
     public void copyFrom(RobotState ref) {
         opMode = ref.opMode;
@@ -49,10 +52,12 @@ public final class RobotState {
         launcherReport.copyFrom(ref.launcherReport);
         isTurretHomed = ref.isTurretHomed;
         swerveReport.copyFrom(ref.swerveReport);
+        intakeReport.copyFrom(ref.intakeReport);
 
         targetingMode = ref.targetingMode;
         overrideTurret = ref.overrideTurret;
         ledsMode = ref.ledsMode;
         driveMode = ref.driveMode;
+        shouldDeployIntake = ref.shouldDeployIntake;
     }
 }

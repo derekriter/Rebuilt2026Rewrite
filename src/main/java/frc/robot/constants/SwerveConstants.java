@@ -131,8 +131,6 @@ public final class SwerveConstants {
     // Some configs will be overwritten; check the `with*InitialConfigs()` API documentation.
     private static final TalonFXConfiguration driveInitialConfigs = new TalonFXConfiguration()
             .withCurrentLimits(new CurrentLimitsConfigs()
-                    // .withStatorCurrentLimit(120)
-                    // .withStatorCurrentLimitEnable(true)
                     .withSupplyCurrentLimit(70)
                     .withSupplyCurrentLimitEnable(true)
                     .withSupplyCurrentLowerLimit(60)

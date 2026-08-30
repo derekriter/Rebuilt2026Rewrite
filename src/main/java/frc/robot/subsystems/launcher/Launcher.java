@@ -222,31 +222,23 @@ public final class Launcher extends SubsystemBase {
     }
 
     public void report(LauncherReport report) {
-        if (turretIO_nl == null) {
+        if (Overrides.disableTurretSafety) {
+            report.turretOperational = true;
+        } else if (turretIO_nl == null) {
             report.turretOperational = false;
-            report.turretIsAtTarget = false;
         } else {
-            if (Overrides.disableTurretSafety) {
-                report.turretOperational = true;
-            } else {
-                report.turretOperational = turretInputs.connected && !turretBreaker;
-            }
-
-            report.turretIsAtTarget = isTurretAtTarget();
+            report.turretOperational = turretInputs.connected && !turretBreaker;
         }
+        report.turretIsAtTarget = isTurretAtTarget();
 
-        if (shooterIO_nl == null) {
+        if (Overrides.disableShooterSafety) {
+            report.shooterOperational = true;
+        } else if (shooterIO_nl == null) {
             report.shooterOperational = false;
-            report.shooterIsAtTarget = false;
         } else {
-            if (Overrides.disableShooterSafety) {
-                report.shooterOperational = true;
-            } else {
-                report.shooterOperational = shooterInputs.connected && !shooterThermalShutdown && !shooterBreaker;
-            }
-
-            report.shooterIsAtTarget = isShooterAtTarget();
+            report.shooterOperational = shooterInputs.connected && !shooterBreaker && !shooterThermalShutdown;
         }
+        report.shooterIsAtTarget = isShooterAtTarget();
     }
 
     private Translation2d getLauncherTranslation() {
@@ -278,19 +270,13 @@ public final class Launcher extends SubsystemBase {
     }
 
     public void stopTurret() {
-        if (turretIO_nl == null) return;
-
-        turretIO_nl.stop();
-        lastTurretTarget_rot = Double.NaN;
-
-        Logger.recordOutput("Launcher/Turret/motorTarget", Double.NaN, Rotations);
-        Logger.recordOutput("Launcher/Turret/mechTarget", Double.NaN, Degrees);
+        setTurretVoltage(0);
     }
 
     public boolean isTurretAtHomingLimit() {
         if (turretIO_nl == null || !turretInputs.connected) return false;
 
-        return turretInputs.currentOut_A > TurretConstants.homingThresholdCurrent.in(Amps)
+        return turretInputs.statorCurrent_A > TurretConstants.homingThresholdCurrent.in(Amps)
                 || Math.abs(turretInputs.vel_RPM) < TurretConstants.homingThresholdVel.in(RPM);
     }
 
@@ -322,7 +308,7 @@ public final class Launcher extends SubsystemBase {
 
     public void setShooterVoltage(double volts) {
         if (shooterIO_nl == null) return;
-        if (shooterThermalShutdown && volts != 0) return;
+        if (shooterThermalShutdown && Math.abs(volts) > 1e-6) return;
 
         shooterIO_nl.setVoltage(volts);
         lastShooterTarget_RPM = Double.NaN;
@@ -332,13 +318,7 @@ public final class Launcher extends SubsystemBase {
     }
 
     public void stopShooter() {
-        if (shooterIO_nl == null) return;
-
-        shooterIO_nl.stop();
-        lastShooterTarget_RPM = Double.NaN;
-
-        Logger.recordOutput("Launcher/Shooter/velTarget", Double.NaN, RPM);
-        Logger.recordOutput("Launcher/Shooter/distTarget", Double.NaN, Meters);
+        setShooterVoltage(0);
     }
 
     public boolean isShooterAtTarget() {

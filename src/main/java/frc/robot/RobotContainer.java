@@ -6,6 +6,7 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
+import static edu.wpi.first.units.Units.Volts;
 
 import choreo.Choreo;
 import choreo.auto.AutoFactory;
@@ -27,9 +28,14 @@ import frc.robot.commands.AimAtTarget;
 import frc.robot.commands.HomeLauncher;
 import frc.robot.commands.TeleopDrive;
 import frc.robot.constants.ControllerConstants;
+import frc.robot.constants.IntakeConstants.RollerConstants;
 import frc.robot.constants.LEDsConstants;
 import frc.robot.constants.Overrides;
 import frc.robot.pdh.PDH;
+import frc.robot.subsystems.intake.IIntakeIO;
+import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.IntakeIOReal;
+import frc.robot.subsystems.intake.IntakeIOSim;
 import frc.robot.subsystems.launcher.Launcher;
 import frc.robot.subsystems.launcher.shooter.IShooterIO;
 import frc.robot.subsystems.launcher.shooter.ShooterIOReal;
@@ -66,6 +72,7 @@ public final class RobotContainer {
     public final Swerve swerve;
     public final Launcher launcher;
     public final LEDs leds = new LEDs();
+    public final Intake intake;
 
     public final CommandXboxController driver1Cmd = new CommandXboxController(ControllerConstants.driver1Port);
     public final XboxController driver1 = driver1Cmd.getHID();
@@ -91,6 +98,7 @@ public final class RobotContainer {
                 launcher = new Launcher(
                         Overrides.disableTurret ? null : new TurretIOReal(),
                         Overrides.disableShooter ? null : new ShooterIOReal());
+                intake = new Intake(Overrides.disableIntake ? null : new IntakeIOReal());
             }
             case SIM -> {
                 swerve = new Swerve(
@@ -99,10 +107,10 @@ public final class RobotContainer {
                         bus -> new ModuleIOSim(1),
                         bus -> new ModuleIOSim(2),
                         bus -> new ModuleIOSim(3));
-
                 launcher = new Launcher(
                         Overrides.disableTurret ? null : new TurretIOSim(),
                         Overrides.disableShooter ? null : new ShooterIOSim());
+                intake = new Intake(Overrides.disableIntake ? null : new IntakeIOSim());
             }
             case REPLAY -> {
                 swerve = new Swerve(
@@ -114,6 +122,7 @@ public final class RobotContainer {
                 launcher = new Launcher(
                         Overrides.disableTurret ? null : ITurretIO.blank,
                         Overrides.disableShooter ? null : IShooterIO.blank);
+                intake = new Intake(Overrides.disableIntake ? null : IIntakeIO.blank);
             }
                 // shouldn't be possible to trigger, but the compiler required it anyway
             default -> throw new Error("Unhandled mode encountered");
@@ -129,6 +138,12 @@ public final class RobotContainer {
         driver2Cmd.x().onTrue(Commands.runOnce(() -> {
             Robot.instance().brain.state.isTurretHomed = false;
         }));
+        driver2Cmd.leftTrigger().and(driver2Cmd.rightTrigger().negate()).whileTrue(intakeCmd());
+        driver2Cmd
+                .leftBumper()
+                .and(driver2Cmd.rightTrigger().negate())
+                .and(driver2Cmd.leftTrigger().negate())
+                .whileTrue(reverseIntakeCmd());
     }
 
     private void setupChoreo() {
@@ -233,6 +248,13 @@ public final class RobotContainer {
                 .withName("okLEDsCmd");
     }
 
+    public Command warningLEDsCmd() {
+        LEDPattern blink = LEDPattern.solid(LEDsConstants.orange).blink(Seconds.of(1 / 4.0));
+        return Commands.runEnd(() -> leds.applyPattern(blink), leds::clear, leds)
+                .ignoringDisable(true)
+                .withName("warningLEDsCmd");
+    }
+
     public Command errorLEDsCmd() {
         LEDPattern blink = LEDPattern.solid(Color.kRed).blink(Seconds.of(1 / 8.0));
         return Commands.runEnd(() -> leds.applyPattern(blink), leds::clear, leds)
@@ -289,18 +311,23 @@ public final class RobotContainer {
     }
 
     public Command deployIntakeCmd() {
-        return Commands.runOnce(() -> Console.println("deploy intake") /*, intake*/)
-                .withName("deployIntakeCmd");
+        return Commands.runOnce(intake::deploy, intake).withName("deployIntakeCmd");
     }
 
-    public Command runIntakeCmd() {
-        return Commands.startRun(() -> Console.println("run intake"), () -> {} /*, intake*/)
-                .withName("runIntakeCmd");
+    public Command intakeCmd() {
+        return Commands.startEnd(
+                        () -> intake.setRollerVoltage(RollerConstants.intakeVoltage.in(Volts)),
+                        intake::stopRoller,
+                        intake)
+                .withName("intakeCmd");
     }
 
-    public Command stopIntakeCmd() {
-        return Commands.runOnce(() -> Console.println("stop intake") /*, intake*/)
-                .withName("stopIntakeCmd");
+    public Command reverseIntakeCmd() {
+        return Commands.startEnd(
+                        () -> intake.setRollerVoltage(RollerConstants.reverseVoltage.in(Volts)),
+                        intake::stopRoller,
+                        intake)
+                .withName("reverseIntakeCmd");
     }
 
     public Command climbUpPosCmd() {
