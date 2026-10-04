@@ -27,7 +27,7 @@ public final class IntakeConstants {
             motorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
 
             motorConfig.Voltage.PeakForwardVoltage = 12;
-            motorConfig.Voltage.PeakReverseVoltage = 12;
+            motorConfig.Voltage.PeakReverseVoltage = -12;
 
             motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
             motorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;

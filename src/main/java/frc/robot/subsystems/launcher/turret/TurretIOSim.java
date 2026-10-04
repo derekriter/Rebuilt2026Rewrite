@@ -20,7 +20,7 @@ public class TurretIOSim implements ITurretIO {
     public void setPositionTarget(double target_rots) {}
 
     @Override
-    public void setVoltage(double voltage_volts) {}
+    public void setVoltage(double voltage_V) {}
 
     @Override
     public void setEncoderPosition(double position_rots) {}

@@ -64,7 +64,7 @@ public interface ITurretIO {
 
     public void setPositionTarget(double target_rots);
 
-    public void setVoltage(double voltage_volts);
+    public void setVoltage(double voltage_V);
 
     public void setEncoderPosition(double position_rots);
 }

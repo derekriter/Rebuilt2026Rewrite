@@ -1,5 +1,6 @@
 package frc.robot.brain;
 
+import frc.robot.subsystems.indexer.IndexerReport;
 import frc.robot.subsystems.intake.IntakeReport;
 import frc.robot.subsystems.launcher.LauncherReport;
 import frc.robot.subsystems.swerve.SwerveReport;
@@ -25,6 +26,7 @@ public final class RobotState {
     public boolean isTurretHomed = false;
     public SwerveReport swerveReport = new SwerveReport();
     public IntakeReport intakeReport = new IntakeReport();
+    public IndexerReport indexerReport = new IndexerReport();
 
     public TargetingMode targetingMode = TargetingMode.DISABLED;
     public boolean overrideTurret = false;
@@ -55,6 +57,7 @@ public final class RobotState {
         isTurretHomed = ref.isTurretHomed;
         swerveReport.copyFrom(ref.swerveReport);
         intakeReport.copyFrom(ref.intakeReport);
+        indexerReport.copyFrom(ref.indexerReport);
 
         targetingMode = ref.targetingMode;
         overrideTurret = ref.overrideTurret;

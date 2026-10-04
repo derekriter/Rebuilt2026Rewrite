@@ -16,8 +16,8 @@ public class ShooterIOSim implements IShooterIO {
     }
 
     @Override
-    public void setVelocityTarget(double velocity_rpm) {}
+    public void setVelocityTarget(double velocity_RPM) {}
 
     @Override
-    public void setVoltage(double voltage_volts) {}
+    public void setVoltage(double voltage_V) {}
 }

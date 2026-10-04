@@ -18,6 +18,9 @@ public final class Overrides {
     public static final boolean disableIntakeSafety = false;
     public static final boolean disableIntake = false;
 
+    public static final boolean disableIndexerSafety = false;
+    public static final boolean disableIndexer = false;
+
     public static void logOverrides() {
         Logger.recordOutput("Overrides/disableShooterSafety", disableShooterSafety);
         Logger.recordOutput("Overrides/disableShooter", disableShooter);
@@ -33,6 +36,9 @@ public final class Overrides {
 
         Logger.recordOutput("Overrides/disableIntakeSafety", disableIntakeSafety);
         Logger.recordOutput("Overrides/disableIntake", disableIntake);
+
+        Logger.recordOutput("Overrides/disableIndexerSafety", disableIndexerSafety);
+        Logger.recordOutput("Overrides/disableIndexer", disableIndexer);
     }
 
     private Overrides() {}

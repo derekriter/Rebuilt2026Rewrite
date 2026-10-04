@@ -40,6 +40,7 @@ public class RobotBrain {
         RobotContainer.instance().launcher.report(state.launcherReport);
         RobotContainer.instance().swerve.report(state.swerveReport);
         RobotContainer.instance().intake.report(state.intakeReport);
+        RobotContainer.instance().indexer.report(state.indexerReport);
 
         if (state.opMode == OpMode.TELEOP) {
             pollTeleopData();
@@ -141,7 +142,10 @@ public class RobotBrain {
         boolean intakeError = !Overrides.disableIntake
                 && !(state.intakeReport.rollerOperational && state.intakeReport.deployerOperational);
 
-        boolean hardwareError = shooterError || turretError || swerveError || intakeError;
+        boolean indexerCanRun = !Overrides.disableIndexer && state.indexerReport.isOperational;
+        boolean indexerError = !state.indexerReport.isOperational;
+
+        boolean hardwareError = shooterError || turretError || swerveError || intakeError || indexerError;
 
         switch (state.opMode) {
             case DISABLED -> {
@@ -266,6 +270,7 @@ public class RobotBrain {
         Logger.recordOutput(
                 "RobotBrain/RobotState/IntakeReport/deployerOperational", state.intakeReport.deployerOperational);
         Logger.recordOutput("RobotBrain/RobotState/IntakeReport/hasDeployed", state.intakeReport.hasDeployed);
+        Logger.recordOutput("RobotBrain/RobotState/IndexerReport/isOperational", state.indexerReport.isOperational);
 
         Logger.recordOutput("RobotBrain/RobotState/targetingMode", state.targetingMode.name());
         Logger.recordOutput("RobotBrain/RobotState/overrideTurret", state.overrideTurret);
