@@ -138,102 +138,121 @@ public class RobotBrain {
 
         boolean swerveError = !state.swerveReport.isOperational;
 
-        boolean deployerCanRun = !Overrides.disableIntake;
-        boolean intakeError = !Overrides.disableIntake
-                && !(state.intakeReport.rollerOperational && state.intakeReport.deployerOperational);
+        boolean deployerCanRun = !Overrides.disableIntake && state.intakeReport.deployerOperational;
+        boolean rollerCanRun = !Overrides.disableIntake && state.intakeReport.rollerOperational;
+        boolean intakeError = (!state.intakeReport.rollerOperational || !state.intakeReport.deployerOperational)
+                && !Overrides.disableIntake;
 
         boolean indexerCanRun = !Overrides.disableIndexer && state.indexerReport.isOperational;
         boolean indexerError = !state.indexerReport.isOperational;
 
         boolean hardwareError = shooterError || turretError || swerveError || intakeError || indexerError;
 
-        switch (state.opMode) {
-            case DISABLED -> {
+        // disabled
+        if (state.opMode == OpMode.DISABLED) {
+            state.targetingMode = TargetingMode.DISABLED;
+            state.driveMode = DriveMode.DISABLED;
+            state.intakeMode = IntakeMode.DISABLED;
+            state.indexingMode = IndexingMode.DISABLED;
+
+            if (hardwareError) {
+                state.ledsMode = LEDsMode.ERROR;
+                state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.FAST_PULSING;
+            } else if (state.isDSAttached) {
+                state.ledsMode = LEDsMode.IDLE;
+                state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.NONE;
+            } else {
+                state.ledsMode = LEDsMode.DISCONNECTED;
+                state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.NONE;
+            }
+
+            return;
+        }
+        // auton
+        if (state.opMode == OpMode.AUTON) {
+            if (Overrides.disableShooter || Overrides.disableTurret) {
                 state.targetingMode = TargetingMode.DISABLED;
-                state.driveMode = DriveMode.DISABLED;
-
-                if (hardwareError) {
-                    state.ledsMode = LEDsMode.ERROR;
-                    state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.FAST_PULSING;
-                } else if (state.isDSAttached) {
-                    state.ledsMode = LEDsMode.IDLE;
-                    state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.IDLE;
-                } else {
-                    state.ledsMode = LEDsMode.DISCONNECTED;
-                    state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.IDLE;
-                }
-
-                state.shouldDeployIntake = false;
+            } else if (!state.isTurretHomed) {
+                state.targetingMode = TargetingMode.HOMING;
+            } else {
+                state.targetingMode = TargetingMode.TARGETING_HUB;
             }
-            case TEST -> {
+
+            if (hardwareError) {
+                state.ledsMode = LEDsMode.ERROR;
+                state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.FAST_PULSING;
+            } else {
+                state.ledsMode = LEDsMode.AUTON;
+                state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.NONE;
+            }
+
+            state.driveMode = DriveMode.AUTON;
+            state.intakeMode = IntakeMode.DISABLED;
+            state.indexingMode = IndexingMode.DISABLED;
+
+            return;
+        }
+
+        // test and teleop
+        XboxController d2 = RobotContainer.instance().driver2.getHID();
+
+        state.driveMode = DriveMode.TELEOP;
+
+        if (d2.getLeftBumperButton()) {
+            state.intakeMode = IntakeMode.REVERSE;
+        } else if (Controller.isPastDeadband(d2.getLeftTriggerAxis(), 0.5)) {
+            state.intakeMode = IntakeMode.FORWARD;
+        } else {
+            state.intakeMode = IntakeMode.DISABLED;
+        }
+
+        if (state.opMode == OpMode.TEST) {
+            // test-specific
+            state.targetingMode = TargetingMode.DISABLED;
+
+            if (hardwareError) {
+                state.ledsMode = LEDsMode.ERROR;
+                state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.FAST_PULSING;
+            } else {
+                state.ledsMode = LEDsMode.OK;
+                state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.NONE;
+            }
+        } else {
+            // teleop-specific
+            if (!shooterCanRun) {
                 state.targetingMode = TargetingMode.DISABLED;
-                state.driveMode = DriveMode.TELEOP;
-
-                if (hardwareError) {
-                    state.ledsMode = LEDsMode.ERROR;
-                    state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.FAST_PULSING;
-                } else {
-                    state.ledsMode = LEDsMode.OK;
-                    state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.IDLE;
-                }
-
-                state.shouldDeployIntake = false;
+            } else if (!state.isTurretHomed && turretCanRun) {
+                state.targetingMode = TargetingMode.HOMING;
+            } else if (isInFZone()) {
+                state.targetingMode = TargetingMode.TARGETING_HUB;
+            } else {
+                state.targetingMode = TargetingMode.TARGETING_FZONE;
             }
-            case TELEOP -> {
-                if (!shooterCanRun) {
-                    state.targetingMode = TargetingMode.DISABLED;
-                } else if (!state.isTurretHomed && turretCanRun) {
-                    state.targetingMode = TargetingMode.HOMING;
-                } else if (isInFZone()) {
-                    state.targetingMode = TargetingMode.TARGETING_HUB;
+
+            if (hardwareError) {
+                state.ledsMode = LEDsMode.ERROR;
+                state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.FAST_PULSING;
+            } else if (state.phase == TeleopPhase.ENDGAME) {
+                state.ledsMode = LEDsMode.ENDGAME;
+
+                if (state.modeTime_s - TeleopPhase.SHIFT4.endTime.in(Seconds) <= 5) {
+                    state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.CONTINUOUS;
                 } else {
-                    state.targetingMode = TargetingMode.TARGETING_FZONE;
+                    state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.NONE;
                 }
-
-                if (hardwareError) {
-                    state.ledsMode = LEDsMode.ERROR;
-                    state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.FAST_PULSING;
-                } else if (state.phase == TeleopPhase.ENDGAME) {
-                    state.ledsMode = LEDsMode.ENDGAME;
-
-                    if (state.modeTime_s - TeleopPhase.SHIFT4.endTime.in(Seconds) <= 5) {
-                        state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.CONTINUOUS;
-                    } else {
-                        state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.IDLE;
-                    }
-                } else if (state.timeLeftInPhase_s <= 3) {
-                    state.ledsMode = LEDsMode.SHIFT_WARNING;
-                    state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.KNOCK;
-                } else if (state.isHubActive) {
-                    state.ledsMode = LEDsMode.HUB_ACTIVE;
-                    state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.IDLE;
-                } else {
-                    state.ledsMode = LEDsMode.HUB_INACTIVE;
-                    state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.IDLE;
-                }
-
-                state.driveMode = DriveMode.TELEOP;
-                state.shouldDeployIntake = !state.intakeReport.hasDeployed && deployerCanRun;
+            } else if (state.timeLeftInPhase_s <= 3) {
+                state.ledsMode = LEDsMode.SHIFT_WARNING;
+                state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.KNOCK;
+            } else if (state.isHubActive) {
+                state.ledsMode = LEDsMode.HUB_ACTIVE;
+                state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.NONE;
+            } else {
+                state.ledsMode = LEDsMode.HUB_INACTIVE;
+                state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.NONE;
             }
-            case AUTON -> {
-                if (Overrides.disableShooter || Overrides.disableTurret) {
-                    state.targetingMode = TargetingMode.DISABLED;
-                } else if (!state.isTurretHomed) {
-                    state.targetingMode = TargetingMode.HOMING;
-                } else {
-                    state.targetingMode = TargetingMode.TARGETING_HUB;
-                }
 
-                if (hardwareError) {
-                    state.ledsMode = LEDsMode.ERROR;
-                    state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.FAST_PULSING;
-                } else {
-                    state.ledsMode = LEDsMode.AUTON;
-                    state.driver1RumbleMode = state.driver2RumbleMode = RumbleMode.IDLE;
-                }
-
-                state.driveMode = DriveMode.AUTON;
-                state.shouldDeployIntake = false;
+            if (!state.intakeReport.hasDeployed && deployerCanRun) {
+                state.intakeMode = IntakeMode.DEPLOYING;
             }
         }
     }
@@ -276,9 +295,10 @@ public class RobotBrain {
         Logger.recordOutput("RobotBrain/RobotState/overrideTurret", state.overrideTurret);
         Logger.recordOutput("RobotBrain/RobotState/ledsMode", state.ledsMode.name());
         Logger.recordOutput("RobotBrain/RobotState/driveMode", state.driveMode.name());
-        Logger.recordOutput("RobotBrain/RobotState/shouldDeployIntake", state.shouldDeployIntake);
+        Logger.recordOutput("RobotBrain/RobotState/intakeMode", state.intakeMode.name());
         Logger.recordOutput("RobotBrain/RobotState/driver1RumbleMode", state.driver1RumbleMode.name());
         Logger.recordOutput("RobotBrain/RobotState/driver2RumbleMode", state.driver2RumbleMode.name());
+        Logger.recordOutput("RobotBrain/RobotState/indexingMode", state.indexingMode.name());
 
         if (state.isBrownedOut && !lastState.map(s -> s.isBrownedOut).orElse(false)) {
             Console.reportWarning("Brown out event triggered on RoboRIO", false);
@@ -373,7 +393,7 @@ public class RobotBrain {
 
     private void updateRumbleMode(RumbleMode newMode, Controller<?, ?> contr) {
         switch (newMode) {
-            case IDLE -> removeSubsystemDefaultCommand(contr);
+            case NONE -> removeSubsystemDefaultCommand(contr);
             case CONTINUOUS -> changeSubsystemDefaultCommand(contr, contr.rumbleCmd(1));
             case KNOCK -> {
                 removeSubsystemDefaultCommand(contr);

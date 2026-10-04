@@ -32,9 +32,10 @@ public final class RobotState {
     public boolean overrideTurret = false;
     public LEDsMode ledsMode = LEDsMode.DISCONNECTED;
     public DriveMode driveMode = DriveMode.DISABLED;
-    public boolean shouldDeployIntake = false;
-    public RumbleMode driver1RumbleMode = RumbleMode.IDLE;
-    public RumbleMode driver2RumbleMode = RumbleMode.IDLE;
+    public IntakeMode intakeMode = IntakeMode.DISABLED;
+    public RumbleMode driver1RumbleMode = RumbleMode.NONE;
+    public RumbleMode driver2RumbleMode = RumbleMode.NONE;
+    public IndexingMode indexingMode = IndexingMode.DISABLED;
 
     public void copyFrom(RobotState ref) {
         opMode = ref.opMode;
@@ -63,8 +64,9 @@ public final class RobotState {
         overrideTurret = ref.overrideTurret;
         ledsMode = ref.ledsMode;
         driveMode = ref.driveMode;
-        shouldDeployIntake = ref.shouldDeployIntake;
+        intakeMode = ref.intakeMode;
         driver1RumbleMode = ref.driver1RumbleMode;
         driver2RumbleMode = ref.driver2RumbleMode;
+        indexingMode = ref.indexingMode;
     }
 }

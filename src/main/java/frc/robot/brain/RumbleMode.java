@@ -1,7 +1,7 @@
 package frc.robot.brain;
 
 public enum RumbleMode {
-    IDLE,
+    NONE,
     CONTINUOUS,
     KNOCK,
     NORMAL_PULSING,
