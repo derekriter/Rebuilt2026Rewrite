@@ -40,12 +40,12 @@ public class ShooterIOReal implements IShooterIO {
     }
 
     @Override
-    public void setVelocityTarget(double velocity_rpm) {
-        shooter.getClosedLoopController().setSetpoint(velocity_rpm, ControlType.kVelocity);
+    public void setVelocityTarget(double velocity_RPM) {
+        shooter.getClosedLoopController().setSetpoint(velocity_RPM, ControlType.kVelocity);
     }
 
     @Override
-    public void setVoltage(double voltage_volts) {
-        shooter.setVoltage(voltage_volts);
+    public void setVoltage(double voltage_V) {
+        shooter.setVoltage(voltage_V);
     }
 }

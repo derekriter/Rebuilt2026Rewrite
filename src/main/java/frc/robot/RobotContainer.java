@@ -33,6 +33,10 @@ import frc.robot.constants.LEDsConstants;
 import frc.robot.constants.Overrides;
 import frc.robot.pdh.PDH;
 import frc.robot.subsystems.Controller;
+import frc.robot.subsystems.indexer.IIndexerIO;
+import frc.robot.subsystems.indexer.Indexer;
+import frc.robot.subsystems.indexer.IndexerIOReal;
+import frc.robot.subsystems.indexer.IndexerIOSim;
 import frc.robot.subsystems.intake.IIntakeIO;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIOReal;
@@ -74,6 +78,7 @@ public final class RobotContainer {
     public final Launcher launcher;
     public final LEDs leds = new LEDs();
     public final Intake intake;
+    public final Indexer indexer;
 
     public final Controller<XboxController, CommandXboxController> driver1, driver2;
 
@@ -104,6 +109,7 @@ public final class RobotContainer {
                         Overrides.disableTurret ? null : new TurretIOReal(),
                         Overrides.disableShooter ? null : new ShooterIOReal());
                 intake = new Intake(Overrides.disableIntake ? null : new IntakeIOReal());
+                indexer = new Indexer(Overrides.disableIndexer ? null : new IndexerIOReal());
             }
             case SIM -> {
                 swerve = new Swerve(
@@ -116,6 +122,7 @@ public final class RobotContainer {
                         Overrides.disableTurret ? null : new TurretIOSim(),
                         Overrides.disableShooter ? null : new ShooterIOSim());
                 intake = new Intake(Overrides.disableIntake ? null : new IntakeIOSim());
+                indexer = new Indexer(Overrides.disableIndexer ? null : new IndexerIOSim());
             }
             case REPLAY -> {
                 swerve = new Swerve(
@@ -128,6 +135,7 @@ public final class RobotContainer {
                         Overrides.disableTurret ? null : ITurretIO.blank,
                         Overrides.disableShooter ? null : IShooterIO.blank);
                 intake = new Intake(Overrides.disableIntake ? null : IIntakeIO.blank);
+                indexer = new Indexer(Overrides.disableIndexer ? null : IIndexerIO.blank);
             }
                 // shouldn't be possible to trigger, but the compiler required it anyway
             default -> throw new Error("Unhandled mode encountered");

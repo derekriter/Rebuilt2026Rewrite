@@ -48,6 +48,7 @@ public final class LauncherConstants {
 
         static {
             motorConfig = new SparkMaxConfig();
+
             motorConfig.smartCurrentLimit(4);
             motorConfig.idleMode(IdleMode.kCoast);
             motorConfig.inverted(false);
@@ -84,6 +85,7 @@ public final class LauncherConstants {
 
         static {
             motorConfig = new SparkFlexConfig();
+
             motorConfig.smartCurrentLimit(40);
             motorConfig.voltageCompensation(12);
             motorConfig.idleMode(IdleMode.kCoast);

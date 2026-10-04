@@ -47,8 +47,8 @@ public class TurretIOReal implements ITurretIO {
     }
 
     @Override
-    public void setVoltage(double voltage_volts) {
-        turret.setVoltage(voltage_volts);
+    public void setVoltage(double voltage_V) {
+        turret.setVoltage(voltage_V);
     }
 
     @Override

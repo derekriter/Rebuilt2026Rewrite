@@ -54,7 +54,7 @@ public interface IShooterIO {
 
     public void updateInputs(ShooterIOInputs inputs);
 
-    public void setVelocityTarget(double velocity_rpm);
+    public void setVelocityTarget(double velocity_RPM);
 
-    public void setVoltage(double voltage_volts);
+    public void setVoltage(double voltage_V);
 }
