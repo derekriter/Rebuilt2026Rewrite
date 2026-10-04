@@ -86,7 +86,7 @@ public final class Robot extends LoggedRobot {
                 "initDate",
                 new SimpleDateFormat("dd MMM yyyy, hh:mm:ss a")
                         .format(Calendar.getInstance(TimeZone.getTimeZone("America/Detroit"))
-                                .getTime()));
+                                .getTime())); // TODO: see if this works on the real bot
 
         switch (Mode.getMode()) {
             case REAL -> {

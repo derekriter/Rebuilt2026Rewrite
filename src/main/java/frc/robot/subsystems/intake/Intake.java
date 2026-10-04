@@ -1,7 +1,5 @@
 package frc.robot.subsystems.intake;
 
-import static edu.wpi.first.units.Units.Celsius;
-
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -23,7 +21,6 @@ public class Intake extends SubsystemBase {
 
     private final Alert rollerCANAlert = AlertUtils.makeCANFailureAlert("roller"),
             rollerBreakerAlert = AlertUtils.makeBreakerTripAlert("roller"),
-            rollerTempWarnAlert = AlertUtils.makeTempWarnAlert("roller"),
             rollerThermalShutdownAlert = AlertUtils.makeThermalShutdownAlert("roller"),
             leftDeployerBreakerAlert = AlertUtils.makeBreakerTripAlert("leftDeployer"),
             rightDeployerBreakerAlert = AlertUtils.makeBreakerTripAlert("rightDeployer");
@@ -31,7 +28,6 @@ public class Intake extends SubsystemBase {
     private boolean rollerConnectedLast = false;
     private boolean rollerBreaker = false;
     private boolean rollerBreakerLast = false;
-    private boolean rollerThermalShutdown = false;
     private boolean rollerThermalShutdownLast = false;
 
     private boolean leftDeployerBreaker = false;
@@ -84,19 +80,9 @@ public class Intake extends SubsystemBase {
                         Console.reportBreakerReset("roller", RollerConstants.canID, RollerConstants.channelID);
                     }
                 }
-
-                if (!Overrides.disableIntakeSafety && inputs.rollerConnected) {
-                    boolean gettingToasty = inputs.rollerTemp_C >= RollerConstants.tempWarnThreshold.in(Celsius);
-                    boolean overheating = inputs.rollerTemp_C >= RollerConstants.thermalShutdownThreshold.in(Celsius);
-                    rollerThermalShutdown = (overheating || rollerThermalShutdown) && gettingToasty;
-
-                    rollerTempWarnAlert.set(gettingToasty && !overheating);
-                    Logger.recordOutput("Intake/Roller/thermalShutdown", rollerThermalShutdown);
-                    rollerThermalShutdownAlert.set(rollerThermalShutdown);
-                }
-
-                if (rollerThermalShutdown != rollerThermalShutdownLast) {
-                    if (rollerThermalShutdown) {
+                rollerThermalShutdownAlert.set(inputs.rollerThermalShutdown);
+                if (inputs.rollerThermalShutdown != rollerThermalShutdownLast) {
+                    if (inputs.rollerThermalShutdown) {
                         Console.reportThermalShutdownTrigger(
                                 "roller", RollerConstants.canID, RollerConstants.channelID);
 
@@ -109,7 +95,7 @@ public class Intake extends SubsystemBase {
 
                 rollerConnectedLast = inputs.rollerConnected;
                 rollerBreakerLast = rollerBreaker;
-                rollerThermalShutdownLast = rollerThermalShutdown;
+                rollerThermalShutdownLast = inputs.rollerThermalShutdown;
             }
 
             // left deployer
@@ -164,7 +150,7 @@ public class Intake extends SubsystemBase {
             report.rollerOperational = false;
             report.deployerOperational = false;
         } else {
-            report.rollerOperational = inputs.rollerConnected && !rollerBreaker && !rollerThermalShutdown;
+            report.rollerOperational = inputs.rollerConnected && !rollerBreaker && !inputs.rollerThermalShutdown;
             report.deployerOperational = !leftDeployerBreaker && !rightDeployerBreaker;
         }
         report.hasDeployed = hasDeployed;
@@ -182,7 +168,6 @@ public class Intake extends SubsystemBase {
 
     public void setRollerVoltage(double voltage_V) {
         if (io_nl == null) return;
-        if (rollerThermalShutdown && Math.abs(voltage_V) > 1e-6) return;
 
         io_nl.setRollerVoltage(voltage_V);
     }

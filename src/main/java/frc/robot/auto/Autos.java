@@ -71,7 +71,7 @@ public final class Autos {
                             RobotContainer.instance().climbHangingPosCmd()
                     )
                 );
-        //spotless:on
+        // spotless:on
 
         return new AutoProgram(
                 isDebug,
@@ -127,7 +127,7 @@ public final class Autos {
                             )
                     )
                 );
-        //spotless:on
+        // spotless:on
 
         return new AutoProgram(
                 isDebug,
@@ -167,7 +167,7 @@ public final class Autos {
                             )
                     )
                 );
-        //spotless:on
+        // spotless:on
 
         return new AutoProgram(isDebug, name, SetupReference.LEFT_TRENCH, routine, trench_collect1, collect1_depot);
     }

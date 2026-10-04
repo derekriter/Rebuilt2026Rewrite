@@ -30,12 +30,12 @@ public class ShooterIOReal implements IShooterIO {
         inputs.connected = MotorUtils.isSparkConnected(shooter);
 
         if (inputs.connected) {
-            inputs.pos_rots = shooter.getEncoder().getPosition(); // frame 2
-            inputs.vel_RPM = shooter.getEncoder().getVelocity(); // frame 1
-            inputs.temp_C = shooter.getMotorTemperature(); // frame 1
-            inputs.appliedOut_perc = shooter.getAppliedOutput(); // frame 0
-            inputs.statorVoltage_V = shooter.getBusVoltage() * inputs.appliedOut_perc; // frame 0 & 1
-            inputs.statorCurrent_A = shooter.getOutputCurrent(); // frame 1
+            inputs.vel_RPM = shooter.getEncoder().getVelocity();
+            inputs.temp_C = shooter.getMotorTemperature();
+            inputs.appliedOut_perc = shooter.getAppliedOutput();
+            inputs.statorVoltage_V = shooter.getBusVoltage() * inputs.appliedOut_perc;
+            inputs.statorCurrent_A = shooter.getOutputCurrent();
+            inputs.thermalShutdown = MotorUtils.isSparkThermalShutdown(shooter);
         }
     }
 

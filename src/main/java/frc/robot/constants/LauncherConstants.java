@@ -14,7 +14,6 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
-import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.subsystems.launcher.shooter.ShooterTarget;
@@ -54,10 +53,19 @@ public final class LauncherConstants {
             motorConfig.inverted(false);
             motorConfig.voltageCompensation(12);
             motorConfig.closedLoop.outputRange(-1, 1);
+
             motorConfig.openLoopRampRate(0.1);
             motorConfig.closedLoopRampRate(0.1);
 
             motorConfig.closedLoop.pid(0.1, 0, 0.1);
+
+            motorConfig.signals.primaryEncoderPositionAlwaysOn(true).primaryEncoderPositionPeriodMs(20); // status 2
+            motorConfig.signals.primaryEncoderVelocityAlwaysOn(true).primaryEncoderVelocityPeriodMs(20); // status 2
+            motorConfig.signals.motorTemperaturePeriodMs(20); // status 0
+            motorConfig.signals.appliedOutputPeriodMs(20); // status 0
+            motorConfig.signals.busVoltagePeriodMs(20); // status 0
+            motorConfig.signals.outputCurrentPeriodMs(20); // status 0
+            motorConfig.signals.faultsAlwaysOn(true).faultsPeriodMs(20); // status 1
         }
 
         private TurretConstants() {}
@@ -68,8 +76,6 @@ public final class LauncherConstants {
         public static final int channelID = 4;
 
         public static final SparkFlexConfig motorConfig;
-        public static final Temperature tempWarnThreshold = MotorConstants.neoVortexTempWarnThreshold;
-        public static final Temperature thermalShutdownThreshold = MotorConstants.neoVortexThermalShutdownThreshold;
 
         public static final ShooterTarget targetOffset = ShooterTarget.fromShooterVelocity(RPM.of(100));
         public static final ShooterTarget maxRealTarget = ShooterTarget.fromShooterVelocity(RPM.of(5300));
@@ -86,6 +92,13 @@ public final class LauncherConstants {
 
             motorConfig.closedLoop.pid(9.3539e-4, 0, 0);
             motorConfig.closedLoop.feedForward.sv(0.11245, 12.071 / 6756d);
+
+            motorConfig.signals.primaryEncoderVelocityAlwaysOn(true).primaryEncoderVelocityPeriodMs(20); // status 2
+            motorConfig.signals.motorTemperaturePeriodMs(20); // status 0
+            motorConfig.signals.appliedOutputPeriodMs(20); // status 0
+            motorConfig.signals.busVoltagePeriodMs(20); // status 0
+            motorConfig.signals.outputCurrentPeriodMs(20); // status 0
+            motorConfig.signals.faultsAlwaysOn(true).faultsPeriodMs(20); // status 1
         }
 
         private ShooterConstants() {}

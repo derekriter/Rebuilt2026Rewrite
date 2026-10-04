@@ -6,7 +6,6 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
-import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
@@ -20,12 +19,12 @@ import frc.robot.util.MotorUtils;
 public class IntakeIOReal implements IIntakeIO {
 
     private final TalonFX roller;
-    private final StatusSignal<Angle> rollerPos_rots;
     private final StatusSignal<AngularVelocity> rollerVel_rps;
     private final StatusSignal<Temperature> rollerTemp_C;
     private final StatusSignal<Voltage> rollerStatorVoltage_V;
     private final StatusSignal<Current> rollerStatorCurrent_A;
     private final StatusSignal<Current> rollerSupplyCurrent_A;
+    private final StatusSignal<Boolean> rollerThermalShutdown;
     private final Debouncer rollerConnectedDebouncer = new Debouncer(0.5, DebounceType.kFalling);
 
     private final Servo leftDeployer;
@@ -36,20 +35,20 @@ public class IntakeIOReal implements IIntakeIO {
         MotorUtils.safeApplyConfig(
                 roller, "roller", RollerConstants.canID, RollerConstants.channelID, RollerConstants.motorConfig);
 
-        rollerPos_rots = roller.getPosition();
         rollerVel_rps = roller.getVelocity();
         rollerTemp_C = roller.getDeviceTemp();
         rollerStatorVoltage_V = roller.getMotorVoltage();
         rollerStatorCurrent_A = roller.getStatorCurrent();
         rollerSupplyCurrent_A = roller.getSupplyCurrent();
+        rollerThermalShutdown = roller.getFault_DeviceTemp();
         BaseStatusSignal.setUpdateFrequencyForAll(
                 50,
-                rollerPos_rots,
                 rollerVel_rps,
                 rollerTemp_C,
                 rollerStatorVoltage_V,
                 rollerStatorCurrent_A,
-                rollerSupplyCurrent_A);
+                rollerSupplyCurrent_A,
+                rollerThermalShutdown);
         roller.optimizeBusUtilization();
 
         leftDeployer = new Servo(LeftDeployerConstants.port);
@@ -59,20 +58,15 @@ public class IntakeIOReal implements IIntakeIO {
     @Override
     public void updateInputs(IntakeIOInputs inputs) {
         StatusCode rollerStatus = BaseStatusSignal.refreshAll(
-                rollerPos_rots,
-                rollerVel_rps,
-                rollerTemp_C,
-                rollerStatorVoltage_V,
-                rollerStatorCurrent_A,
-                rollerSupplyCurrent_A);
+                rollerVel_rps, rollerTemp_C, rollerStatorVoltage_V, rollerStatorCurrent_A, rollerSupplyCurrent_A);
 
         inputs.rollerConnected = rollerConnectedDebouncer.calculate(rollerStatus.isOK());
-        inputs.rollerPos_rots = rollerPos_rots.getValueAsDouble();
         inputs.rollerVel_rpm = rollerVel_rps.getValueAsDouble() * 60;
         inputs.rollerTemp_C = rollerTemp_C.getValueAsDouble();
         inputs.rollerStatorVoltage_V = rollerStatorVoltage_V.getValueAsDouble();
         inputs.rollerStatorCurrent_A = rollerStatorCurrent_A.getValueAsDouble();
         inputs.rollerSupplyCurrent_A = rollerSupplyCurrent_A.getValueAsDouble();
+        inputs.rollerThermalShutdown = rollerThermalShutdown.getValue();
 
         inputs.leftDeployerPos = leftDeployer.get();
 

@@ -128,7 +128,7 @@ public class Controller<HID extends GenericHID, CMDHID extends CommandGenericHID
     }
 
     public static boolean isPastDeadband(double rawX, double rawY, double deadband) {
-        return isPastDeadband(Math.hypot(rawX, rawY), deadband);
+        return rawX * rawX + rawY * rawY > deadband * deadband;
     }
 
     public static double applySimpleDeadband(double raw, double deadband) {

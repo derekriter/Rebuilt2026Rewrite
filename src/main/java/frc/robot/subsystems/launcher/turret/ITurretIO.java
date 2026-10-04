@@ -33,6 +33,7 @@ public interface ITurretIO {
         public double appliedOut_perc = Double.NaN;
         public double statorVoltage_V = Double.NaN;
         public double statorCurrent_A = Double.NaN;
+        public boolean thermalShutdown = false;
 
         @Override
         public void toLog(LogTable table) {
@@ -43,6 +44,7 @@ public interface ITurretIO {
             table.put("appliedOut", appliedOut_perc);
             table.put("statorVoltage", statorVoltage_V, Volts.name());
             table.put("statorCurrent", statorCurrent_A, Amps.name());
+            table.put("thermalShutdown", thermalShutdown);
         }
 
         @Override
@@ -54,6 +56,7 @@ public interface ITurretIO {
             appliedOut_perc = table.get("appliedOut", appliedOut_perc);
             statorVoltage_V = table.get("statorVoltage", statorVoltage_V);
             statorCurrent_A = table.get("statorCurrent", statorCurrent_A);
+            thermalShutdown = table.get("thermalShutdown", thermalShutdown);
         }
     }
 

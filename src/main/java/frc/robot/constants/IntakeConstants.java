@@ -5,7 +5,6 @@ import static edu.wpi.first.units.Units.Volts;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
 
 public final class IntakeConstants {
@@ -14,8 +13,6 @@ public final class IntakeConstants {
         public static final int channelID = 14;
 
         public static final TalonFXConfiguration motorConfig;
-        public static final Temperature tempWarnThreshold = MotorConstants.falcon500TempWarnThreshold;
-        public static final Temperature thermalShutdownThreshold = MotorConstants.falcon500ThermalShutdownThreshold;
 
         public static final Voltage intakeVoltage = Volts.of(12);
         public static final Voltage shootVoltage = Volts.of(12);

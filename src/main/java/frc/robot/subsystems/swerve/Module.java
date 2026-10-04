@@ -26,20 +26,19 @@ public class Module {
     private final String moduleName;
     private final SwerveConstants.ModuleInfo config;
 
-    private final Alert driveCANAlert;
-    private final Alert driveBreakerAlert;
+    private final Alert driveCANAlert, driveBreakerAlert, driveThermalShutdownAlert;
     private boolean driveConnectedLast = false;
     private boolean driveBreaker = false;
     private boolean driveBreakerLast = false;
+    private boolean driveThermalShutdownLast = false;
 
-    private final Alert steerCANAlert;
-    private final Alert steerBreakerAlert;
+    private final Alert steerCANAlert, steerBreakerAlert, steerThermalShutdownAlert;
     private boolean steerConnectedLast = false;
     private boolean steerBreaker = false;
     private boolean steerBreakerLast = false;
+    private boolean steerThermalShutdownLast = false;
 
-    private final Alert encoderCANAlert;
-    private final Alert encoderBreakerAlert;
+    private final Alert encoderCANAlert, encoderBreakerAlert;
     private boolean encoderConnectedLast = false;
     private boolean encoderBreaker = false;
     private boolean encoderBreakerLast = false;
@@ -54,8 +53,10 @@ public class Module {
 
         driveCANAlert = AlertUtils.makeCANFailureAlert(config.driveMotorName);
         driveBreakerAlert = AlertUtils.makeBreakerTripAlert(config.driveMotorName);
+        driveThermalShutdownAlert = AlertUtils.makeThermalShutdownAlert(config.driveMotorName);
         steerCANAlert = AlertUtils.makeCANFailureAlert(config.steerMotorName);
         steerBreakerAlert = AlertUtils.makeBreakerTripAlert(config.steerMotorName);
+        steerThermalShutdownAlert = AlertUtils.makeThermalShutdownAlert(config.steerMotorName);
         encoderCANAlert = AlertUtils.makeCANFailureAlert(config.encoderName);
         encoderBreakerAlert = AlertUtils.makeBreakerTripAlert(config.encoderName);
     }
@@ -93,6 +94,14 @@ public class Module {
                 Console.reportBreakerReset(config.driveMotorName, config.driveCANID, config.driveChannelID);
             }
         }
+        driveThermalShutdownAlert.set(inputs.driveThermalShutdown);
+        if (inputs.driveThermalShutdown != driveThermalShutdownLast) {
+            if (inputs.driveThermalShutdown) {
+                Console.reportThermalShutdownTrigger(config.driveMotorName, config.driveCANID, config.driveChannelID);
+            } else {
+                Console.reportThermalShutdownRelease(config.driveMotorName, config.driveCANID, config.driveChannelID);
+            }
+        }
 
         steerBreaker = RobotContainer.instance().pdh.isBreakerTripped(config.steerChannelID);
         Logger.recordOutput(
@@ -111,6 +120,14 @@ public class Module {
                 Console.reportBreakerTrip(config.steerMotorName, config.steerCANID, config.steerChannelID);
             } else {
                 Console.reportBreakerReset(config.steerMotorName, config.steerCANID, config.steerChannelID);
+            }
+        }
+        steerThermalShutdownAlert.set(inputs.steerThermalShutdown);
+        if (inputs.steerThermalShutdown != steerThermalShutdownLast) {
+            if (inputs.steerThermalShutdown) {
+                Console.reportThermalShutdownTrigger(config.steerMotorName, config.steerCANID, config.steerChannelID);
+            } else {
+                Console.reportThermalShutdownRelease(config.steerMotorName, config.steerCANID, config.steerChannelID);
             }
         }
 
@@ -136,15 +153,17 @@ public class Module {
 
         driveConnectedLast = inputs.driveConnected;
         driveBreakerLast = driveBreaker;
+        driveThermalShutdownLast = inputs.driveThermalShutdown;
         steerConnectedLast = inputs.steerConnected;
         steerBreakerLast = steerBreaker;
+        steerThermalShutdownLast = inputs.steerThermalShutdown;
         encoderConnectedLast = inputs.encoderConnected;
         encoderBreakerLast = encoderBreaker;
     }
 
     public boolean isOperational() {
-        return (inputs.driveConnected && !driveBreaker)
-                && (inputs.steerConnected && !steerBreaker)
+        return (inputs.driveConnected && !driveBreaker && !inputs.driveThermalShutdown)
+                && (inputs.steerConnected && !steerBreaker && !inputs.steerThermalShutdown)
                 && (inputs.encoderConnected && !encoderBreaker);
     }
 

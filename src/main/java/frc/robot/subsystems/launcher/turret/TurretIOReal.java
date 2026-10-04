@@ -31,12 +31,13 @@ public class TurretIOReal implements ITurretIO {
         inputs.connected = MotorUtils.isSparkConnected(turret);
 
         if (inputs.connected) {
-            inputs.pos_rots = turret.getEncoder().getPosition(); // frame 2
-            inputs.vel_RPM = turret.getEncoder().getVelocity(); // frame 1
-            inputs.temp_C = turret.getMotorTemperature(); // frame 1
-            inputs.appliedOut_perc = turret.getAppliedOutput(); // frame 0
-            inputs.statorVoltage_V = turret.getBusVoltage() * inputs.appliedOut_perc; // frame 0 & 1
-            inputs.statorCurrent_A = turret.getOutputCurrent(); // frame 1
+            inputs.pos_rots = turret.getEncoder().getPosition();
+            inputs.vel_RPM = turret.getEncoder().getVelocity();
+            inputs.temp_C = turret.getMotorTemperature();
+            inputs.appliedOut_perc = turret.getAppliedOutput();
+            inputs.statorVoltage_V = turret.getBusVoltage() * inputs.appliedOut_perc;
+            inputs.statorCurrent_A = turret.getOutputCurrent();
+            inputs.thermalShutdown = MotorUtils.isSparkThermalShutdown(turret);
         }
     }
 

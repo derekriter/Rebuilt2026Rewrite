@@ -70,18 +70,20 @@ public class ModuleIOTalonFX implements IModuleIO {
     private final Queue<Double> drivePositionQueue;
     private final StatusSignal<AngularVelocity> driveVelocity_rps;
     private final StatusSignal<Temperature> driveTemp_C;
-    private final StatusSignal<Voltage> driveAppliedVoltage_V;
+    private final StatusSignal<Voltage> driveStatorVoltage_V;
     private final StatusSignal<Current> driveStatorCurrent_A;
     private final StatusSignal<Current> driveSupplyCurrent_A;
+    private final StatusSignal<Boolean> driveThermalShutdown;
 
     // Inputs from steer motor
     private final StatusSignal<Angle> steerPosition_rots;
     private final Queue<Double> steerPositionQueue;
     private final StatusSignal<AngularVelocity> steerVelocity_rps;
     private final StatusSignal<Temperature> steerTemp_C;
-    private final StatusSignal<Voltage> steerAppliedVoltage_V;
+    private final StatusSignal<Voltage> steerStatorVoltage_V;
     private final StatusSignal<Current> steerStatorCurrent_A;
     private final StatusSignal<Current> steerSupplyCurrent_A;
+    private final StatusSignal<Boolean> steerThermalShutdown;
 
     // Inputs from encoder
     private final StatusSignal<Angle> encoderAbsolutePosition_rots;
@@ -150,18 +152,20 @@ public class ModuleIOTalonFX implements IModuleIO {
         drivePositionQueue = PhoenixOdometryThread.instance().registerSignal(drivePosition_rots.clone());
         driveVelocity_rps = driveTalon.getVelocity();
         driveTemp_C = driveTalon.getDeviceTemp();
-        driveAppliedVoltage_V = driveTalon.getMotorVoltage();
+        driveStatorVoltage_V = driveTalon.getMotorVoltage();
         driveStatorCurrent_A = driveTalon.getStatorCurrent();
         driveSupplyCurrent_A = driveTalon.getSupplyCurrent();
+        driveThermalShutdown = driveTalon.getFault_DeviceTemp();
 
         // Create steer status signals
         steerPosition_rots = steerTalon.getPosition();
         steerPositionQueue = PhoenixOdometryThread.instance().registerSignal(steerPosition_rots.clone());
         steerVelocity_rps = steerTalon.getVelocity();
         steerTemp_C = steerTalon.getDeviceTemp();
-        steerAppliedVoltage_V = steerTalon.getMotorVoltage();
+        steerStatorVoltage_V = steerTalon.getMotorVoltage();
         steerStatorCurrent_A = steerTalon.getStatorCurrent();
         steerSupplyCurrent_A = steerTalon.getSupplyCurrent();
+        steerThermalShutdown = steerTalon.getFault_DeviceTemp();
 
         // Create encoder status signals
         encoderAbsolutePosition_rots = cancoder.getAbsolutePosition();
@@ -173,14 +177,16 @@ public class ModuleIOTalonFX implements IModuleIO {
                 50.0,
                 driveVelocity_rps,
                 driveTemp_C,
-                driveAppliedVoltage_V,
+                driveStatorVoltage_V,
                 driveStatorCurrent_A,
                 driveSupplyCurrent_A,
+                driveThermalShutdown,
                 steerVelocity_rps,
                 steerTemp_C,
-                steerAppliedVoltage_V,
+                steerStatorVoltage_V,
                 steerStatorCurrent_A,
                 steerSupplyCurrent_A,
+                steerThermalShutdown,
                 encoderAbsolutePosition_rots);
         ParentDevice.optimizeBusUtilizationForAll(driveTalon, steerTalon);
     }
@@ -192,16 +198,18 @@ public class ModuleIOTalonFX implements IModuleIO {
                 drivePosition_rots,
                 driveVelocity_rps,
                 driveTemp_C,
-                driveAppliedVoltage_V,
+                driveStatorVoltage_V,
                 driveStatorCurrent_A,
-                driveSupplyCurrent_A);
+                driveSupplyCurrent_A,
+                driveThermalShutdown);
         var steerStatus = BaseStatusSignal.refreshAll(
                 steerPosition_rots,
                 steerVelocity_rps,
                 steerTemp_C,
-                steerAppliedVoltage_V,
+                steerStatorVoltage_V,
                 steerStatorCurrent_A,
-                steerSupplyCurrent_A);
+                steerSupplyCurrent_A,
+                steerThermalShutdown);
         var cancoderStatus = BaseStatusSignal.refreshAll(encoderAbsolutePosition_rots);
 
         // Update drive inputs
@@ -209,8 +217,9 @@ public class ModuleIOTalonFX implements IModuleIO {
         inputs.drivePosition_rad = Units.rotationsToRadians(drivePosition_rots.getValueAsDouble());
         inputs.driveVelocity_radps = Units.rotationsToRadians(driveVelocity_rps.getValueAsDouble());
         inputs.driveTemp_C = driveTemp_C.getValueAsDouble();
-        inputs.driveAppliedVoltage_V = driveAppliedVoltage_V.getValueAsDouble();
+        inputs.driveStatorVoltage_V = driveStatorVoltage_V.getValueAsDouble();
         inputs.driveStatorCurrent_A = driveStatorCurrent_A.getValueAsDouble();
+        inputs.driveThermalShutdown = driveThermalShutdown.getValue();
 
         // Update steer inputs
         inputs.steerConnected = steerConnectedDebounce.calculate(steerStatus.isOK());
@@ -218,8 +227,9 @@ public class ModuleIOTalonFX implements IModuleIO {
         inputs.steerPosition = Rotation2d.fromRotations(steerPosition_rots.getValueAsDouble());
         inputs.steerVelocity_radps = Units.rotationsToRadians(steerVelocity_rps.getValueAsDouble());
         inputs.steerTemp_C = steerTemp_C.getValueAsDouble();
-        inputs.steerAppliedVoltage_V = steerAppliedVoltage_V.getValueAsDouble();
+        inputs.steerStatorVoltage_V = steerStatorVoltage_V.getValueAsDouble();
         inputs.steerStatorCurrent_A = steerStatorCurrent_A.getValueAsDouble();
+        inputs.steerThermalShutdown = steerThermalShutdown.getValue();
 
         // Update encoder inputs
         inputs.encoderAbsolutePosition = Rotation2d.fromRotations(encoderAbsolutePosition_rots.getValueAsDouble());

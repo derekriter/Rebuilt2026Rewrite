@@ -7,6 +7,7 @@ import com.revrobotics.PersistMode;
 import com.revrobotics.REVLibError;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkBase;
+import com.revrobotics.spark.SparkLowLevel.PeriodicStatus1;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import java.util.function.Supplier;
 
@@ -98,7 +99,13 @@ public class MotorUtils {
     }
 
     public static boolean isSparkConnected(SparkBase spark) {
-        return !spark.getFaults().firmware;
+        PeriodicStatus1 frame = spark.getPeriodicStatus1();
+        return frame != null && !frame.firmwareFault;
+    }
+
+    public static boolean isSparkThermalShutdown(SparkBase spark) {
+        PeriodicStatus1 frame = spark.getPeriodicStatus1();
+        return frame != null && frame.temperatureFault;
     }
 
     // Copyright (c) 2021-2026 Littleton Robotics

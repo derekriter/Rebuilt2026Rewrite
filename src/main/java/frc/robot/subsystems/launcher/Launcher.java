@@ -1,7 +1,6 @@
 package frc.robot.subsystems.launcher;
 
 import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.RPM;
@@ -36,28 +35,28 @@ public final class Launcher extends SubsystemBase {
     private final ITurretIO turretIO_nl;
 
     private final Alert turretCANAlert = AlertUtils.makeCANFailureAlert("turret"),
-            turretBreakerAlert = AlertUtils.makeBreakerTripAlert("turret");
+            turretBreakerAlert = AlertUtils.makeBreakerTripAlert("turret"),
+            turretThermalShutdownAlert = AlertUtils.makeThermalShutdownAlert("turret");
 
     private TurretIOInputs turretInputs = new TurretIOInputs();
     private boolean turretConnectedLast = false;
     private boolean turretBreaker = false;
     private boolean turretBreakerLast = false;
+    private boolean turretThermalShutdownLast = false;
     private double lastTurretTarget_rot = Double.NaN;
 
     // ===Shooter===
     private final IShooterIO shooterIO_nl;
 
     private final Alert shooterCANAlert = AlertUtils.makeCANFailureAlert("shooter"),
-            shooterTempWarnAlert = AlertUtils.makeTempWarnAlert("shooter"),
-            shooterThermalShutdownAlert = AlertUtils.makeThermalShutdownAlert("shooter"),
-            shooterBreakerAlert = AlertUtils.makeBreakerTripAlert("shooter");
+            shooterBreakerAlert = AlertUtils.makeBreakerTripAlert("shooter"),
+            shooterThermalShutdownAlert = AlertUtils.makeThermalShutdownAlert("shooter");
 
     private ShooterIOInputs shooterInputs = new ShooterIOInputs();
     private boolean shooterConnectedLast = false;
-    private boolean shooterThermalShutdown = false;
-    private boolean shooterThermalShutdownLast = false;
     private boolean shooterBreaker = false;
     private boolean shooterBreakerLast = false;
+    private boolean shooterThermalShutdownLast = false;
     private double lastShooterTarget_RPM = Double.NaN;
 
     public Launcher(ITurretIO _turretIO_nl, IShooterIO _shooterIO_nl) {
@@ -116,10 +115,19 @@ public final class Launcher extends SubsystemBase {
                     Console.reportBreakerReset("turret", TurretConstants.canID, TurretConstants.channelID);
                 }
             }
+            turretThermalShutdownAlert.set(turretInputs.thermalShutdown);
+            if (turretInputs.thermalShutdown != turretThermalShutdownLast) {
+                if (turretInputs.thermalShutdown) {
+                    Console.reportThermalShutdownTrigger("turret", TurretConstants.canID, TurretConstants.channelID);
+                } else {
+                    Console.reportThermalShutdownRelease("turret", TurretConstants.canID, TurretConstants.channelID);
+                }
+            }
             Logger.recordOutput("Launcher/Turret/atHomingLimit", isTurretAtHomingLimit());
 
             turretConnectedLast = turretInputs.connected;
             turretBreakerLast = turretBreaker;
+            turretThermalShutdownLast = turretInputs.thermalShutdown;
         }
 
         if (shooterIO_nl != null) {
@@ -146,22 +154,10 @@ public final class Launcher extends SubsystemBase {
                     Console.reportBreakerReset("shooter", ShooterConstants.canID, ShooterConstants.channelID);
                 }
             }
-
-            if (!Overrides.disableShooterSafety && shooterInputs.connected) {
-                boolean gettingToasty = shooterInputs.temp_C >= ShooterConstants.tempWarnThreshold.in(Celsius);
-                boolean overheating = shooterInputs.temp_C >= ShooterConstants.thermalShutdownThreshold.in(Celsius);
-                shooterThermalShutdown = (overheating || shooterThermalShutdown) && gettingToasty;
-
-                shooterTempWarnAlert.set(gettingToasty && !shooterThermalShutdown);
-                Logger.recordOutput("Launcher/Shooter/thermalShutdown", shooterThermalShutdown);
-                shooterThermalShutdownAlert.set(shooterThermalShutdown);
-            }
-
-            if (shooterThermalShutdown != shooterThermalShutdownLast) {
-                if (shooterThermalShutdown) {
+            shooterThermalShutdownAlert.set(shooterInputs.thermalShutdown);
+            if (shooterInputs.thermalShutdown != shooterThermalShutdownLast) {
+                if (shooterInputs.thermalShutdown) {
                     Console.reportThermalShutdownTrigger("shooter", ShooterConstants.canID, ShooterConstants.channelID);
-
-                    stopShooter();
                 } else {
                     Console.reportThermalShutdownRelease("shooter", ShooterConstants.canID, ShooterConstants.channelID);
                 }
@@ -169,7 +165,7 @@ public final class Launcher extends SubsystemBase {
 
             shooterConnectedLast = shooterInputs.connected;
             shooterBreakerLast = shooterBreaker;
-            shooterThermalShutdownLast = shooterThermalShutdown;
+            shooterThermalShutdownLast = shooterInputs.thermalShutdown;
         }
 
         Command currentCommand = getCurrentCommand();
@@ -227,7 +223,7 @@ public final class Launcher extends SubsystemBase {
         } else if (turretIO_nl == null) {
             report.turretOperational = false;
         } else {
-            report.turretOperational = turretInputs.connected && !turretBreaker;
+            report.turretOperational = turretInputs.connected && !turretBreaker && !turretInputs.thermalShutdown;
         }
         report.turretIsAtTarget = isTurretAtTarget();
 
@@ -236,7 +232,7 @@ public final class Launcher extends SubsystemBase {
         } else if (shooterIO_nl == null) {
             report.shooterOperational = false;
         } else {
-            report.shooterOperational = shooterInputs.connected && !shooterBreaker && !shooterThermalShutdown;
+            report.shooterOperational = shooterInputs.connected && !shooterBreaker && !shooterInputs.thermalShutdown;
         }
         report.shooterIsAtTarget = isShooterAtTarget();
     }
@@ -295,7 +291,7 @@ public final class Launcher extends SubsystemBase {
     }
 
     public void setShooterTarget(ShooterTarget trg) {
-        if (shooterIO_nl == null || shooterThermalShutdown) return;
+        if (shooterIO_nl == null) return;
 
         if (!trg.isLegal()) trg.clampToLegalRange();
 
@@ -308,7 +304,6 @@ public final class Launcher extends SubsystemBase {
 
     public void setShooterVoltage(double volts) {
         if (shooterIO_nl == null) return;
-        if (shooterThermalShutdown && Math.abs(volts) > 1e-6) return;
 
         shooterIO_nl.setVoltage(volts);
         lastShooterTarget_RPM = Double.NaN;

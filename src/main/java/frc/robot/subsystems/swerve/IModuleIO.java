@@ -40,17 +40,19 @@ public interface IModuleIO {
         public double drivePosition_rad = 0;
         public double driveVelocity_radps = 0;
         public double driveTemp_C = 0;
-        public double driveAppliedVoltage_V = 0;
+        public double driveStatorVoltage_V = 0;
         public double driveStatorCurrent_A = 0;
         public double driveSupplyCurrent_A = 0;
+        public boolean driveThermalShutdown = false;
 
         public boolean steerConnected = false;
         public Rotation2d steerPosition = Rotation2d.kZero;
         public double steerVelocity_radps = 0;
         public double steerTemp_C = 0;
-        public double steerAppliedVoltage_V = 0;
+        public double steerStatorVoltage_V = 0;
         public double steerStatorCurrent_A = 0;
         public double steerSupplyCurrent_A = 0;
+        public boolean steerThermalShutdown = false;
 
         public boolean encoderConnected = false;
         public Rotation2d encoderAbsolutePosition = Rotation2d.kZero;
@@ -65,17 +67,19 @@ public interface IModuleIO {
             table.put("drivePosition", drivePosition_rad, Radians.name());
             table.put("driveVelocity", driveVelocity_radps, RadiansPerSecond.name());
             table.put("driveTemp", driveTemp_C, Celsius.name());
-            table.put("driveAppliedVoltage", driveAppliedVoltage_V, Volts.name());
+            table.put("driveStatorVoltage", driveStatorVoltage_V, Volts.name());
             table.put("driveStatorCurrent", driveStatorCurrent_A, Amps.name());
             table.put("driveSupplyCurrent", driveSupplyCurrent_A, Amps.name());
+            table.put("driveThermalShutdown", driveThermalShutdown);
 
             table.put("steerConnected", steerConnected);
             table.put("steerPosition", steerPosition);
             table.put("steerVelocity", steerVelocity_radps, RadiansPerSecond.name());
             table.put("steerTemp", steerTemp_C, Celsius.name());
-            table.put("steerAppliedVoltage", steerAppliedVoltage_V, Volts.name());
+            table.put("steerStatorVoltage", steerStatorVoltage_V, Volts.name());
             table.put("steerStatorCurrent", steerStatorCurrent_A, Amps.name());
             table.put("steerSupplyCurrent", steerSupplyCurrent_A, Amps.name());
+            table.put("steerThermalShutdown", steerThermalShutdown);
 
             table.put("encoderConnected", encoderConnected);
             table.put("encoderAbsolutePosition", encoderAbsolutePosition);
@@ -91,17 +95,19 @@ public interface IModuleIO {
             drivePosition_rad = table.get("drivePosition", drivePosition_rad);
             driveVelocity_radps = table.get("driveVelocity", driveVelocity_radps);
             driveTemp_C = table.get("driveTemp", driveTemp_C);
-            driveAppliedVoltage_V = table.get("driveAppliedVoltage", driveAppliedVoltage_V);
+            driveStatorVoltage_V = table.get("driveStatorVoltage", driveStatorVoltage_V);
             driveStatorCurrent_A = table.get("driveStatorCurrent", driveStatorCurrent_A);
             driveSupplyCurrent_A = table.get("driveSupplyCurrent", driveSupplyCurrent_A);
+            driveThermalShutdown = table.get("driveThermalShutdown", driveThermalShutdown);
 
             steerConnected = table.get("steerConnected", steerConnected);
             steerPosition = table.get("steerPosition", steerPosition);
             steerVelocity_radps = table.get("steerVelocity", steerVelocity_radps);
             steerTemp_C = table.get("steerTemp", steerTemp_C);
-            steerAppliedVoltage_V = table.get("steerAppliedVoltage", steerAppliedVoltage_V);
+            steerStatorVoltage_V = table.get("steerStatorVoltage", steerStatorVoltage_V);
             steerStatorCurrent_A = table.get("steerStatorCurrent", steerStatorCurrent_A);
             steerSupplyCurrent_A = table.get("steerSupplyCurrent", steerSupplyCurrent_A);
+            steerThermalShutdown = table.get("steerThermalShutdown", steerThermalShutdown);
 
             encoderConnected = table.get("encoderConnected", encoderConnected);
             encoderAbsolutePosition = table.get("encoderAbsolutePosition", encoderAbsolutePosition);

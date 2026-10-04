@@ -13,6 +13,7 @@ public class TurretIOSim implements ITurretIO {
         inputs.appliedOut_perc = 0;
         inputs.statorVoltage_V = 0;
         inputs.statorCurrent_A = 0;
+        inputs.thermalShutdown = false;
     }
 
     @Override

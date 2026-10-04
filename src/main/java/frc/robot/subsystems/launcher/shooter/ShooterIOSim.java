@@ -7,12 +7,12 @@ public class ShooterIOSim implements IShooterIO {
     @Override
     public void updateInputs(ShooterIOInputs inputs) {
         inputs.connected = true;
-        inputs.pos_rots = 0;
         inputs.vel_RPM = 0;
         inputs.temp_C = 20;
         inputs.appliedOut_perc = 0;
         inputs.statorVoltage_V = 0;
         inputs.statorCurrent_A = 0;
+        inputs.thermalShutdown = false;
     }
 
     @Override

@@ -8,10 +8,6 @@ public class AlertUtils {
         return new Alert(String.format("Missing CAN connection to %s", deviceName), AlertType.kError);
     }
 
-    public static Alert makeTempWarnAlert(String deviceName) {
-        return new Alert(String.format("%s nearing thermal shutdown", deviceName), AlertType.kWarning);
-    }
-
     public static Alert makeThermalShutdownAlert(String deviceName) {
         return new Alert(String.format("Thermal shutdown triggered on %s", deviceName), AlertType.kError);
     }
